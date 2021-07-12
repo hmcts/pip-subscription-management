@@ -1,0 +1,13 @@
+#!groovy
+
+@Library("Infrastructure")
+
+def type = "java"
+def product = "pip"
+def component = "subscription-management"
+
+withPipeline(type, product, component) {
+
+
+    enableSlackNotifications('#pip-build-notices')
+}
