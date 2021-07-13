@@ -230,11 +230,9 @@ dependencies {
   smokeTestImplementation sourceSets.main.runtimeClasspath
 }
 
-mainClassName = 'uk.gov.hmcts.reform.demo.Application'
-
 bootJar {
   getArchiveFileName().set(provider {
-    'spring-boot-template.jar'
+    'pip-subscription-management.jar'
   })
 
   manifest {

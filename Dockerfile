@@ -1,4 +1,5 @@
 ARG APP_INSIGHTS_AGENT_VERSION=2.5.1
+ARG APP
 
 # Application image
 

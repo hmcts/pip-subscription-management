@@ -8,6 +8,7 @@ services:
         - http_proxy
         - https_proxy
         - no_proxy
+        - APP
     image: hmctspublic.azurecr.io/pip-subscription-management
     environment:
       # these environment variables are used by java-logging library
