@@ -1,6 +1,6 @@
 apiVersion: v2
 appVersion: "1.0"
-description: A Helm chart for spring-boot-template App
+description: A Helm chart for pip-subscription-management App
 name: pip-subscription-management
 home: https://github.com/hmcts/pip-subscription-management
 version: 0.0.2

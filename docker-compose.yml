@@ -1,13 +1,14 @@
 version: '2.1'
 
 services:
-  spring-boot-template:
+  pip-subscription-management:
     build:
       context: .
       args:
         - http_proxy
         - https_proxy
         - no_proxy
+        - APP
     image: hmctspublic.azurecr.io/pip-subscription-management
     environment:
       # these environment variables are used by java-logging library
