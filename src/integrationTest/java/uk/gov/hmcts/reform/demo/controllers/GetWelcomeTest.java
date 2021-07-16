@@ -24,14 +24,4 @@ public class GetWelcomeTest {
 
         assertThat(response.getResponse().getContentAsString()).startsWith("Welcome");
     }
-
-    @DisplayName("Should welcome upon root request with 404 response code")
-    @Test
-    public void subscriptionEndpoint() throws Exception {
-        MvcResult response = mockMvc.perform(get("/subscription")).andExpect(status().isNotFound()).andReturn();
-
-        assertThat(response.getResponse().getContentAsString()).contains("Subscription");
-    }
-
-
 }
