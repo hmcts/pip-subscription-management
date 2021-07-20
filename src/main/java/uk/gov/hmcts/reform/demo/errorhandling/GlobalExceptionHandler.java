@@ -24,7 +24,8 @@ public class GlobalExceptionHandler {
      * @return The error response, modelled using the ExceptionResponse object.
      */
     @ExceptionHandler(SubscriptionNotFoundException.class)
-    ResponseEntity<ExceptionResponse> handleSubscriptionNotFound(SubscriptionNotFoundException ex, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> handleSubscriptionNotFound(
+        SubscriptionNotFoundException ex, WebRequest request) {
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
