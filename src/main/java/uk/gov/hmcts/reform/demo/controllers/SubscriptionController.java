@@ -3,7 +3,9 @@ package uk.gov.hmcts.reform.demo.controllers;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.hmcts.reform.demo.model.Subscriber;
 
 import static org.springframework.http.ResponseEntity.ok;
 
@@ -12,7 +14,7 @@ import static org.springframework.http.ResponseEntity.ok;
  */
 @RestController
 @Api(tags = "Subscription Management root API")
-public class RootController {
+public class SubscriptionController {
 
     /**
      * Root GET endpoint.
@@ -26,6 +28,11 @@ public class RootController {
     @GetMapping("/")
     public ResponseEntity<String> welcome() {
         return ok("Welcome to spring-boot-template");
+    }
+
+    @PostMapping("/user")
+    public ResponseEntity<String> registerUser(Subscriber subscriber) {
+        return ResponseEntity.ok().body("TestResponse");
     }
 
 }
