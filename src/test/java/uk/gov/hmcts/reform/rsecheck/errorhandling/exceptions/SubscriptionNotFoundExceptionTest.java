@@ -5,10 +5,10 @@ import uk.gov.hmcts.reform.demo.errorhandling.exceptions.SubscriptionNotFoundExc
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class SubscriptionNotFoundExceptionTest {
+class SubscriptionNotFoundExceptionTest {
 
     @Test
-    public void testCreationOfSubscriptionNotFoundException() {
+    void testCreationOfSubscriptionNotFoundException() {
 
         SubscriptionNotFoundException subscriptionNotFoundException
             = new SubscriptionNotFoundException("This is a test message");

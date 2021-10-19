@@ -12,10 +12,10 @@ import uk.gov.hmcts.reform.demo.errorhandling.exceptions.SubscriptionNotFoundExc
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class GlobalExceptionHandlerTest {
+class GlobalExceptionHandlerTest {
 
     @Test
-    public void testHandleSubscriptionNotFoundMethod() {
+    void testHandleSubscriptionNotFoundMethod() {
 
         GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
 
