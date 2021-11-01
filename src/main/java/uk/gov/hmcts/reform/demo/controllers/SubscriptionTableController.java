@@ -1,10 +1,12 @@
 package uk.gov.hmcts.reform.demo.controllers;
 
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.demo.models.Subscription;
 
 
@@ -14,23 +16,24 @@ import uk.gov.hmcts.reform.demo.models.Subscription;
 @RequestMapping("/subscriptions")
 public class SubscriptionTableController {
 
-//    the below code is required when we create a service
-//    @Autowired
-//    private SubscriptionService subscriptionService;
+    //    the below code is required when we create our service
+    //    @Autowired
+    //    private SubscriptionService subscriptionService;
 
 
     @ApiResponses({
-        @ApiResponse(code= 200, message = "All subscriptions returned"),
+        @ApiResponse(code = 200, message = "All subscriptions returned"),
     })
     @GetMapping("/all")
-    public String getResponse(){
+    public String getResponse() {
         return "Everything is fine.";
+
     }
 
     @PostMapping("/addnew")
-    public Subscription postResponse(){
+    public Subscription postResponse() {
         /**
-         * generate new unique sub id
+         * generate new unique subscription
          */
         Subscription sub = new Subscription();
         sub.setUuid("12345-29-09-88");
