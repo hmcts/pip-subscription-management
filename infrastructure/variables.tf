@@ -1,17 +1,16 @@
-variable "product" {}
-
-variable "component" {}
 
 variable "location" {
-  default = "UK South"
+  type        = string
+  default     = "UK South"
+  description = "Deployment location"
+}
+variable "env" {
+  type        = string
+  description = "Deployment Environment"
 }
 
-variable "env" {}
-
-variable "subscription" {}
-
-variable "deployment_namespace" {}
-
-variable "common_tags" {
-  type = "map"
+variable "databases" {
+  type        = list(string)
+  description = "List of Databases Names to create"
+  default     = ["subscriptions"]
 }
