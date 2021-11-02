@@ -28,4 +28,12 @@ public class RootController {
         return ok("Welcome to spring-boot-template");
     }
 
+    /**
+     * DB test endpoint
+     * This will test whether the db can be accessed.
+     */
+    @GetMapping("/testdb")
+    public ResponseEntity<String> testdb() {
+        return ok("Welcome to spring-boot-template");
+    }
 }

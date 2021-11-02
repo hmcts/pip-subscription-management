@@ -17,13 +17,13 @@ spring:
     import: "optional:configtree:/mnt/secrets/"
   application:
     name: Spring Boot Template
-#  datasource:
-#    driver-class-name: org.postgresql.Driver
-#    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}${DB_OPTIONS:}
-#    username: ${DB_USER_NAME}
-#    password: ${DB_PASSWORD}
-#    properties:
-#      charSet: UTF-8
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/some-postgres
+    username: postgres
+    password: postgres
+    properties:
+      charSet: UTF-8
 #    hikari:
 #      minimumIdle: 2
 #      maximumPoolSize: 10
@@ -31,13 +31,19 @@ spring:
 #      poolName: {to-be-defined}HikariCP
 #      maxLifetime: 7200000
 #      connectionTimeout: 30000
-#  jpa:
-#    properties:
-#      hibernate:
-#        jdbc:
-#          lob:
-#            # silence the 'wall-of-text' - unnecessary exception throw about blob types
-#            non_contextual_creation: true
+  jpa:
+    show-sql: 'true'
+    properties:
+      hibernate:
+        format_sql: 'true'
+        dialect: org.hibernate.dialect.PostgreSQL81Dialect
+        jdbc:
+          lob:
+            non_contextual_creation: 'true'
+    database: POSTGRESQL
+    generate-ddl: 'true'
+    hibernate:
+      ddl-auto: create-drop
 
 azure:
   application-insights:
