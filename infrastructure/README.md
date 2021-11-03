@@ -9,3 +9,6 @@ This could be things like:
 * application insights
 
 If you don't need any application infrastructure here, you can delete the whole folder (it will speed up your Jenkins build)
+
+##TODO: add details for what is deployed
+##TODO: add override details setup
