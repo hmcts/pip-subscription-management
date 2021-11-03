@@ -21,5 +21,5 @@ variable "common_tags" {
 variable "databases" {
   type        = list(string)
   description = "List of Databases Names to create"
-  default     = []
+  default     = ["subscriptions"]
 }
