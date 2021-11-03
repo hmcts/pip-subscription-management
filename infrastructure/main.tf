@@ -43,47 +43,47 @@ data "azurerm_key_vault" "ss_kv" {
 }
 
 resource "azurerm_key_vault_secret" "db-host" {
-  for_each = { for database in module.databases : database.name => database }
+  for_each        = { for database in module.databases : database.name => database }
   key_vault_id    = data.azurerm_key_vault.ss_kv.id
   name            = "${local.postgresql_prefix}-${each.value.postgresql_database}-host"
   value           = each.value.host_name
-  tags            = merge(var.common_tags, {"source" : "PostgreSQL"})
+  tags            = merge(var.common_tags, { "source" : "PostgreSQL" })
   content_type    = ""
   expiration_date = timeadd(timestamp(), "8760h")
 }
 resource "azurerm_key_vault_secret" "db-port" {
-  for_each = { for database in module.databases : database.name => database }
+  for_each        = { for database in module.databases : database.name => database }
   key_vault_id    = data.azurerm_key_vault.ss_kv.id
   name            = "${local.postgresql_prefix}-${each.value.postgresql_database}-port"
   value           = each.value.postgresql_listen_port
-  tags            = merge(var.common_tags, {"source" : "PostgreSQL"})
+  tags            = merge(var.common_tags, { "source" : "PostgreSQL" })
   content_type    = ""
   expiration_date = timeadd(timestamp(), "8760h")
 }
 resource "azurerm_key_vault_secret" "db-user" {
-  for_each = { for database in module.databases : database.name => database }
+  for_each        = { for database in module.databases : database.name => database }
   key_vault_id    = data.azurerm_key_vault.ss_kv.id
   name            = "${local.postgresql_prefix}-${each.value.postgresql_database}-user"
   value           = each.value.user_name
-  tags            = merge(var.common_tags, {"source" : "PostgreSQL"})
+  tags            = merge(var.common_tags, { "source" : "PostgreSQL" })
   content_type    = ""
   expiration_date = timeadd(timestamp(), "8760h")
 }
 resource "azurerm_key_vault_secret" "db-pwd" {
-  for_each = { for database in module.databases : database.name => database }
+  for_each        = { for database in module.databases : database.name => database }
   key_vault_id    = data.azurerm_key_vault.ss_kv.id
   name            = "${local.postgresql_prefix}-${each.value.postgresql_database}-pwd"
   value           = each.value.postgresql_password
-  tags            = merge(var.common_tags, {"source" : "PostgreSQL"})
+  tags            = merge(var.common_tags, { "source" : "PostgreSQL" })
   content_type    = ""
   expiration_date = timeadd(timestamp(), "8760h")
 }
 resource "azurerm_key_vault_secret" "db-name" {
-  for_each = { for database in module.databases : database.name => database }
+  for_each        = { for database in module.databases : database.name => database }
   key_vault_id    = data.azurerm_key_vault.ss_kv.id
   name            = "${local.postgresql_prefix}-${each.value.postgresql_database}-name"
   value           = each.value.postgresql_database
-  tags            = merge(var.common_tags, {"source" : "PostgreSQL"})
+  tags            = merge(var.common_tags, { "source" : "PostgreSQL" })
   content_type    = ""
   expiration_date = timeadd(timestamp(), "8760h")
 }
