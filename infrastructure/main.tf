@@ -20,7 +20,7 @@ data "azurerm_subnet" "postgres" {
 
 module "databases" {
   for_each           = { for database in var.databases : database => database }
-  source             = "git@github.com/hmcts/cnp-module-postgres.git?ref=postgresql_tf"
+  source             = "git@github.com:hmcts/cnp-module-postgres?ref=postgresql_tf"
   product            = local.product
   component          = local.component
   subnet_id          = data.azurerm_subnet.postgres.id
