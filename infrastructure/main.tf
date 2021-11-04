@@ -1,6 +1,6 @@
 locals {
   product                  = "pip"
-  component                = "subecription-mgmt"
+  component                = "subscription-mgmt"
   builtFrom                = "hmcts/jenkins/subscription-management"
   resource_group_name      = "pip-sharedinfra-${var.env}-rg"
   storage_account_name     = "pipsharedinfrasa${var.env}"
