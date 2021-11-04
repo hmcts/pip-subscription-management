@@ -17,19 +17,20 @@ import javax.persistence.Table;
 @Table(name = "subscription")
 public class Subscription implements Serializable {
 
+
     private String uuid;
 
     //private Enum subscriptionLevel;
 
-    private String subscriptionID;
+    private String subscriptionId;
 
-    private String courtID;
+    private String courtId;
 
-    private String caseID;
+    private String caseId;
 
-    private String urnID;
+    private String urnId;
 
-    private String uniqueSubID;
+    private String uniqueSubId;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -43,25 +44,25 @@ public class Subscription implements Serializable {
         //intentionally empty constructor
     }
 
-    public Subscription(String uuid, String courtID, String subscriptionID,
-                        String caseID, String urnID, String uniqueSubID) {
+    public Subscription(String uuid, String courtId, String subscriptionId,
+                        String caseId, String urnId, String uniqueSubId) {
         this.uuid = uuid;
-        this.courtID = courtID;
-        this.subscriptionID = subscriptionID;
-        this.caseID = caseID;
-        this.urnID = urnID;
-        this.uniqueSubID = uniqueSubID;
+        this.courtId = courtId;
+        this.subscriptionId = subscriptionId;
+        this.caseId = caseId;
+        this.urnId = urnId;
+        this.uniqueSubId = uniqueSubId;
     }
 
     @Override
     public String toString() {
         return "Subscription{" +
             "uuid='" + uuid + '\'' +
-            ", subscriptionID='" + subscriptionID + '\'' +
-            ", courtID='" + courtID + '\'' +
-            ", caseID='" + caseID + '\'' +
-            ", urnID='" + urnID + '\'' +
-            ", uniqueSubID='" + uniqueSubID + '\'' +
+            ", subscriptionID='" + subscriptionId + '\'' +
+            ", courtID='" + courtId + '\'' +
+            ", caseID='" + caseId + '\'' +
+            ", urnID='" + urnId + '\'' +
+            ", uniqueSubID='" + uniqueSubId + '\'' +
             ", id=" + id +
             '}';
     }
