@@ -29,6 +29,7 @@ public class SubscriptionTableController {
     public String postResponse() {
         /**
          * generate new unique subscription
+         * is currently a get but will be made into a post later
          */
         Subscription sub = new Subscription("danny33",
                                             "glasgow-1",
@@ -70,6 +71,9 @@ public class SubscriptionTableController {
     @GetMapping("/delete/{subid}")
     public String deleteSpecific(@ApiParam(value="The specific subscription ID to be deleted", required = true)
                                  @PathVariable String subid) {
+        /**
+         * Deletes a subscription from the given subscriptionID
+         */
         if (subid.matches("^[a-zA-Z0-9.-]*$")){
             repository.deleteAll(repository.findAllBySubscriptionId(subid));
             return String.format("Subscription %s deleted", subid);
@@ -83,6 +87,9 @@ public class SubscriptionTableController {
     })
     @GetMapping("/findall")
     public List<Subscription> findAll() {
+        /**
+         * Returns the entire subscription db - for debug
+         */
         return repository.findAll();
     }
 
@@ -94,6 +101,9 @@ public class SubscriptionTableController {
     @GetMapping("/find/uuid/{uuid}")
     public List<Subscription> findByUuid(@ApiParam(value="The specific uuid to find", required = true)
                                    @PathVariable String uuid) {
+        /**
+         * Returns all subscriptions associated with a given user
+         */
         return repository.findAllByUuid(uuid);
     }
 
@@ -104,6 +114,9 @@ public class SubscriptionTableController {
     @GetMapping("/find/subscription/sub/{subid}")
     public List<Subscription> findBySubId(@ApiParam(value="The specific subscription id to find", required = true)
                                          @PathVariable String subid) {
+        /**
+         * Returns all subscriptions associated with a given subscription id
+         */
         return repository.findAllBySubscriptionId(subid);
     }
 
@@ -114,6 +127,9 @@ public class SubscriptionTableController {
     @GetMapping("/find/subscription/court/{courtid}")
     public List<Subscription> findByCourtId(@ApiParam(value="The specific court id to find", required = true)
                                           @PathVariable String courtid) {
+        /**
+         * Returns all subscriptions associated with a given courtID
+         */
         return repository.findAllByCourtId(courtid);
     }
 
@@ -124,6 +140,9 @@ public class SubscriptionTableController {
     @GetMapping("/find/case/{caseid}")
     public List<Subscription> findByCaseId(@ApiParam(value="The specific case id to find", required = true)
                                          @PathVariable String caseid) {
+        /**
+         * Returns all subscriptions associated with a given caseID
+         */
         return repository.findAllByCaseId(caseid);
     }
 
@@ -134,6 +153,9 @@ public class SubscriptionTableController {
     @GetMapping("/find/urn/{urnid}")
     public List<Subscription> findByUrnId(@ApiParam(value="The specific urn id to find", required = true)
                                            @PathVariable String urnid) {
+        /**
+         * Returns all subscriptions associated with a given urnid
+         */
         return repository.findAllByUrnId(urnid);
     }
 
