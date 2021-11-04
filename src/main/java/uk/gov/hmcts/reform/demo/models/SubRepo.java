@@ -8,7 +8,15 @@ import java.util.List;
 @Repository
 public interface SubRepo extends JpaRepository<Subscription, Long> {
 
-    List<Subscription> findByUuid(String uuid);
+    List<Subscription> findAllByUuid(String uuid);
+
+    List<Subscription> findAllByCaseID(String caseId);
+
+    List<Subscription> findAllByCourtID(String courtId);
+
+    List<Subscription> findAllByUrnID(String urnId);
+
+    List<Subscription> findAllBySubscriptionID(String subId);
 
     @Override
     List<Subscription> findAll();

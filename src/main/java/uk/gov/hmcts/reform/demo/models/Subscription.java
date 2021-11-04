@@ -53,7 +53,17 @@ public class Subscription implements Serializable {
         this.uniqueSubID = uniqueSubID;
     }
 
-
-
+    @Override
+    public String toString() {
+        return "Subscription{" +
+            "uuid='" + uuid + '\'' +
+            ", subscriptionID='" + subscriptionID + '\'' +
+            ", courtID='" + courtID + '\'' +
+            ", caseID='" + caseID + '\'' +
+            ", urnID='" + urnID + '\'' +
+            ", uniqueSubID='" + uniqueSubID + '\'' +
+            ", id=" + id +
+            '}';
+    }
 }
 
