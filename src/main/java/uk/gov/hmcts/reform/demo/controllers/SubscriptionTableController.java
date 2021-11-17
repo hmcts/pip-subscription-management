@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import uk.gov.hmcts.reform.demo.models.SubRepo;
 import uk.gov.hmcts.reform.demo.models.Subscription;
+import uk.gov.hmcts.reform.demo.services.SubscriptionService;
 
 import java.util.List;
 
@@ -21,12 +22,12 @@ public class SubscriptionTableController {
     SubRepo repository;
 
 
-    @GetMapping("/addnew")
+    @GetMapping("/addexample")
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscriptions created"),
         @ApiResponse(code = 404, message = "Error reaching database")
     })
-    public String postResponse() {
+    public String createSubExample() {
         /**
          * generate new unique subscription
          * is currently a get but will be made into a post later
@@ -49,6 +50,24 @@ public class SubscriptionTableController {
         return "subs created";
 
     }
+
+    @PostMapping(value = "/addnew/{input}", consumes = "application/json", produces="application/json")
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Subscriptions created"),
+        @ApiResponse(code = 404, message = "Error reaching database")
+    })
+    public String postSub(@RequestBody Subscription sub) {
+        /**
+         * generate new unique subscription
+         * is currently a get but will be made into a post later
+         */
+        repository.save(sub);
+
+        return "data added";
+
+    }
+
+
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "Deleted all"),

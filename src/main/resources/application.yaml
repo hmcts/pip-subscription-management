@@ -19,10 +19,10 @@ spring:
     name: Spring Boot Template
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${db-name}.postgres.database.azure.com:${db-port}/postgres
+    url: jdbc:postgresql://${db_name}.postgres.database.azure.com:${db_port}/postgres
 
-    username: "${db-user}"
-    password: "${db-pass}"
+    username: ${db_user}
+    password: ${db_pass}
     properties:
       charSet: UTF-8
 #    hikari:

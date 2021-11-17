@@ -10,11 +10,11 @@ java:
       usePodIdentity: true
       secrets:
         - name: pip-subscription-management-POSTGRES-DATABASE
-          alias: db-name
+          alias: db_name
         - name: pip-subscription-management-POSTGRES-PASS
-          alias: db-pass
+          alias: db_pass
         - name: pip-subscription-management-POSTGRES-PORT
-          alias: db-port
+          alias: db_port
         - name: pip-subscription-management-POSTGRES-USER
-          alias: db-user
+          alias: db_user
   environment:

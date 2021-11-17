@@ -20,7 +20,7 @@ public class Subscription implements Serializable {
 
     private String uuid;
 
-    //private Enum subscriptionLevel;
+    private SearchType searchType;
 
     private String subscriptionId;
 
