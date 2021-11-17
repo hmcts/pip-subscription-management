@@ -46,5 +46,10 @@ spring:
       ddl-auto: create-drop
 
 azure:
+  db:
+    name: ${db-name}
+    pass: ${db-pass}
+    port: ${db-port}
+    user: ${db-user}
   application-insights:
     instrumentation-key: ${rpe.AppInsightsInstrumentationKey:00000000-0000-0000-0000-000000000000}

@@ -3,10 +3,18 @@ java:
   image: 'sdshmctspublic.azurecr.io/pip/subscription-management:latest'
   ingressHost: pip-subscription-management.{{ .Values.global.environment }}.platform.hmcts.net
   aadIdentityName: pip
-#  Uncomment once the vault containing the app insights key has been set up
-#  keyVaults:
-#    rpe:
-#      secrets:
-#        - name: AppInsightsInstrumentationKey
-#          alias: azure.application-insights.instrumentation-key
+  keyVaults:
+    pip-shared-kv:
+      excludeEnvironmentSuffix: false
+      resourceGroup: pip-sharedservices-{{ .Values.global.environment }}-rg
+      usePodIdentity: true
+      secrets:
+        - name: pip-subscription-management-POSTGRES-DATABASE
+          alias: db-name
+        - name: pip-subscription-management-POSTGRES-PASS
+          alias: db-pass
+        - name: pip-subscription-management-POSTGRES-PORT
+          alias: db-port
+        - name: pip-subscription-management-POSTGRES-USER
+          alias: db-user
   environment:
