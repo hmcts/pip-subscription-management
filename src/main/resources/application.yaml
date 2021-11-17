@@ -19,9 +19,10 @@ spring:
     name: Spring Boot Template
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5433/postgres
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://pip-subscription-mgmt-staging.postgres.database.azure.com:5432/postgres
+
+    username: "pipdbadmin@pip-subscription-mgmt-staging"
+    password: "${dbpas}"
     properties:
       charSet: UTF-8
 #    hikari:
@@ -43,7 +44,8 @@ spring:
     database: POSTGRESQL
     generate-ddl: 'true'
     hibernate:
-      ddl-auto: create-drop
+      # this ensures the db persists after spring boot connection drops.
+      ddl-auto: update
 
 azure:
   application-insights:
