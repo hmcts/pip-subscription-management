@@ -15,55 +15,25 @@ import java.util.List;
 
 @RestController
 @Api(tags = "Subscription management API")
-@RequestMapping("/subscriptions")
+@RequestMapping("/subscription")
 public class SubscriptionTableController {
 
     @Autowired
     SubRepo repository;
 
 
-    @GetMapping("/addexample")
+    @PostMapping(value = "/new/{input}", consumes = "application/json", produces= "application/json")
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscriptions created"),
         @ApiResponse(code = 404, message = "Error reaching database")
     })
-    public String createSubExample() {
-        /**
-         * generate new unique subscription
-         * is currently a get but will be made into a post later
-         */
-        Subscription sub = new Subscription("danny33",
-                                            "glasgow-1",
-                                            "sub-12345-321",
-                                            "m1ur2d",
-                                            "4444-5555-6666-7324",
-                                            "fa9fka9k");
-        Subscription sub2 = new Subscription("rudolph21",
-                                             "london-3",
-                                             "sub-32345-232",
-                                             "th13f2",
-                                             "3321-0402-0214-9580",
-                                             "124f21a2");
-        repository.save(sub);
-        repository.save(sub2);
-
-        return "subs created";
-
-    }
-
-    @PostMapping(value = "/addnew/{input}", consumes = "application/json", produces="application/json")
-    @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscriptions created"),
-        @ApiResponse(code = 404, message = "Error reaching database")
-    })
-    public String postSub(@RequestBody Subscription sub) {
-        /**
-         * generate new unique subscription
-         * is currently a get but will be made into a post later
+    public Subscription postSub(@RequestBody Subscription sub) {
+        /*
+          generate new unique subscription with json - 'id' field is hidden as auto-generated
          */
         repository.save(sub);
 
-        return "data added";
+        return sub;
 
     }
 
@@ -73,10 +43,10 @@ public class SubscriptionTableController {
         @ApiResponse(code = 200, message = "Deleted all"),
         @ApiResponse(code = 404, message = "No subscriptions found")
     })
-    @GetMapping("/deleteall")
+    @DeleteMapping("/all")
     public String deleteAll() {
-        /**
-         * delete all data from the subscriptions table - probably unnecessary.
+        /*
+          delete all data from the subscriptions table - probably unnecessary but useful for debug.
          */
         repository.deleteAll();
         return "all subs deleted";
@@ -87,17 +57,15 @@ public class SubscriptionTableController {
         @ApiResponse(code = 200, message = "Subscription {subid} deleted"),
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subid}")
     })
-    @GetMapping("/delete/{subid}")
+    @DeleteMapping("/{subid}")
     public String deleteSpecific(@ApiParam(value="The specific subscription ID to be deleted", required = true)
-                                 @PathVariable String subid) {
-        /**
-         * Deletes a subscription from the given subscriptionID
+                                 @PathVariable Long subid) {
+        /*
+          Deletes a subscription from the given subscriptionID
          */
-        if (subid.matches("^[a-zA-Z0-9.-]*$")){
-            repository.deleteAll(repository.findAllBySubscriptionId(subid));
-            return String.format("Subscription %s deleted", subid);
-        }
-        return "Error - incorrect uuid format";
+
+        repository.deleteAll(repository.findAllById(subid));
+        return String.format("Subscription %s deleted", subid);
     }
 
     @ApiResponses({
@@ -106,77 +74,29 @@ public class SubscriptionTableController {
     })
     @GetMapping("/findall")
     public List<Subscription> findAll() {
-        /**
-         * Returns the entire subscription db - for debug
+        /*
+          Returns the entire subscription db - for debug
          */
         return repository.findAll();
     }
 
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "User {uuid} found"),
-        @ApiResponse(code = 404, message = "No subscription found with the uuid {caseid}")
-    })
-    @GetMapping("/find/uuid/{uuid}")
-    public List<Subscription> findByUuid(@ApiParam(value="The specific uuid to find", required = true)
-                                   @PathVariable String uuid) {
-        /**
-         * Returns all subscriptions associated with a given user
-         */
-        return repository.findAllByUuid(uuid);
-    }
-
-    @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription {subid} found"),
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subid}")
     })
-    @GetMapping("/find/subscription/sub/{subid}")
+    @GetMapping("/subscription/{subid}")
     public List<Subscription> findBySubId(@ApiParam(value="The specific subscription id to find", required = true)
-                                         @PathVariable String subid) {
-        /**
-         * Returns all subscriptions associated with a given subscription id
+                                         @PathVariable Long subid) {
+        /*
+          Returns all subscriptions associated with a given subscription id
          */
-        return repository.findAllBySubscriptionId(subid);
+        return repository.findAllById(subid);
     }
 
-    @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscriptions associated with court {courtid} found"),
-        @ApiResponse(code = 404, message = "No subscription found with the courtid {courtid}")
-    })
-    @GetMapping("/find/subscription/court/{courtid}")
-    public List<Subscription> findByCourtId(@ApiParam(value="The specific court id to find", required = true)
-                                          @PathVariable String courtid) {
-        /**
-         * Returns all subscriptions associated with a given courtID
-         */
-        return repository.findAllByCourtId(courtid);
-    }
 
-    @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscriptions associated with case {caseid} found"),
-        @ApiResponse(code = 404, message = "No subscription found with the caseid {caseid}")
-    })
-    @GetMapping("/find/case/{caseid}")
-    public List<Subscription> findByCaseId(@ApiParam(value="The specific case id to find", required = true)
-                                         @PathVariable String caseid) {
-        /**
-         * Returns all subscriptions associated with a given caseID
-         */
-        return repository.findAllByCaseId(caseid);
-    }
 
-    @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscriptions associated with urn {urnid} found"),
-        @ApiResponse(code = 404, message = "No subscription found with the urn {urnid}")
-    })
-    @GetMapping("/find/urn/{urnid}")
-    public List<Subscription> findByUrnId(@ApiParam(value="The specific urn id to find", required = true)
-                                           @PathVariable String urnid) {
-        /**
-         * Returns all subscriptions associated with a given urnid
-         */
-        return repository.findAllByUrnId(urnid);
-    }
+
 
 
 }

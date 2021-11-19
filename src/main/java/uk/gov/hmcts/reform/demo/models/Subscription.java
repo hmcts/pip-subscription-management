@@ -1,7 +1,9 @@
 package uk.gov.hmcts.reform.demo.models;
 
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.io.Serializable;
 import javax.persistence.Entity;
@@ -17,23 +19,28 @@ import javax.persistence.Table;
 @Table(name = "subscription")
 public class Subscription implements Serializable {
 
-
+    /**
+     * P&I user ID
+     */
     private String uuid;
 
     private SearchType searchType;
 
-    private String subscriptionId;
+    private String searchValue;
 
     private String courtId;
 
-    private String caseId;
+    private String channel;
+
 
     private String urnId;
 
-    private String uniqueSubId;
-
+    /**
+     * Unique subscription ID
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @ApiModelProperty(hidden = true)
     private long id;
 
     private static final long serialVersionUID = -470332543681824967L;
@@ -44,26 +51,25 @@ public class Subscription implements Serializable {
         //intentionally empty constructor
     }
 
-    public Subscription(String uuid, String courtId, String subscriptionId,
-                        String caseId, String urnId, String uniqueSubId) {
+    public Subscription(String uuid, String courtId, String searchValue,
+                        String channel, String urnId, String uniqueSubId) {
         this.uuid = uuid;
         this.courtId = courtId;
-        this.subscriptionId = subscriptionId;
-        this.caseId = caseId;
+        this.searchValue = searchValue;
+        this.channel = channel;
         this.urnId = urnId;
-        this.uniqueSubId = uniqueSubId;
+
     }
 
     @Override
     public String toString() {
         return "Subscription{" +
             "uuid='" + uuid + '\'' +
-            ", subscriptionID='" + subscriptionId + '\'' +
-            ", courtID='" + courtId + '\'' +
-            ", caseID='" + caseId + '\'' +
-            ", urnID='" + urnId + '\'' +
-            ", uniqueSubID='" + uniqueSubId + '\'' +
-            ", id=" + id +
+            ", searchValue='" + searchValue + '\'' +
+            ", courtId='" + courtId + '\'' +
+            ", caseId='" + channel + '\'' +
+            ", urnId='" + urnId + '\'' +
+            ", subscriptionId=" + id +
             '}';
     }
 }
