@@ -3,8 +3,8 @@ package uk.gov.hmcts.reform.demo.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.demo.errorhandling.exceptions.SubscriptionNotFoundException;
-import uk.gov.hmcts.reform.demo.repository.SubRepo;
 import uk.gov.hmcts.reform.demo.models.Subscription;
+import uk.gov.hmcts.reform.demo.repository.SubRepo;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +33,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         List<Subscription> subscriptionList = repository.findAllById(id);
 
         if (subscriptionList.isEmpty()) {
-         throw new SubscriptionNotFoundException("No subscription with that id exists");
+            throw new SubscriptionNotFoundException("No subscription with that id exists");
         }
     }
 

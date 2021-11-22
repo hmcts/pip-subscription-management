@@ -5,7 +5,13 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.demo.models.Subscription;
 import uk.gov.hmcts.reform.demo.services.SubscriptionService;
 
@@ -21,7 +27,7 @@ public class SubscriptionTableController {
     @Autowired
     SubscriptionService subscriptionService;
 
-    @PostMapping(consumes = "application/json", produces= "application/json")
+    @PostMapping(consumes = "application/json", produces = "application/json")
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription created"),
         @ApiResponse(code = 404, message = "Error reaching database")
@@ -53,7 +59,7 @@ public class SubscriptionTableController {
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
     })
     @DeleteMapping("/{subId}")
-    public String deleteSpecific(@ApiParam(value="The specific subscription ID to be deleted", required = true)
+    public String deleteSpecific(@ApiParam(value = "The specific subscription ID to be deleted", required = true)
                                  @PathVariable Long subId) {
 
         subscriptionService.deleteById(subId);
@@ -78,7 +84,7 @@ public class SubscriptionTableController {
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
     })
     @GetMapping("/{subId}")
-    public Optional<Subscription> findBySubId(@ApiParam(value="The specific subscription id to find", required = true)
+    public Optional<Subscription> findBySubId(@ApiParam(value = "The specific subscription id to find", required = true)
                                          @PathVariable Long subId) {
         /*
           Returns all subscriptions associated with a given subscription id

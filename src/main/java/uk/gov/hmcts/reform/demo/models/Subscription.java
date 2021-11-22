@@ -16,7 +16,7 @@ import javax.persistence.Table;
 public class Subscription implements Serializable {
 
     /**
-     * Unique subscription ID
+     * Unique subscription ID.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
