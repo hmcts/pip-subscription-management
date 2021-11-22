@@ -1,15 +1,12 @@
 locals {
-  product                  = "pip"
-  component                = "subscription-mgmt"
-  builtFrom                = "hmcts/jenkins/subscription-management"
-  resource_group_name      = "pip-sharedinfra-${var.env}-rg"
-  storage_account_name     = "pipsharedinfrasa${var.env}"
-  dtu_storage_account_name = "pipdtu${var.env}"
-  team_name                = "PIP DevOps"
-  team_contact             = "#vh-devops"
-  env_long_name            = var.env == "sbox" ? "sandbox" : var.env == "stg" ? "staging" : var.env
-  postgresql_user          = "pipdbadmin"
-  secret_prefix            = "pip-subscription-management-POSTGRES"
+  product         = "pip"
+  component       = "subscription-mgmt"
+  builtFrom       = "hmcts/jenkins/subscription-management"
+  team_name       = "PIP DevOps"
+  team_contact    = "#vh-devops"
+  env_long_name   = var.env == "sbox" ? "sandbox" : var.env == "stg" ? "staging" : var.env
+  postgresql_user = "pipdbadmin"
+  secret_prefix   = "pip-subscription-management-POSTGRES"
 
 }
 
@@ -37,9 +34,13 @@ module "database" {
   key_vault_name = "dtssharedservices${var.env}kv"
 }
 
+locals {
+  kv_env = var.env != "prod" ? "stg" : "prod"
+}
+
 data "azurerm_key_vault" "ss_kv" {
-  name                = "${local.product}-shared-kv-${var.env}"
-  resource_group_name = "${local.product}-sharedservices-${var.env}-rg"
+  name                = "${local.product}-sharedservice-kv-${local.kv_env}"
+  resource_group_name = "${local.product}-sharedservice-${local.kv_env}-rg"
 }
 
 locals {
