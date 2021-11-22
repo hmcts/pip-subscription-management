@@ -6,11 +6,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import uk.gov.hmcts.reform.demo.models.SubRepo;
 import uk.gov.hmcts.reform.demo.models.Subscription;
 import uk.gov.hmcts.reform.demo.services.SubscriptionService;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -19,22 +19,18 @@ import java.util.List;
 public class SubscriptionTableController {
 
     @Autowired
-    SubRepo repository;
+    SubscriptionService subscriptionService;
 
-
-    @PostMapping(value = "/new/{input}", consumes = "application/json", produces= "application/json")
+    @PostMapping(consumes = "application/json", produces= "application/json")
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscriptions created"),
+        @ApiResponse(code = 200, message = "Subscription created"),
         @ApiResponse(code = 404, message = "Error reaching database")
     })
     public Subscription postSub(@RequestBody Subscription sub) {
         /*
           generate new unique subscription with json - 'id' field is hidden as auto-generated
          */
-        repository.save(sub);
-
-        return sub;
-
+        return subscriptionService.createSubscription(sub);
     }
 
 
@@ -48,55 +44,46 @@ public class SubscriptionTableController {
         /*
           delete all data from the subscriptions table - probably unnecessary but useful for debug.
          */
-        repository.deleteAll();
+        subscriptionService.deleteAll();
         return "all subs deleted";
     }
 
-
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscription {subid} deleted"),
-        @ApiResponse(code = 404, message = "No subscription found with the subscription id {subid}")
+        @ApiResponse(code = 200, message = "Subscription {subId} deleted"),
+        @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
     })
-    @DeleteMapping("/{subid}")
+    @DeleteMapping("/{subId}")
     public String deleteSpecific(@ApiParam(value="The specific subscription ID to be deleted", required = true)
-                                 @PathVariable Long subid) {
-        /*
-          Deletes a subscription from the given subscriptionID
-         */
+                                 @PathVariable Long subId) {
 
-        repository.deleteAll(repository.findAllById(subid));
-        return String.format("Subscription %s deleted", subid);
+        subscriptionService.deleteById(subId);
+        return String.format("Subscription %s deleted", subId);
     }
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "All subscriptions found"),
         @ApiResponse(code = 404, message = "No subscriptions found")
     })
-    @GetMapping("/findall")
+    @GetMapping
     public List<Subscription> findAll() {
         /*
           Returns the entire subscription db - for debug
          */
-        return repository.findAll();
+        return subscriptionService.findAll();
     }
 
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscription {subid} found"),
-        @ApiResponse(code = 404, message = "No subscription found with the subscription id {subid}")
+        @ApiResponse(code = 200, message = "Subscription {subId} found"),
+        @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
     })
-    @GetMapping("/subscription/{subid}")
-    public List<Subscription> findBySubId(@ApiParam(value="The specific subscription id to find", required = true)
-                                         @PathVariable Long subid) {
+    @GetMapping("/{subId}")
+    public Optional<Subscription> findBySubId(@ApiParam(value="The specific subscription id to find", required = true)
+                                         @PathVariable Long subId) {
         /*
           Returns all subscriptions associated with a given subscription id
          */
-        return repository.findAllById(subid);
+        return subscriptionService.findById(subId);
     }
-
-
-
-
-
 
 }
