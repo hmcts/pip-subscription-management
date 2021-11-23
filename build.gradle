@@ -15,7 +15,7 @@ apply plugin: 'org.owasp.dependencycheck'
 apply plugin: 'org.sonarqube'
 
 group = 'uk.gov.hmcts.reform.pip'
-mainClassName = 'uk.gov.hmcts.reform.demo.Application'
+mainClassName = 'uk.gov.hmcts.reform.pip.subscription.management.Application'
 version = '0.0.1'
 
 allprojects {
@@ -181,6 +181,8 @@ dependencies {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
 
+  testImplementation 'com.h2database:h2'
+
   integrationTestImplementation sourceSets.main.runtimeClasspath
   integrationTestImplementation sourceSets.test.runtimeClasspath
 
@@ -188,6 +190,8 @@ dependencies {
 
   smokeTestImplementation sourceSets.main.runtimeClasspath
   smokeTestImplementation sourceSets.test.runtimeClasspath
+
+  annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 
 bootJar {
@@ -200,6 +204,11 @@ bootJar {
 
 // Gradle 7.x issue, workaround from: https://github.com/gradle/gradle/issues/17236#issuecomment-894768083
 rootProject.tasks.named("processSmokeTestResources") {
+  duplicatesStrategy = 'include'
+}
+
+//To use multiple application.yamls (for db mocking)
+rootProject.tasks.named("processIntegrationTestResources") {
   duplicatesStrategy = 'include'
 }
 

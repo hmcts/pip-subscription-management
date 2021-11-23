@@ -16,7 +16,7 @@ spring:
   config:
     import: "optional:configtree:/mnt/secrets/"
   application:
-    name: Spring Boot Template
+    name: PIP Subscription Management
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${db_name}.postgres.database.azure.com:${db_port}/postgres
