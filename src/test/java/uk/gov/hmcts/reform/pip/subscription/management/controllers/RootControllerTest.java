@@ -3,14 +3,10 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 
 class RootControllerTest {
 
@@ -22,7 +18,8 @@ class RootControllerTest {
         ResponseEntity<String> welcomeResponse = rootController.welcome();
         assertEquals(HttpStatus.OK, welcomeResponse.getStatusCode(), "An OK response code is returned");
         assertEquals("Welcome to pip-subscription-management", welcomeResponse.getBody(),
-                     "The correct response body is returned");
+                     "The correct response body is returned"
+        );
     }
 
     @Test
@@ -31,7 +28,8 @@ class RootControllerTest {
         ResponseEntity<String> welcomeResponse = rootController.testdb();
         assertEquals(HttpStatus.OK, welcomeResponse.getStatusCode(), "An OK response code is returned");
         assertEquals("Welcome to pip-subscription-management", welcomeResponse.getBody(),
-                     "The correct response body is returned");
+                     "The correct response body is returned"
+        );
     }
 
 }
