@@ -15,11 +15,6 @@ public interface SubscriptionService {
     Subscription createSubscription(Subscription subscription);
 
     /**
-     * Deletes all subscriptions.
-     */
-    void deleteAll();
-
-    /**
      * Delete subscription by id.
      * @param id The id of the subscription to delete.
      */

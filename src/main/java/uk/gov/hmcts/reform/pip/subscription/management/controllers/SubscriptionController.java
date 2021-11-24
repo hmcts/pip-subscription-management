@@ -30,7 +30,6 @@ public class SubscriptionController {
     @PostMapping(consumes = "application/json", produces = "application/json")
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription created"),
-        @ApiResponse(code = 404, message = "Error reaching database")
     })
     public ResponseEntity<Subscription> createSubscription(@RequestBody Subscription sub) {
         /*

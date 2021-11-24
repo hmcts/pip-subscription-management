@@ -24,11 +24,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void deleteAll() {
-        repository.deleteAll();
-    }
-
-    @Override
     public void deleteById(Long id) {
         Optional<Subscription> subscription = repository.findById(id);
 
