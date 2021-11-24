@@ -21,8 +21,6 @@ bin/main/application.yaml
 
 .DS_Store
 
-<<<<<<< HEAD
-
 # Local .terraform directories
 **/.terraform/*
 
@@ -53,11 +51,10 @@ override.tf.json
 
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
-=======
+
 ### Terraform ###
 .terraform
 .terraform-version
 .idea/
 .terraform.lock.hcl
 **/override.tf
->>>>>>> eb47226025b2007bd208695fcbc3073a5e2866ff
