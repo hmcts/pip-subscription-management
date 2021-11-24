@@ -22,15 +22,6 @@ class RootControllerTest {
         );
     }
 
-    @Test
-    @DisplayName("Tests that a 200 code is returned, with the correct response message")
-    void testDb() {
-        ResponseEntity<String> welcomeResponse = rootController.testdb();
-        assertEquals(HttpStatus.OK, welcomeResponse.getStatusCode(), "An OK response code is returned");
-        assertEquals("Welcome to pip-subscription-management", welcomeResponse.getBody(),
-                     "The correct response body is returned"
-        );
-    }
 
 }
 

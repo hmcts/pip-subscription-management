@@ -28,12 +28,4 @@ public class RootController {
         return ok("Welcome to pip-subscription-management");
     }
 
-    /**
-     * DB test endpoint
-     * This will test whether the db can be accessed.
-     */
-    @GetMapping("/testdb")
-    public ResponseEntity<String> testdb() {
-        return ok("Welcome to pip-subscription-management");
-    }
 }
