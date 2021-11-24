@@ -25,7 +25,7 @@ public class RootController {
      */
     @GetMapping("/")
     public ResponseEntity<String> welcome() {
-        return ok("Welcome to spring-boot-template");
+        return ok("Welcome to pip-subscription-management");
     }
 
     /**
@@ -34,6 +34,6 @@ public class RootController {
      */
     @GetMapping("/testdb")
     public ResponseEntity<String> testdb() {
-        return ok("Welcome to spring-boot-template");
+        return ok("Welcome to pip-subscription-management");
     }
 }
