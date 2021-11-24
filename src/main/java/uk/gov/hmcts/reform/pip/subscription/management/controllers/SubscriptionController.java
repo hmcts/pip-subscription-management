@@ -38,21 +38,6 @@ public class SubscriptionController {
         return subscriptionService.createSubscription(sub);
     }
 
-
-
-    @ApiResponses({
-        @ApiResponse(code = 200, message = "Deleted all"),
-        @ApiResponse(code = 404, message = "No subscriptions found")
-    })
-    @DeleteMapping("/all")
-    public String deleteAll() {
-        /*
-          delete all data from the subscriptions table - probably unnecessary but useful for debug.
-         */
-        subscriptionService.deleteAll();
-        return "all subs deleted";
-    }
-
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription {subId} deleted"),
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
