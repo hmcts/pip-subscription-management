@@ -132,7 +132,7 @@ project.tasks['sonarqube'].dependsOn jacocoTestReport
 def sonarExclusions = []
 sonarqube {
   properties {
-    property "sonar.projectKey", "pip-subscription-management"
+    property "sonar.projectKey", "pip-subscription.management"
     property "sonar.exclusions", sonarExclusions.join(', ')
     property "sonar.dynamicAnalysis", "reuseReports"
     property "sonar.java.coveragePlugin", "jacoco"
@@ -195,7 +195,7 @@ dependencies {
 }
 
 bootJar {
-  archiveFileName = "pip-subscription-management.jar"
+  archiveFileName = "pip-subscription.management.jar"
 
   manifest {
     attributes('Implementation-Version': project.version.toString())

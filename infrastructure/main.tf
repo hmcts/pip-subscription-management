@@ -1,7 +1,7 @@
 locals {
   product                  = "pip"
   component                = "subscription-mgmt"
-  builtFrom                = "hmcts/jenkins/subscription-management"
+  builtFrom                = "hmcts/jenkins/subscription.management"
   resource_group_name      = "pip-sharedinfra-${var.env}-rg"
   storage_account_name     = "pipsharedinfrasa${var.env}"
   dtu_storage_account_name = "pipdtu${var.env}"
@@ -9,7 +9,7 @@ locals {
   team_contact             = "#vh-devops"
   env_long_name            = var.env == "sbox" ? "sandbox" : var.env == "stg" ? "staging" : var.env
   postgresql_user          = "pipdbadmin"
-  secret_prefix            = "pip-subscription-management-POSTGRES"
+  secret_prefix            = "pip-subscription.management-POSTGRES"
 
 }
 

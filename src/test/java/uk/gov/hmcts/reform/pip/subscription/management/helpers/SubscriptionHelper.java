@@ -6,6 +6,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class SubscriptionHelper {
@@ -35,7 +36,7 @@ public final class SubscriptionHelper {
         for (int i = 0; i < 8; i++) {
             Subscription subscription = createMockSubscription(mockData.get(i), String.format("court-%s", i));
             subscription.setChannel(i < 3 ? Channel.API : Channel.EMAIL);
-            subscription.setId(i);
+            subscription.setId(UUID.randomUUID());
             subs.add(subscription);
         }
         return subs;
@@ -44,7 +45,7 @@ public final class SubscriptionHelper {
     public static Subscription findableSubscription() {
         Subscription subscription = new Subscription();
         subscription.setUserId("Ralph");
-        subscription.setId(10);
+        subscription.setId(UUID.randomUUID());
         return subscription;
     }
 

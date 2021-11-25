@@ -1,7 +1,7 @@
 java:
   applicationPort: 4550
-  image: 'sdshmctspublic.azurecr.io/pip/subscription-management:latest'
-  ingressHost: pip-subscription-management.{{ .Values.global.environment }}.platform.hmcts.net
+  image: 'sdshmctspublic.azurecr.io/pip/subscription.management:latest'
+  ingressHost: pip-subscription.management.{{ .Values.global.environment }}.platform.hmcts.net
   aadIdentityName: pip
   keyVaults:
     pip-shared-kv:
@@ -9,12 +9,12 @@ java:
       resourceGroup: pip-sharedservices-{{ .Values.global.environment }}-rg
       usePodIdentity: true
       secrets:
-        - name: pip-subscription-management-POSTGRES-DATABASE
-          alias: db_name
-        - name: pip-subscription-management-POSTGRES-PASS
-          alias: db_pass
-        - name: pip-subscription-management-POSTGRES-PORT
-          alias: db_port
-        - name: pip-subscription-management-POSTGRES-USER
-          alias: db_user
+        - name: pip-subscription.management-POSTGRES-DATABASE
+          alias: DB_NAME
+        - name: pip-subscription.management-POSTGRES-PASS
+          alias: DB_PASS
+        - name: pip-subscription.management-POSTGRES-PORT
+          alias: DB_PORT
+        - name: pip-subscription.management-POSTGRES-USER
+          alias: DB_USER
   environment:

@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.pip.subscription.management.services;
+package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -8,6 +8,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRe
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Service layer for dealing with subscriptions.
@@ -24,7 +25,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(UUID id) {
         Optional<Subscription> subscription = repository.findById(id);
 
         if (subscription.isEmpty()) {
@@ -42,7 +43,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public Subscription findById(Long subscriptionId) {
+    public Subscription findById(UUID subscriptionId) {
         Optional<Subscription> subscription = repository.findById(subscriptionId);
         if (subscription.isEmpty()) {
             throw new SubscriptionNotFoundException(String.format(

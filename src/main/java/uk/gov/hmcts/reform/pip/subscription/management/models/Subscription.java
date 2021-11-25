@@ -2,26 +2,31 @@ package uk.gov.hmcts.reform.pip.subscription.management.models;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.hibernate.annotations.Type;
 
-import java.io.Serializable;
+import java.util.UUID;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+
 @Data
 @Entity
 @Table
-public class Subscription implements Serializable {
+public class Subscription {
 
     /**
      * Unique subscription ID.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(columnDefinition = "uuid", insertable = false, updatable = false, nullable = false)
     @ApiModelProperty(hidden = true)
-    private long id;
+    @Type(type = "org.hibernate.type.PostgresUUIDType")
+    private UUID id;
 
     private String userId; //P&I user id
 
@@ -30,8 +35,6 @@ public class Subscription implements Serializable {
     private String searchValue;
 
     private Channel channel;
-
-    private static final long serialVersionUID = -470332543681824967L;
 
     public SubscriptionDto toDto() {
         SubscriptionDto dto = new SubscriptionDto();

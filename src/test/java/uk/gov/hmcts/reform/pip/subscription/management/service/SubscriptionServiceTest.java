@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.pip.subscription.management.services;
+package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,10 +13,10 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRe
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper.createMockSubscription;
@@ -63,33 +63,37 @@ class SubscriptionServiceTest {
 
     @Test
     void testDeleteSubscription() {
-        ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
+        UUID testUuid = UUID.randomUUID();
+        ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
         doNothing().when(subscriptionRepository).deleteById(captor.capture());
-        when(subscriptionRepository.findById(3L)).thenReturn(Optional.of(findableSubscription));
-        subscriptionService.deleteById(3L);
-        assertEquals(3L, captor.getValue(), "The service layer tried to delete the wrong subscription");
+        when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
+        subscriptionService.deleteById(testUuid);
+        assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
     }
 
     @Test
     void testDeleteException() {
-        when(subscriptionRepository.findById(2L)).thenReturn(Optional.empty());
-        assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.deleteById(2L),
+        UUID testUuid = UUID.randomUUID();
+        when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.empty());
+        assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.deleteById(testUuid),
                      "SubscriptionNotFoundException not thrown when trying to delete a subscription"
                          + " that does not exist");
     }
 
     @Test
     void testFindException() {
-        when(subscriptionRepository.findById(10L)).thenReturn(Optional.empty());
-        assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.findById(10L),
+        UUID testUuid = UUID.randomUUID();
+        when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.empty());
+        assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.findById(testUuid),
                      "SubscriptionNotFoundException not thrown "
                          + "when trying to find a subscription that does not exist");
     }
 
     @Test
     void testFindSubscription() {
-        when(subscriptionRepository.findById(any())).thenReturn(Optional.of(findableSubscription));
-        assertEquals(subscriptionService.findById(9L), findableSubscription,
+        UUID testUuid = UUID.randomUUID();
+        when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
+        assertEquals(subscriptionService.findById(testUuid), findableSubscription,
                      "The returned subscription does not match the expected subscription");
     }
 

@@ -10,9 +10,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.services.SubscriptionService;
+import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
-import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith({MockitoExtension.class})
 class SubscriptionControllerTest {
 
-    private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
     private Subscription findableSubscription;
     private static final String USER_ID = "Ralph21";
@@ -37,41 +36,37 @@ class SubscriptionControllerTest {
     @BeforeEach
     void setup() {
         mockSubscription = SubscriptionHelper.createMockSubscription(USER_ID, SEARCH_VALUE);
-        mockSubscriptionList = SubscriptionHelper.createMockSubscriptionList();
         findableSubscription = SubscriptionHelper.findableSubscription();
 
     }
 
-    @Test
-    void testGetSubscriptionReturnsExpected() {
-        when(subscriptionService.findAll()).thenReturn(mockSubscriptionList);
-        assertEquals(mockSubscriptionList, subscriptionController.findAll(), "Subscription list "
-            + "does not match expected list");
-    }
 
     @Test
     void testCreateSubscription() {
         when(subscriptionService.createSubscription(mockSubscription))
             .thenReturn(mockSubscription);
         assertEquals(subscriptionController.createSubscription(mockSubscription.toDto()),
-                     ResponseEntity.ok(mockSubscription),
+                     ResponseEntity.ok(String.format("Subscription created with the id %s for user %s",
+                                                     mockSubscription.getId(), mockSubscription.getUserId()
+                     )),
                      "Returned subscription does not match expected subscription"
         );
     }
 
     @Test
     void testDeleteSubscription() {
-        ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
         doNothing().when(subscriptionService).deleteById(captor.capture());
-        subscriptionController.deleteById(1L);
-        assertEquals(1L, captor.getValue(), "The service layer tried to delete the wrong subscription");
+        UUID testUuid = UUID.randomUUID();
+        subscriptionController.deleteById(testUuid);
+        assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
     }
 
 
     @Test
     void testFindSubscription() {
         when(subscriptionService.findById(any())).thenReturn(findableSubscription);
-        assertEquals(subscriptionController.findBySubId(3L), findableSubscription, "The found "
+        assertEquals(subscriptionController.findBySubId(UUID.randomUUID()), findableSubscription, "The found "
             + "subscription does not match expected subscription");
     }
 

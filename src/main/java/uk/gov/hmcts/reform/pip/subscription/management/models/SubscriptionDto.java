@@ -3,7 +3,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.models;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.io.Serializable;
+import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -14,7 +14,7 @@ import javax.persistence.Table;
 @Data
 @Entity
 @Table
-public class SubscriptionDto implements Serializable {
+public class SubscriptionDto {
 
     /**
      * Unique subscription ID.
@@ -22,7 +22,7 @@ public class SubscriptionDto implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @ApiModelProperty(hidden = true)
-    private long id;
+    private UUID id;
 
     private String userId; //P&I user id
 
@@ -32,7 +32,6 @@ public class SubscriptionDto implements Serializable {
 
     private Channel channel;
 
-    private static final long serialVersionUID = -470332543681824967L;
 
     public Subscription toEntity() {
         Subscription entity = new Subscription();

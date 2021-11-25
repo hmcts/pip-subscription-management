@@ -1,9 +1,10 @@
-package uk.gov.hmcts.reform.pip.subscription.management.services;
+package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface SubscriptionService {
 
@@ -18,7 +19,7 @@ public interface SubscriptionService {
      * Delete subscription by id.
      * @param id The id of the subscription to delete.
      */
-    void deleteById(Long id);
+    void deleteById(UUID id);
 
     /**
      * Find all subscriptions.
@@ -31,6 +32,6 @@ public interface SubscriptionService {
      * @param subscriptionId The id of the subscription to be found.
      * @return The subscription that has been found.
      */
-    Subscription findById(Long subscriptionId);
+    Subscription findById(UUID subscriptionId);
 
 }

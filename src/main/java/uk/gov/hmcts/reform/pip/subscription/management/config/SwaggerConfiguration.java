@@ -31,7 +31,7 @@ public class SwaggerConfiguration {
         return new ApiInfoBuilder()
             .title("P&I Subscription Management Service")
             .description("Use this service to view and manage the subscriptions against a publication(s). You can "
-                             + "find out more about how the code works at https://github.com/hmcts/pip-subscription-management")
+                             + "find out more about how the code works at https://github.com/hmcts/pip-subscription.management")
             .version("1.0.0")
             .contact(new Contact("P&I Team",
                                  "https://tools.hmcts.net/confluence/display/PUBH/Publication+Hub",
