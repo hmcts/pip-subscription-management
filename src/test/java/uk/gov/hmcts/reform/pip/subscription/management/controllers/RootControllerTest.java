@@ -17,7 +17,7 @@ class RootControllerTest {
     void testWelcomeMessage() {
         ResponseEntity<String> welcomeResponse = rootController.welcome();
         assertEquals(HttpStatus.OK, welcomeResponse.getStatusCode(), "An OK response code is returned");
-        assertEquals("Welcome to pip-subscription.management", welcomeResponse.getBody(),
+        assertEquals("Welcome to pip-subscription-management", welcomeResponse.getBody(),
                      "The correct response body is returned"
         );
     }

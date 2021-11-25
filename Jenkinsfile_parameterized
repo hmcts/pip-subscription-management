@@ -4,7 +4,7 @@
 
 def type = "java"
 def product = "pip"
-def component = "subscription.management"
+def component = "subscription-management"
 
 withPipeline(type, product, component) {
 
