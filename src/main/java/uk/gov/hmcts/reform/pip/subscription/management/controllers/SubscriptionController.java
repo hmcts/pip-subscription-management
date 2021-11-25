@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 import uk.gov.hmcts.reform.pip.subscription.management.services.SubscriptionService;
 
 import java.util.List;
@@ -31,11 +32,11 @@ public class SubscriptionController {
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription created"),
     })
-    public ResponseEntity<Subscription> createSubscription(@RequestBody Subscription sub) {
+    public ResponseEntity<Subscription> createSubscription(@RequestBody SubscriptionDto sub) {
         /*
           generate new unique subscription with json - 'id' field is hidden as auto-generated
          */
-        return ResponseEntity.ok(subscriptionService.createSubscription(sub));
+        return ResponseEntity.ok(subscriptionService.createSubscription(sub.toEntity()));
     }
 
     @ApiResponses({

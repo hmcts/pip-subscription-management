@@ -10,10 +10,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+
 @Data
 @Entity
 @Table
-public class Subscription implements Serializable {
+public class SubscriptionDto implements Serializable {
 
     /**
      * Unique subscription ID.
@@ -33,14 +34,16 @@ public class Subscription implements Serializable {
 
     private static final long serialVersionUID = -470332543681824967L;
 
-    public SubscriptionDto toDto() {
-        SubscriptionDto dto = new SubscriptionDto();
-        dto.setSearchValue(this.searchValue);
-        dto.setChannel(this.channel);
-        dto.setUserId(this.userId);
-        dto.setSearchType(this.searchType);
-        dto.setId(this.id);
-        return dto;
+    public Subscription toEntity() {
+        Subscription entity = new Subscription();
+        entity.setSearchValue(this.searchValue);
+        entity.setChannel(this.channel);
+        entity.setUserId(this.userId);
+        entity.setSearchType(this.searchType);
+        entity.setId(this.id);
+        return entity;
     }
+
 }
+
 

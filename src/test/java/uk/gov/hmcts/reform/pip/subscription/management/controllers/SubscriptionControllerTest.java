@@ -51,8 +51,10 @@ class SubscriptionControllerTest {
 
     @Test
     void testCreateSubscription() {
-        when(subscriptionService.createSubscription(mockSubscription)).thenReturn(mockSubscription);
-        assertEquals(subscriptionController.createSubscription(mockSubscription), ResponseEntity.ok(mockSubscription),
+        when(subscriptionService.createSubscription(mockSubscription))
+            .thenReturn(mockSubscription);
+        assertEquals(subscriptionController.createSubscription(mockSubscription.toDto()),
+                     ResponseEntity.ok(mockSubscription),
                      "Returned subscription does not match expected subscription"
         );
     }
