@@ -29,9 +29,8 @@ public class Subscription {
     private UUID id;
 
     /**
-     *  P&I user id
+     *  P&I user id.
      */
-
     private String userId;
 
     private SearchType searchType;
