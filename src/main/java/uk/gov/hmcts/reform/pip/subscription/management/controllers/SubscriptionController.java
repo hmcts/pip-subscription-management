@@ -34,8 +34,8 @@ public class SubscriptionController {
     @ApiOperation("Endpoint to create a new unique subscription - the 'id' field is hidden from swagger as it is auto"
         + " generated on creation")
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Returns a string with the subscription id and user id of the generated "
-            + "subscription")
+        @ApiResponse(code = 200, message = "Subscription successfully created with the id: {subscription id} "
+            + "for user: {userId}")
     })
     public ResponseEntity<String> createSubscription(@RequestBody SubscriptionDto sub) {
         Subscription subscription = subscriptionService.createSubscription(sub.toEntity());
