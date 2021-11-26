@@ -4,15 +4,11 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.UUID;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
 
 @Data
-@Entity
 @Table
 public class SubscriptionDto {
 
@@ -20,11 +16,13 @@ public class SubscriptionDto {
      * Unique subscription ID.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @ApiModelProperty(hidden = true)
     private UUID id;
 
-    private String userId; //P&I user id
+    /**
+     *  P&I user id.
+     */
+    private String userId;
 
     private SearchType searchType;
 
