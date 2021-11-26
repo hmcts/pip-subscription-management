@@ -28,7 +28,11 @@ public class Subscription {
     @Type(type = "org.hibernate.type.PostgresUUIDType")
     private UUID id;
 
-    private String userId; //P&I user id
+    /**
+     *  P&I user id
+     */
+
+    private String userId;
 
     private SearchType searchType;
 
