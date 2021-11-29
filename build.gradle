@@ -190,8 +190,6 @@ dependencies {
 
   smokeTestImplementation sourceSets.main.runtimeClasspath
   smokeTestImplementation sourceSets.test.runtimeClasspath
-
-  annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 
 bootJar {
