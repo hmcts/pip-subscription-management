@@ -1,3 +1,4 @@
+
 locals {
   product                  = "pip"
   component                = "subscription-mgmt"
@@ -72,3 +73,4 @@ resource "azurerm_key_vault_secret" "db-name" {
   content_type    = ""
   expiration_date = timeadd(timestamp(), "8760h")
 }
+
