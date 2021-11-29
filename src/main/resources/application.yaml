@@ -14,7 +14,7 @@ management:
 #If you use a database then uncomment below lines and update db properties accordingly
 spring:
   config:
-    import: "optional:configtree:/mnt/secrets/"
+    import: "optional:configtree:/mnt/secrets/pip-shared-kv/"
   application:
     name: PIP Subscription Management
   datasource:
@@ -33,7 +33,7 @@ spring:
 #      maxLifetime: 7200000
 #      connectionTimeout: 30000
   jpa:
-    show-sql: 'true'
+    show-sql: 'false'
     properties:
       hibernate:
         format_sql: 'true'
