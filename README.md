@@ -3,8 +3,6 @@
 ## Purpose
 The purpose of this service is to provide the ability to interact with and manage subscriptions.
 
-[![Build Status](https://travis-ci.org/hmcts/spring-boot-template.svg?branch=master)](https://travis-ci.org/hmcts/spring-boot-template)
-
 
 The application exposes health endpoint (http://localhost:4550/health) and metrics endpoint
 (http://localhost:4550/metrics).
