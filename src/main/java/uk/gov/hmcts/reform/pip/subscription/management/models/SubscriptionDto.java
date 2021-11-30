@@ -4,18 +4,14 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.UUID;
-import javax.persistence.Id;
-import javax.persistence.Table;
 
 
 @Data
-@Table
 public class SubscriptionDto {
 
     /**
      * Unique subscription ID.
      */
-    @Id
     @ApiModelProperty(hidden = true)
     private UUID id;
 

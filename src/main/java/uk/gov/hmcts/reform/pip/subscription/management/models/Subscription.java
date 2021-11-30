@@ -37,7 +37,6 @@ public class Subscription {
 
     @Enumerated(EnumType.STRING)
     private SearchType searchType;
-
     private String searchValue;
 
     @Enumerated(EnumType.STRING)
