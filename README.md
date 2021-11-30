@@ -97,7 +97,7 @@ To build the project execute the following command:
 
 ####Environment Variables
 The application requires 4 environment variables ($DB_PASS, $DB_USER, $DB_NAME and $DB_PORT).
-These values are required to connect to the postgres db. They can be found in the pip-shared-kv-stg key vault within azure.
+These values are required to connect to the postgres db. They can be found in the pip-ss-kv-stg key vault within azure.
 
 Create the image of the application by executing the following command:
 
