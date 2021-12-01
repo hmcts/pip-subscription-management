@@ -51,7 +51,7 @@ class SubscriptionControllerTest {
     private static final String VALIDATION_SEARCH_TYPE = "Returned search type does not match expected type";
     private static final String VALIDATION_SEARCH_VALUE = "Returned search value does not match expected value";
     private static final String VALIDATION_USER_ID = "Returned user ID does not match expected user ID";
-
+    private static final String SUBSCRIPTION_PATH = "/subscription";
     @Autowired
     private MockMvc mvc;
 
@@ -69,13 +69,13 @@ class SubscriptionControllerTest {
     private MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws Exception {
 
         subscription.setSearchValue(searchValue);
-        return MockMvcRequestBuilders.post("/subscription")
+        return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(subscription))
             .contentType(MediaType.APPLICATION_JSON);
     }
 
     private MockHttpServletRequestBuilder setupRawJsonSubscription(String json) throws Exception {
-        return MockMvcRequestBuilders.post("/subscription")
+        return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(json)
             .contentType(MediaType.APPLICATION_JSON);
     }
@@ -170,7 +170,8 @@ class SubscriptionControllerTest {
     void checkSearchTypeEnum() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'searchType': 'INVALID_TYPE'}");
-       mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
     }
 
     @DisplayName("Checks for bad request for invalid channel enum.")
@@ -178,14 +179,16 @@ class SubscriptionControllerTest {
     void checkChannelEnum() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'channel': 'INVALID_TYPE'}");
-        mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
     }
 
     @DisplayName("Checks for bad request when empty json is sent")
     @Test
     void checkEmptyPost() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription("{}");
-        mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
     }
 
 
@@ -199,7 +202,7 @@ class SubscriptionControllerTest {
         MockHttpServletRequestBuilder mappedSubscription2 = setupMockSubscription(COURT_NAME_2);
         mvc.perform(mappedSubscription2).andExpect(status().isOk()).andReturn();
 
-        MvcResult responseAll = mvc.perform(get("/subscription")).andExpect(status().isOk()).andReturn();
+        MvcResult responseAll = mvc.perform(get(SUBSCRIPTION_PATH)).andExpect(status().isOk()).andReturn();
         assertNotNull(responseAll.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
         List<Subscription> listResponse = OBJECT_MAPPER.readValue(
             responseAll.getResponse().getContentAsString(),
@@ -244,7 +247,7 @@ class SubscriptionControllerTest {
             "Responses are not equal"
         );
 
-        MvcResult responseAll = mvc.perform(get("/subscription")).andExpect(status().isOk()).andReturn();
+        MvcResult responseAll = mvc.perform(get(SUBSCRIPTION_PATH)).andExpect(status().isOk()).andReturn();
         assertNotNull(responseAll.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
         List<Subscription> listResponse = OBJECT_MAPPER.readValue(
             responseAll.getResponse().getContentAsString(),
