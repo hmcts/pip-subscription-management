@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,12 +20,14 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
+import javax.validation.Valid;
 import java.util.UUID;
 
 
 @RestController
 @Api(tags = "Subscription management API")
 @RequestMapping("/subscription")
+@Valid
 public class SubscriptionController {
 
     @Autowired
@@ -35,9 +38,10 @@ public class SubscriptionController {
         + " generated on creation")
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription successfully created with the id: {subscription id} "
-            + "for user: {userId}")
+            + "for user: {userId}"),
+        @ApiResponse(code = 400, message = "This subscription object has an invalid format. Please check again.")
     })
-    public ResponseEntity<String> createSubscription(@RequestBody SubscriptionDto sub) {
+    public ResponseEntity<String> createSubscription(@RequestBody @Valid SubscriptionDto sub) {
         Subscription subscription = subscriptionService.createSubscription(sub.toEntity());
         return ResponseEntity.ok(String.format("Subscription created with the id %s for user %s",
                                                subscription.getId(), subscription.getUserId()
@@ -47,6 +51,7 @@ public class SubscriptionController {
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription {subId} deleted"),
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
+
     })
     @Transactional
     @ApiOperation("Endpoint to delete a given unique subscription, using subscription ID as a parameter.")

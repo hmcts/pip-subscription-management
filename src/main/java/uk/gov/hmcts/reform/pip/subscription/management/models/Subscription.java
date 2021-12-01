@@ -13,7 +13,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
@@ -33,10 +34,14 @@ public class Subscription {
     /**
      *  P&I user id.
      */
+    @Valid
+    @NotNull
     private String userId;
 
     @Enumerated(EnumType.STRING)
     private SearchType searchType;
+
+    @Valid
     private String searchValue;
 
     @Enumerated(EnumType.STRING)

@@ -21,6 +21,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.ExceptionRe
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SubscriptionControllerTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static Subscription subscription;
+    private static SubscriptionDto subscription;
 
     private static final String COURT_NAME_1 = "Glasgow-Court-1";
     private static final String COURT_NAME_2 = "Glasgow-Court-2";
@@ -58,7 +59,7 @@ class SubscriptionControllerTest {
     @BeforeAll
     static void setup() {
         OBJECT_MAPPER.findAndRegisterModules();
-        subscription = new Subscription();
+        subscription = new SubscriptionDto();
         subscription.setChannel(Channel.API);
         subscription.setSearchType(SearchType.COURT_ID);
         subscription.setUserId("tom1");
@@ -70,6 +71,12 @@ class SubscriptionControllerTest {
         subscription.setSearchValue(searchValue);
         return MockMvcRequestBuilders.post("/subscription")
             .content(OBJECT_MAPPER.writeValueAsString(subscription))
+            .contentType(MediaType.APPLICATION_JSON);
+    }
+
+    private MockHttpServletRequestBuilder setupRawJsonSubscription(String json) throws Exception {
+        return MockMvcRequestBuilders.post("/subscription")
+            .content(json)
             .contentType(MediaType.APPLICATION_JSON);
     }
 
@@ -157,6 +164,30 @@ class SubscriptionControllerTest {
 
 
     }
+
+    @DisplayName("Checks for bad request for invalid searchType enum.")
+    @Test
+    void checkSearchTypeEnum() throws Exception {
+        MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
+            "{'searchType': 'INVALID_TYPE'}");
+       mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+    }
+
+    @DisplayName("Checks for bad request for invalid channel enum.")
+    @Test
+    void checkChannelEnum() throws Exception {
+        MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
+            "{'channel': 'INVALID_TYPE'}");
+        mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+    }
+
+    @DisplayName("Checks for bad request when empty json is sent")
+    @Test
+    void checkEmptyPost() throws Exception {
+        MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription("{}");
+        mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+    }
+
 
 
     @DisplayName("Get all subscriptions in the db.")

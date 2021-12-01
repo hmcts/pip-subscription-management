@@ -1,8 +1,12 @@
 package uk.gov.hmcts.reform.pip.subscription.management.models;
 
+
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotBlank;
 import java.util.UUID;
 
 
@@ -17,13 +21,22 @@ public class SubscriptionDto {
 
     /**
      *  P&I user id.
-     */
+     **/
+    @Valid
+    @NotNull
     private String userId;
 
+    @Valid
+    @NotNull
     private SearchType searchType;
 
+    @Valid
+    @javax.validation.constraints.NotNull
+    @NotBlank
     private String searchValue;
 
+    @Valid
+    @NotNull
     private Channel channel;
 
 
