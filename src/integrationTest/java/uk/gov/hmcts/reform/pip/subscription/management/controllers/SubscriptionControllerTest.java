@@ -24,7 +24,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -44,7 +44,6 @@ class SubscriptionControllerTest {
     private static SubscriptionDto subscription;
 
     private static final String COURT_NAME_1 = "Glasgow-Court-1";
-    private static final String COURT_NAME_2 = "Glasgow-Court-2";
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
     private static final String VALIDATION_CHANNEL_NAME = "Returned subscription channel "
         + "does not match expected channel";
@@ -191,39 +190,6 @@ class SubscriptionControllerTest {
         assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
     }
 
-
-
-    @DisplayName("Get all subscriptions in the db.")
-    @Test
-    void checkGetAllEndpoint() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
-
-        mvc.perform(mappedSubscription).andExpect(status().isOk()).andReturn();
-        MockHttpServletRequestBuilder mappedSubscription2 = setupMockSubscription(COURT_NAME_2);
-        mvc.perform(mappedSubscription2).andExpect(status().isOk()).andReturn();
-
-        MvcResult responseAll = mvc.perform(get(SUBSCRIPTION_PATH)).andExpect(status().isOk()).andReturn();
-        assertNotNull(responseAll.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
-        List<Subscription> listResponse = OBJECT_MAPPER.readValue(
-            responseAll.getResponse().getContentAsString(),
-            new TypeReference<>() {
-            }
-        );
-        assertEquals(2, listResponse.size(), "List is the wrong size.");
-
-        List<Subscription> subscription1 = listResponse.stream().filter(value -> COURT_NAME_1.equals(
-            value.getSearchValue())
-            ).collect(
-            Collectors.toList());
-        assertEquals(1, subscription1.size(), "size is not 1");
-        List<Subscription> subscription2 = listResponse.stream().filter(value -> COURT_NAME_2.equals(
-            value.getSearchValue())).collect(
-            Collectors.toList());
-        assertEquals(1, subscription2.size(), "size is not 1");
-
-    }
-
-
     @DisplayName("Delete an individual subscription")
     @Test
     void deleteEndpoint() throws Exception {
@@ -261,14 +227,16 @@ class SubscriptionControllerTest {
     @DisplayName("Check response if delete fails")
     @Test
     void failedDelete() throws Exception {
-        MvcResult response = mvc.perform(delete("/subscription/1234")).andExpect(status().isNotFound()).andReturn();
+        UUID randomUuid = UUID.randomUUID();
+        MvcResult response = mvc.perform(delete("/subscription/" + randomUuid))
+            .andExpect(status().isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String errorResponse = response.getResponse().getContentAsString();
         ExceptionResponse exceptionResponse = OBJECT_MAPPER.readValue(errorResponse, ExceptionResponse.class);
 
         assertEquals(
-            "No subscription found with the subscription id 1234",
+            "No subscription found with the subscription id " + randomUuid,
             exceptionResponse.getMessage(),
             "Incorrect status code"
         );
