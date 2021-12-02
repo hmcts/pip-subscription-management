@@ -1,12 +1,10 @@
 package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,7 +24,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -53,6 +50,7 @@ class SubscriptionControllerTest {
     private static final String VALIDATION_SEARCH_VALUE = "Returned search value does not match expected value";
     private static final String VALIDATION_USER_ID = "Returned user ID does not match expected user ID";
     private static final String SUBSCRIPTION_PATH = "/subscription";
+    private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
     @Autowired
     private MockMvc mvc;
 
@@ -76,7 +74,7 @@ class SubscriptionControllerTest {
     }
 
     private MockHttpServletRequestBuilder getSubscriptionbyuuid(String searchValue) throws Exception {
-        return MockMvcRequestBuilders.get(SUBSCRIPTION_PATH + '/' + searchValue);
+        return get(SUBSCRIPTION_PATH + '/' + searchValue);
     }
 
     private MockHttpServletRequestBuilder setupRawJsonSubscription(String json) throws Exception {
@@ -100,8 +98,10 @@ class SubscriptionControllerTest {
                 .orElse(null);
 
         MvcResult getResponse = mvc.perform(getSubscriptionbyuuid(ourUuid)).andReturn();
-        Subscription returnedSubscription = OBJECT_MAPPER.readValue(getResponse.getResponse().getContentAsString(),
-                                                                                Subscription.class);
+        Subscription returnedSubscription = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            Subscription.class
+        );
         assertEquals(
             subscription.getChannel(),
             returnedSubscription.getChannel(),
@@ -141,8 +141,10 @@ class SubscriptionControllerTest {
                 .orElse(null);
 
         MvcResult getResponse = mvc.perform(getSubscriptionbyuuid(ourUuid)).andReturn();
-        Subscription returnedSubscription = OBJECT_MAPPER.readValue(getResponse.getResponse().getContentAsString(),
-                                                                    Subscription.class);
+        Subscription returnedSubscription = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            Subscription.class
+        );
         MvcResult findResponse = mvc.perform(get(String.format(
             "/subscription/%s",
             returnedSubscription.getId()
@@ -218,8 +220,10 @@ class SubscriptionControllerTest {
                 .orElse(null);
 
         MvcResult getResponse = mvc.perform(getSubscriptionbyuuid(ourUuid)).andReturn();
-        Subscription returnedSubscription = OBJECT_MAPPER.readValue(getResponse.getResponse().getContentAsString(),
-                                                                    Subscription.class);
+        Subscription returnedSubscription = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            Subscription.class
+        );
         MvcResult deleteResponse = mvc.perform(delete(String.format(
             "/subscription/%s",
             returnedSubscription.getId()
@@ -235,7 +239,7 @@ class SubscriptionControllerTest {
     @DisplayName("Check response if delete fails")
     @Test
     void failedDelete() throws Exception {
-        UUID randomUuid = UUID.randomUUID();
+        String randomUuid = UUID_STRING;
         MvcResult response = mvc.perform(delete("/subscription/" + randomUuid))
             .andExpect(status().isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -254,15 +258,16 @@ class SubscriptionControllerTest {
     @DisplayName("Check response if findBySubId fails")
     @Test
     void failedFind() throws Exception {
-        UUID new_uuid = UUID.randomUUID();
-        MvcResult response = mvc.perform(get("/subscription/" + new_uuid)).andExpect(status().isNotFound()).andReturn();
+        String randomUuid = UUID_STRING;
+        MvcResult response = mvc.perform(get("/subscription/" + randomUuid)).andExpect(status()
+                                                                                           .isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String errorResponse = response.getResponse().getContentAsString();
         ExceptionResponse exceptionResponse = OBJECT_MAPPER.readValue(errorResponse, ExceptionResponse.class);
 
         assertEquals(
-            "No subscription found with the subscription id " + new_uuid,
+            "No subscription found with the subscription id " + randomUuid,
             exceptionResponse.getMessage(),
             "Incorrect status code"
         );
