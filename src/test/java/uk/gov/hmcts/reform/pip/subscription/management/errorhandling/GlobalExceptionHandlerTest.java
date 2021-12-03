@@ -82,6 +82,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("Tests that the response entity returned from the exception handler in case of "
         + "invalidformatexception contains the correct status code and body")
     void testInvalidFormatException() throws ClassNotFoundException {
+
         GlobalExceptionHandler globalExceptionHandler = new GlobalExceptionHandler();
         doReturn(SearchType.class).when(invalidFormatException).getTargetType();
         when(invalidFormatException.getValue()).thenReturn("valueString");
