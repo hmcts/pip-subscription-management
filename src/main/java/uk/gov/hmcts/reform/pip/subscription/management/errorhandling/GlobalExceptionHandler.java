@@ -37,6 +37,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
     }
 
+    /**
+     * This exception creates the following style of message:
+     * "Bad Request: userId must not be null, searchValue must not be blank" etc.
+     *
+     * @param ex - a MethodArgumentNotValidException, created when an invalid json object is passed as a parameter to
+     *           the post endpoint (e.g. an empty request)
+     * @return - a ResponseEntity containing the exception response
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponse> handleArgumentNotValid(
         MethodArgumentNotValidException ex) {
@@ -54,6 +62,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }
 
+    /**
+     * This will create a message of the following style:
+     * "Bad Request: SearchType {search} should be one of the following types: [ COURT_ID CASE_ID CASE_URN ]"
+     * Note: this exception also covers the "channel" enum in the same way.
+     *
+     * @param ex - an invalidformatexception, created when e.g. a value that does not adhere to an enum restriction
+     * @return - a ResponseEntity containing the exception response
+     */
     @ExceptionHandler(InvalidFormatException.class)
     public ResponseEntity<ExceptionResponse> handleInvalidFormat(
         InvalidFormatException ex) {
