@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponse> handleArgumentNotValid(
-        MethodArgumentNotValidException ex, WebRequest request) {
+        MethodArgumentNotValidException ex) {
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         StringBuilder responseText = new StringBuilder("Bad Request: ");
         for (int i = 0; i < ex.getBindingResult().getErrorCount(); i++) {
@@ -55,8 +55,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidFormatException.class)
-    public ResponseEntity<ExceptionResponse> handleArgumentNotValid(
-        InvalidFormatException ex, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> handleInvalidFormat(
+        InvalidFormatException ex) {
         StringBuilder responseText = new StringBuilder(100);
         responseText.append("Bad Request: ").append(ex.getTargetType().getSimpleName()).append(' ')
             .append(ex.getValue()).append(" should be one of the following types: [ ");

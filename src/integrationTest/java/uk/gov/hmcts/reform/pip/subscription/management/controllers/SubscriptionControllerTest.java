@@ -197,6 +197,7 @@ class SubscriptionControllerTest {
             "{'channel': 'INVALID_TYPE'}");
         MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
+
     }
 
     @DisplayName("Checks for bad request when empty json is sent")
@@ -271,7 +272,7 @@ class SubscriptionControllerTest {
             exceptionResponse.getMessage(),
             "Incorrect status code"
         );
-
     }
+
 }
 
