@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Entity
 @Table
-@JsonPropertyOrder(alphabetic = true)
+@JsonPropertyOrder({"id", "channel", "searchType", "searchValue", "userID"})
 public class Subscription {
 
     /**

@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 
 
 @Data
-@JsonPropertyOrder(alphabetic = true)
+@JsonPropertyOrder({"id", "channel", "searchType", "searchValue", "userID"})
 public class SubscriptionDto {
 
     /**
