@@ -22,14 +22,17 @@ public class SubscriptionDto {
     /**
      *  P&I user id.
      **/
+    @ApiModelProperty(example = "exampleString")
     @Valid
     @NotNull
+    @NotBlank
     private String userId;
 
     @Valid
     @NotNull
     private SearchType searchType;
 
+    @ApiModelProperty(example = "exampleString")
     @Valid
     @NotNull
     @NotBlank

@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
             responseText.append(ex.getBindingResult().getAllErrors().get(i).getDefaultMessage());
             responseText.append(", ");
         }
-        exceptionResponse.setMessage(responseText.toString());
+        exceptionResponse.setMessage(responseText.substring(0, responseText.length() - 2));
         exceptionResponse.setTimestamp(LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
