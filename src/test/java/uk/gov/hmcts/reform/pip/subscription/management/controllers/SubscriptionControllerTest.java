@@ -46,7 +46,7 @@ class SubscriptionControllerTest {
         when(subscriptionService.createSubscription(mockSubscription))
             .thenReturn(mockSubscription);
         assertEquals(subscriptionController.createSubscription(mockSubscription.toDto()),
-                     ResponseEntity.ok(String.format("Subscription created with the id %s for user %s",
+                     ResponseEntity.ok(String.format("Subscription created with the id %s for user '%s'",
                                                      mockSubscription.getId(), mockSubscription.getUserId()
                      )),
                      "Returned subscription does not match expected subscription"

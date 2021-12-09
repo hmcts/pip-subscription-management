@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.models;
 
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import javax.validation.constraints.NotNull;
 
 
 @Data
+@JsonPropertyOrder(alphabetic = true)
 public class SubscriptionDto {
 
     /**
@@ -22,7 +24,7 @@ public class SubscriptionDto {
     /**
      *  P&I user id.
      **/
-    @ApiModelProperty(example = "exampleString")
+    @ApiModelProperty(example = "e.g. 410129ka214k")
     @Valid
     @NotNull
     @NotBlank
@@ -32,7 +34,7 @@ public class SubscriptionDto {
     @NotNull
     private SearchType searchType;
 
-    @ApiModelProperty(example = "exampleString")
+    @ApiModelProperty(example = "Value to categorise your entry")
     @Valid
     @NotNull
     @NotBlank

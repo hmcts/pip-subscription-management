@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.models;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.annotations.Type;
@@ -19,6 +20,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Entity
 @Table
+@JsonPropertyOrder(alphabetic = true)
 public class Subscription {
 
     /**
