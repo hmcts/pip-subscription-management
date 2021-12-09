@@ -22,6 +22,5 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     void deleteById(UUID id);
 
-    List<Subscription> findAllByUserId(String userId);
 }
 
