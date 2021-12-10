@@ -19,6 +19,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
+import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
 
@@ -71,6 +72,17 @@ public class SubscriptionController {
     public Subscription findBySubId(@ApiParam(value = "The specific subscription id to find", required = true)
                                     @PathVariable UUID subId) {
         return subscriptionService.findById(subId);
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Subscriptions list for user id {userId} found"),
+        @ApiResponse(code = 404, message = "No subscription found with the user id {userId}")
+    })
+    @ApiOperation("Returns the subscription object associated with a given user id.")
+    @GetMapping("/user/{userId}")
+    public List<Subscription> findByUserId(@ApiParam(value = "The specific user id to find subscription for", required = true)
+                                    @PathVariable String userId) {
+        return subscriptionService.findByUserId(userId);
     }
 
 }

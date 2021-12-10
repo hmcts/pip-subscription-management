@@ -42,6 +42,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return repository.findAll();
     }
 
+
     @Override
     public Subscription findById(UUID subscriptionId) {
         Optional<Subscription> subscription = repository.findById(subscriptionId);
@@ -52,5 +53,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             ));
         }
         return subscription.get();
+    }
+
+    @Override
+    public List<Subscription>  findByUserId(String userId) {
+        List<Subscription> subscriptions = repository.findByUserId(userId);
+        if (subscriptions.isEmpty()) {
+            throw new SubscriptionNotFoundException(String.format(
+                "No subscriptions found for user id %s",
+                userId
+            ));
+        }
+        return subscriptions;
     }
 }

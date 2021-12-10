@@ -34,4 +34,10 @@ public interface SubscriptionService {
      */
     Subscription findById(UUID subscriptionId);
 
+    /**
+     * Find all subscriptions for a given user.
+     * @return The list of subscriptions that have been found.
+     */
+    List<Subscription> findByUserId(String userId);
+
 }
