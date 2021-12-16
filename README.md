@@ -1,26 +1,8 @@
-# Spring Boot application template
-
-[![Build Status](https://travis-ci.org/hmcts/spring-boot-template.svg?branch=master)](https://travis-ci.org/hmcts/spring-boot-template)
+# Publishing and Information - Subscription Management
 
 ## Purpose
+The purpose of this service is to provide the ability to interact with and manage subscriptions.
 
-The purpose of this template is to speed up the creation of new Spring applications within HMCTS
-and help keep the same standards across multiple teams. If you need to create a new app, you can
-simply use this one as a starting point and build on top of it.
-
-## What's inside
-
-The template is a working application with a minimal setup. It contains:
- * application skeleton
- * setup script to prepare project
- * common plugins and libraries
- * docker setup
- * swagger configuration for api documentation ([see how to publish your api documentation to shared repository](https://github.com/hmcts/reform-api-docs#publish-swagger-docs))
- * code quality tools already set up
- * integration with Travis CI
- * Hystrix circuit breaker enabled
- * MIT license and contribution information
- * Helm chart using chart-java.
 
 The application exposes health endpoint (http://localhost:4550/health) and metrics endpoint
 (http://localhost:4550/metrics).
@@ -112,6 +94,10 @@ To build the project execute the following command:
 ```
 
 ### Running the application
+
+####Environment Variables
+The application requires 4 environment variables ($DB_PASS, $DB_USER, $DB_NAME and $DB_PORT).
+These values are required to connect to the postgres db. They can be found in the pip-ss-kv-stg key vault within azure.
 
 Create the image of the application by executing the following command:
 

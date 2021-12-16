@@ -15,7 +15,7 @@ apply plugin: 'org.owasp.dependencycheck'
 apply plugin: 'org.sonarqube'
 
 group = 'uk.gov.hmcts.reform.pip'
-mainClassName = 'uk.gov.hmcts.reform.demo.Application'
+mainClassName = 'uk.gov.hmcts.reform.pip.subscription.management.Application'
 version = '0.0.1'
 
 allprojects {
@@ -168,17 +168,20 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-json'
-
    implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
-
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.5.5'
+  implementation 'org.springframework.boot:spring-boot-starter-validation:2.6.0'
+  implementation('org.postgresql:postgresql')
   testImplementation(platform('org.junit:junit-bom:5.8.1'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', {
     exclude group: 'junit', module: 'junit'
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
+
+  testImplementation 'com.h2database:h2'
 
   integrationTestImplementation sourceSets.main.runtimeClasspath
   integrationTestImplementation sourceSets.test.runtimeClasspath
@@ -199,6 +202,11 @@ bootJar {
 
 // Gradle 7.x issue, workaround from: https://github.com/gradle/gradle/issues/17236#issuecomment-894768083
 rootProject.tasks.named("processSmokeTestResources") {
+  duplicatesStrategy = 'include'
+}
+
+//To use multiple application.yamls (for db mocking)
+rootProject.tasks.named("processIntegrationTestResources") {
   duplicatesStrategy = 'include'
 }
 
