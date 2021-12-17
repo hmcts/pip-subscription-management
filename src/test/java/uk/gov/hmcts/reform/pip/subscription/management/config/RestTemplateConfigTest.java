@@ -17,7 +17,7 @@ public class RestTemplateConfigTest {
     }
 
     @Bean
-    public RestTemplate restTemplateTest() {
+    public RestTemplate restTemplate() {
         return restTemplate;
     }
 }
