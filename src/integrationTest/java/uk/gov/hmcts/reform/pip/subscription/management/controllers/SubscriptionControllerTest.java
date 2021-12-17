@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
+import uk.gov.hmcts.reform.pip.subscription.management.config.RestTemplateConfig;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
@@ -32,10 +34,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {Application.class},
+@SpringBootTest(classes = {Application.class, RestTemplateConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "test")
+@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class SubscriptionControllerTest {
 
@@ -43,6 +45,9 @@ class SubscriptionControllerTest {
     private static SubscriptionDto subscription;
 
     private static final String COURT_NAME_1 = "Glasgow-Court-1";
+    private static final String COURT_ID = "53";
+    private static final String CASE_ID = "T485913";
+    private static final String CASE_URN = "IBRANE1BVW";
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
     private static final String VALIDATION_CHANNEL_NAME = "Returned subscription channel "
         + "does not match expected channel";
@@ -65,7 +70,7 @@ class SubscriptionControllerTest {
     }
 
 
-    private MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws Exception {
+    private MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
 
         subscription.setSearchValue(searchValue);
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
@@ -73,11 +78,19 @@ class SubscriptionControllerTest {
             .contentType(MediaType.APPLICATION_JSON);
     }
 
-    private MockHttpServletRequestBuilder getSubscriptionbyuuid(String searchValue) throws Exception {
+    private MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType)
+        throws JsonProcessingException {
+
+        subscription.setSearchType(searchType);
+        return setupMockSubscription(searchValue);
+    }
+
+
+    private MockHttpServletRequestBuilder getSubscriptionByUuid(String searchValue) {
         return get(SUBSCRIPTION_PATH + '/' + searchValue);
     }
 
-    private MockHttpServletRequestBuilder setupRawJsonSubscription(String json) throws Exception {
+    private MockHttpServletRequestBuilder setupRawJsonSubscription(String json) {
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(json)
             .contentType(MediaType.APPLICATION_JSON);
@@ -97,7 +110,7 @@ class SubscriptionControllerTest {
             Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
                 .orElse(null);
 
-        MvcResult getResponse = mvc.perform(getSubscriptionbyuuid(ourUuid)).andReturn();
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
             getResponse.getResponse().getContentAsString(),
             Subscription.class
@@ -140,7 +153,7 @@ class SubscriptionControllerTest {
             Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
                 .orElse(null);
 
-        MvcResult getResponse = mvc.perform(getSubscriptionbyuuid(ourUuid)).andReturn();
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
             getResponse.getResponse().getContentAsString(),
             Subscription.class
@@ -220,7 +233,7 @@ class SubscriptionControllerTest {
             Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
                 .orElse(null);
 
-        MvcResult getResponse = mvc.perform(getSubscriptionbyuuid(ourUuid)).andReturn();
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
             getResponse.getResponse().getContentAsString(),
             Subscription.class
@@ -273,6 +286,49 @@ class SubscriptionControllerTest {
             "Incorrect status code"
         );
     }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdSuccessful() throws Exception {
+        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID));
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID));
+        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
+
+        MvcResult response = mvc.perform(get("/subscription/user/tom1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        //TODO: compare the response to a expected instance of UserSubscriptions model that should have 2 cases
+        // (CaseID and CaseURN) and 1 court (COURT ID) also check response code 200
+        //assertEquals(response.getResponse().getContentAsString());
+
+    }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdSingleCourt(){
+        //TODO: add 1 court like line 292 and test that it just populates the 1 court also check response code 200
+    }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdSingleCaseId() {
+        //TODO: add 1 case id and test that it populates also check response code 200
+    }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdSingleCaseUrn() {
+        //TODO: add 1 case urn and test that it populates also check response code 200
+    }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdNoSubscriptions() {
+        //TODO: dont add any subs and check that it returns 200 with empty object
+    }
+
+    @Test
+    void testGetUsersSubscriptionsWithDatabaseInvalidSearchValue() {
+        //TODO: add a value to db where we dont have it in data management (like test as the case id or something)
+        // and check that a 502 is thrown with the message that it doesnt exist in the data man
+    }
+
 
 }
 

@@ -1,12 +1,13 @@
 package uk.gov.hmcts.reform.pip.subscription.management.errorhandling;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
+import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 
 import java.time.LocalDateTime;
@@ -23,12 +24,10 @@ public class GlobalExceptionHandler {
      * and returns a 404 in the standard format.
      *
      * @param ex      The exception that has been thrown.
-     * @param request The request made to the endpoint.
      * @return The error response, modelled using the ExceptionResponse object.
      */
     @ExceptionHandler(SubscriptionNotFoundException.class)
-    public ResponseEntity<ExceptionResponse> handleSubscriptionNotFound(
-        SubscriptionNotFoundException ex, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> handle(SubscriptionNotFoundException ex) {
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
@@ -46,8 +45,7 @@ public class GlobalExceptionHandler {
      * @return - a ResponseEntity containing the exception response
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ExceptionResponse> handleArgumentNotValid(
-        MethodArgumentNotValidException ex) {
+    public ResponseEntity<ExceptionResponse> handle(MethodArgumentNotValidException ex) {
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         StringBuilder responseText = new StringBuilder("Bad Request: ");
         for (int i = 0; i < ex.getBindingResult().getErrorCount(); i++) {
@@ -71,8 +69,7 @@ public class GlobalExceptionHandler {
      * @return - a ResponseEntity containing the exception response
      */
     @ExceptionHandler(InvalidFormatException.class)
-    public ResponseEntity<ExceptionResponse> handleInvalidFormat(
-        InvalidFormatException ex) {
+    public ResponseEntity<ExceptionResponse> handle(InvalidFormatException ex) {
         StringBuilder responseText = new StringBuilder(100);
         responseText.append("Bad Request: ").append(ex.getTargetType().getSimpleName()).append(' ')
             .append(ex.getValue()).append(" should be one of the following types: [ ");
@@ -86,6 +83,16 @@ public class GlobalExceptionHandler {
         exceptionResponse.setTimestamp(LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handle(NotFoundException ex) {
+
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        exceptionResponse.setMessage(ex.getMessage());
+        exceptionResponse.setTimestamp(LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(exceptionResponse);
     }
 
 }
