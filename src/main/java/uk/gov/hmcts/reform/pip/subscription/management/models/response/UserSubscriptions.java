@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.models.response;
 import lombok.Data;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Court;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Hearing;
+
 import java.util.List;
 
 /**

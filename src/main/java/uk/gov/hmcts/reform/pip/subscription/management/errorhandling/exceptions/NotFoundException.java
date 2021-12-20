@@ -1,6 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions;
 
-public class NotFoundException extends RuntimeException{
+public class NotFoundException extends RuntimeException {
 
     private static final long serialVersionUID = -4323013763492278931L;
 
