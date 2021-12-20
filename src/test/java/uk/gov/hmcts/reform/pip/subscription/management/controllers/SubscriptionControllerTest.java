@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper;
+import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscriptions;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
@@ -37,7 +37,7 @@ class SubscriptionControllerTest {
 
     @BeforeEach
     void setup() {
-        mockSubscription = SubscriptionHelper.createMockSubscription(USER_ID, SEARCH_VALUE);
+        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE);
 
     }
 

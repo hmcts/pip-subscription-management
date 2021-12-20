@@ -27,10 +27,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper.createMockSubscription;
-import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper.createMockSubscriptionList;
-import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper.findableSubscription;
-import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper.mockUserSubscriptions;
+import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscription;
+import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
+import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.findableSubscription;
+import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.mockUserSubscriptions;
 
 @ExtendWith({MockitoExtension.class})
 class SubscriptionServiceTest {

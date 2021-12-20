@@ -90,10 +90,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     break;
                 default:
                     log.error("Subscription with id: {} did not have valid SearchType.", subscription.getId());
+                    break;
             }
         });
-        userSubscriptions.setCaseSubscriptions(hearings);
-        userSubscriptions.setCourtSubscriptions(courts);
+        userSubscriptions.getCaseSubscriptions().addAll(hearings);
+        userSubscriptions.getCourtSubscriptions().addAll(courts);
         return userSubscriptions;
     }
 }

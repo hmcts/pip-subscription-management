@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,6 +22,9 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Court;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Hearing;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscriptions;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -30,6 +32,7 @@ import java.util.Comparator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -37,65 +40,70 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {Application.class, RestTemplateConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-class SubscriptionControllerTest {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static SubscriptionDto subscription;
+class SubscriptionControllerTests {
 
     private static final String COURT_NAME_1 = "Glasgow-Court-1";
-    private static final String COURT_ID = "53";
-    private static final String CASE_ID = "T485913";
-    private static final String CASE_URN = "IBRANE1BVW";
+    private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
+
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
     private static final String VALIDATION_CHANNEL_NAME = "Returned subscription channel "
         + "does not match expected channel";
     private static final String VALIDATION_SEARCH_TYPE = "Returned search type does not match expected type";
     private static final String VALIDATION_SEARCH_VALUE = "Returned search value does not match expected value";
     private static final String VALIDATION_USER_ID = "Returned user ID does not match expected user ID";
-    private static final String SUBSCRIPTION_PATH = "/subscription";
-    private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
-    @Autowired
-    private MockMvc mvc;
 
+    private static final String COURT_ID = "53";
+    private static final String CASE_ID = "T485913";
+    private static final String CASE_URN = "IBRANE1BVW";
+    private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/tom1";
+    private static final String VALIDATION_COURT_ID = "Court ID returned does not match expected court ID";
+    private static final String VALIDATION_COURT_NAME = "Court name returned does not match expected court name";
+    private static final String VALIDATION_HEARING_ID = "Hearing ID does not match expected hearing";
+    private static final String VALIDATION_CASE_ID = "Case ID does not match expected case";
+    private static final String VALIDATION_CASE_URN = "Case URN does not match expected case";
+    private static final String VALIDATION_COURT_LIST = "Court subscription list contains unknown courts";
+
+    @Autowired
+    protected MockMvc mvc;
+
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    protected static final String SUBSCRIPTION_PATH = "/subscription";
+    protected static final SubscriptionDto SUBSCRIPTION = new SubscriptionDto();
 
     @BeforeAll
     static void setup() {
         OBJECT_MAPPER.findAndRegisterModules();
-        subscription = new SubscriptionDto();
-        subscription.setChannel(Channel.API);
-        subscription.setSearchType(SearchType.COURT_ID);
-        subscription.setUserId("tom1");
+        SUBSCRIPTION.setChannel(Channel.API);
+        SUBSCRIPTION.setSearchType(SearchType.COURT_ID);
+        SUBSCRIPTION.setUserId("tom1");
     }
 
+    protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
 
-    private MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
-
-        subscription.setSearchValue(searchValue);
+        SUBSCRIPTION.setSearchValue(searchValue);
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
-            .content(OBJECT_MAPPER.writeValueAsString(subscription))
+            .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
             .contentType(MediaType.APPLICATION_JSON);
     }
 
-    private MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType)
+    protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType)
         throws JsonProcessingException {
 
-        subscription.setSearchType(searchType);
+        SUBSCRIPTION.setSearchType(searchType);
         return setupMockSubscription(searchValue);
     }
 
-
-    private MockHttpServletRequestBuilder getSubscriptionByUuid(String searchValue) {
+    protected MockHttpServletRequestBuilder getSubscriptionByUuid(String searchValue) {
         return get(SUBSCRIPTION_PATH + '/' + searchValue);
     }
 
-    private MockHttpServletRequestBuilder setupRawJsonSubscription(String json) {
+    protected MockHttpServletRequestBuilder setupRawJsonSubscription(String json) {
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(json)
             .contentType(MediaType.APPLICATION_JSON);
     }
-
 
     @DisplayName("Post a new subscription and then get it from db.")
     @Test
@@ -116,22 +124,22 @@ class SubscriptionControllerTest {
             Subscription.class
         );
         assertEquals(
-            subscription.getChannel(),
+            SUBSCRIPTION.getChannel(),
             returnedSubscription.getChannel(),
             VALIDATION_CHANNEL_NAME
         );
         assertEquals(
-            subscription.getSearchType(),
+            SUBSCRIPTION.getSearchType(),
             returnedSubscription.getSearchType(),
             VALIDATION_SEARCH_TYPE
         );
         assertEquals(
-            subscription.getSearchValue(),
+            SUBSCRIPTION.getSearchValue(),
             returnedSubscription.getSearchValue(),
             VALIDATION_SEARCH_VALUE
         );
         assertEquals(
-            subscription.getUserId(),
+            SUBSCRIPTION.getUserId(),
             returnedSubscription.getUserId(),
             VALIDATION_USER_ID
         );
@@ -168,29 +176,28 @@ class SubscriptionControllerTest {
         Subscription returnedSubscription2 = OBJECT_MAPPER.readValue(subscriptionResponse2, Subscription.class);
 
         assertEquals(
-            subscription.getChannel(),
+            SUBSCRIPTION.getChannel(),
             returnedSubscription2.getChannel(),
             VALIDATION_CHANNEL_NAME
         );
         assertEquals(
-            subscription.getSearchType(),
+            SUBSCRIPTION.getSearchType(),
             returnedSubscription2.getSearchType(),
             VALIDATION_SEARCH_TYPE
         );
         assertEquals(
-            subscription.getSearchValue(),
+            SUBSCRIPTION.getSearchValue(),
             returnedSubscription2.getSearchValue(),
             VALIDATION_SEARCH_VALUE
         );
         assertEquals(
-            subscription.getUserId(),
+            SUBSCRIPTION.getUserId(),
             returnedSubscription2.getUserId(),
             VALIDATION_USER_ID
         );
         assertNotEquals(
             returnedSubscription2.getId(), 0L, "id should not equal zero"
         );
-
 
     }
 
@@ -244,8 +251,8 @@ class SubscriptionControllerTest {
         ))).andExpect(status().isOk()).andReturn();
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
         assertEquals(
+            String.format("Subscription: %s was deleted", returnedSubscription.getId()),
             deleteResponse.getResponse().getContentAsString(),
-            String.format("Subscription %s deleted", returnedSubscription.getId()),
             "Responses are not equal"
         );
     }
@@ -293,42 +300,148 @@ class SubscriptionControllerTest {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID));
         mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
 
-        MvcResult response = mvc.perform(get("/subscription/user/tom1"))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
             .andReturn();
 
-        //TODO: compare the response to a expected instance of UserSubscriptions model that should have 2 cases
-        // (CaseID and CaseURN) and 1 court (COURT ID) also check response code 200
-        //assertEquals(response.getResponse().getContentAsString());
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
+        UserSubscriptions userSubscriptions =
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscriptions.class);
+
+        assertEquals(1, userSubscriptions.getCourtSubscriptions().size(),
+                     "Court subscription list does not contain 1 court");
+
+        assertEquals(2, userSubscriptions.getCaseSubscriptions().size(),
+                     "Court subscription list does not contain 2 cases");
+
+        Court court = userSubscriptions.getCourtSubscriptions().get(0);
+        assertEquals(Integer.valueOf(COURT_ID), court.getCourtId(),
+                     VALIDATION_COURT_ID);
+        assertEquals("Blackpool Magistrates' Court", court.getName(),
+                     VALIDATION_COURT_NAME);
+
+        Hearing hearing1 = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(1, hearing1.getHearingId(), VALIDATION_HEARING_ID);
+        assertEquals(CASE_ID, hearing1.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals("N363N6R4OG", hearing1.getUrn(), VALIDATION_CASE_URN);
+
+        Hearing hearing2 = userSubscriptions.getCaseSubscriptions().get(1);
+        assertEquals(2, hearing2.getHearingId(), VALIDATION_HEARING_ID);
+        assertEquals("T485914", hearing2.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals(CASE_URN, hearing2.getUrn(), VALIDATION_CASE_URN);
     }
 
     @Test
-    void testGetUsersSubscriptionsByUserIdSingleCourt(){
-        //TODO: add 1 court like line 292 and test that it just populates the 1 court also check response code 200
+    void testGetUsersSubscriptionsByUserIdSingleCourt() throws Exception {
+        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID));
+
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscriptions userSubscriptions =
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscriptions.class);
+
+        assertEquals(1, userSubscriptions.getCourtSubscriptions().size(),
+                     "Court subscription list does not contain 1 court");
+
+        assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
+                     "Court subscription list contains unknown cases");
+
+        Court court = userSubscriptions.getCourtSubscriptions().get(0);
+        assertEquals(Integer.valueOf(COURT_ID), court.getCourtId(),
+                     VALIDATION_COURT_ID);
+        assertEquals("Blackpool Magistrates' Court", court.getName(),
+                     VALIDATION_COURT_NAME);
     }
 
     @Test
-    void testGetUsersSubscriptionsByUserIdSingleCaseId() {
-        //TODO: add 1 case id and test that it populates also check response code 200
+    void testGetUsersSubscriptionsByUserIdSingleCaseId() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID));
+
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscriptions userSubscriptions =
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscriptions.class);
+
+        assertEquals(0, userSubscriptions.getCourtSubscriptions().size(),
+                     VALIDATION_COURT_LIST);
+
+        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
+                     "Court subscription list does not contain 1 case");
+
+        Hearing hearing1 = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(1, hearing1.getHearingId(), VALIDATION_HEARING_ID);
+        assertEquals(CASE_ID, hearing1.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals("N363N6R4OG", hearing1.getUrn(), VALIDATION_CASE_URN);
     }
 
     @Test
-    void testGetUsersSubscriptionsByUserIdSingleCaseUrn() {
-        //TODO: add 1 case urn and test that it populates also check response code 200
+    void testGetUsersSubscriptionsByUserIdSingleCaseUrn() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
+
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscriptions userSubscriptions =
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscriptions.class);
+
+        assertEquals(0, userSubscriptions.getCourtSubscriptions().size(),
+                     VALIDATION_COURT_LIST);
+
+        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
+                     "Court subscription list does not contain 1 case");
+
+        Hearing hearing1 = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(2, hearing1.getHearingId(), VALIDATION_HEARING_ID);
+        assertEquals("T485914", hearing1.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals(CASE_URN, hearing1.getUrn(), VALIDATION_CASE_URN);
     }
 
     @Test
-    void testGetUsersSubscriptionsByUserIdNoSubscriptions() {
-        //TODO: dont add any subs and check that it returns 200 with empty object
+    void testGetUsersSubscriptionsByUserIdNoSubscriptions() throws Exception {
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscriptions userSubscriptions =
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscriptions.class);
+
+        assertEquals(0, userSubscriptions.getCourtSubscriptions().size(),
+                     VALIDATION_COURT_LIST);
+
+        assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
+                     "Court subscription list contains unknown cases");
     }
 
     @Test
-    void testGetUsersSubscriptionsWithDatabaseInvalidSearchValue() {
-        //TODO: add a value to db where we dont have it in data management (like test as the case id or something)
-        // and check that a 502 is thrown with the message that it doesnt exist in the data man
-    }
+    void testGetUsersSubscriptionsWithDatabaseInvalidSearchValue() throws Exception {
+        mvc.perform(setupMockSubscription("1234", SearchType.CASE_ID));
 
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isBadGateway())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        ExceptionResponse exceptionResponse =
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), ExceptionResponse.class);
+
+        assertTrue(exceptionResponse.getMessage().contains("No hearing found for case number: 1234"),
+                   "Error message not present for unknown case number");
+    }
 
 }
 

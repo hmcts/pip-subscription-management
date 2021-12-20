@@ -10,7 +10,7 @@ import org.springframework.web.client.RestTemplate;
 public class RestTemplateConfigTest {
 
     @Mock
-    private RestTemplate restTemplate;
+    private RestTemplate mockRestTemplate;
 
     public RestTemplateConfigTest() {
         MockitoAnnotations.openMocks(this);
@@ -18,6 +18,6 @@ public class RestTemplateConfigTest {
 
     @Bean
     public RestTemplate restTemplate() {
-        return restTemplate;
+        return mockRestTemplate;
     }
 }

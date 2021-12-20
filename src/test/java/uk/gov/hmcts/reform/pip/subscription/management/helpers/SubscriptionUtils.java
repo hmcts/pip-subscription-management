@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class SubscriptionHelper {
+public final class SubscriptionUtils {
 
-    private SubscriptionHelper() {
+    private SubscriptionUtils() {
     }
 
     public static Subscription createMockSubscription(String userId, String courtId) {
@@ -26,6 +26,8 @@ public final class SubscriptionHelper {
     }
 
     public static List<Subscription> createMockSubscriptionList() {
+        final int caseIdInterval = 3;
+        final int caseUrnInterval = 6;
         List<Subscription> subs = new ArrayList<>();
         Map<Integer, String> mockData = new ConcurrentHashMap<>();
         mockData.put(0, "Ralph");
@@ -41,9 +43,9 @@ public final class SubscriptionHelper {
             Subscription subscription = createMockSubscription(mockData.get(i), String.format("court-%s", i));
             subscription.setChannel(i < 3 ? Channel.API : Channel.EMAIL);
             subscription.setId(UUID.randomUUID());
-            if (i < 3) {
+            if (i < caseIdInterval) {
                 subscription.setSearchType(SearchType.CASE_ID);
-            } else if (i < 6) {
+            } else if (i < caseUrnInterval) {
                 subscription.setSearchType(SearchType.CASE_URN);
             } else {
                 subscription.setSearchType(SearchType.COURT_ID);
@@ -61,10 +63,11 @@ public final class SubscriptionHelper {
     }
 
     public static UserSubscriptions mockUserSubscriptions() {
+        final int hearingInterval = 6;
         List<Hearing> hearings = new ArrayList<>();
         List<Court> courts = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
-            if (i < 6) {
+            if (i < hearingInterval) {
                 hearings.add(new Hearing());
             } else {
                 courts.add(new Court());

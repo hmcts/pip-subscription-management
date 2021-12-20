@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = {Application.class, RestTemplateConfigTest.class})
+@SpringBootTest(classes = {RestTemplateConfigTest.class, Application.class})
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
-public class DataManagementServiceTest {
+class DataManagementServiceTest {
 
     private static final String CASE_ID_URL = "testUrl/hearings/case-number/";
     private static final String CASE_URN_URL = "testUrl/hearings/urn/";

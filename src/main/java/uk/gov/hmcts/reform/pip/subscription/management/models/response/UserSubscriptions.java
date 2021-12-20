@@ -4,6 +4,7 @@ import lombok.Data;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Court;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Hearing;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,10 +16,10 @@ public class UserSubscriptions {
     /**
      * Hearing object built from Data Management service containing case info on subscribed cases.
      */
-    private List<Hearing> caseSubscriptions;
+    private List<Hearing> caseSubscriptions = new ArrayList<>();
 
     /**
      * Court object built from Data Management service containing Court info on subscribed courts.
      */
-    private List<Court> courtSubscriptions;
+    private List<Court> courtSubscriptions = new ArrayList<>();
 }
