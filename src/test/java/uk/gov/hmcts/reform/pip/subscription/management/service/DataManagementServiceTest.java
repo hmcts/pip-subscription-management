@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
+import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,8 @@ import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Court;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Hearing;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
@@ -28,10 +31,12 @@ class DataManagementServiceTest {
 
     private static final String CASE_ID_URL = "testUrl/hearings/case-number/";
     private static final String CASE_URN_URL = "testUrl/hearings/urn/";
+    private static final String CASE_NAME_URL = "testUrl/hearings/case-name/";
     private static final String COURT_URL = "testUrl/courts/";
     private static final String VALID_CASE_ID = "123";
     private static final String VALID_URN = "321";
     private static final String VALID_COURT_ID = "345";
+    private static final String VALID_CASE_NAME = "court-name";
     private static final String INVALID = "test";
 
     private Hearing returnedHearing;
@@ -58,6 +63,8 @@ class DataManagementServiceTest {
         doThrow(HearingNotFoundException.class).when(restTemplate).getForEntity(CASE_ID_URL + INVALID, Hearing.class);
         when(restTemplate.getForEntity(CASE_URN_URL + VALID_URN, Hearing.class))
             .thenReturn(ResponseEntity.ok(returnedHearing));
+        when(restTemplate.getForEntity(CASE_NAME_URL + VALID_CASE_NAME, Hearing[].class))
+            .thenReturn(ResponseEntity.ok(Arrays.array(returnedHearing)));
         doThrow(HearingNotFoundException.class).when(restTemplate).getForEntity(CASE_URN_URL + INVALID, Hearing.class);
         when(restTemplate.getForEntity(COURT_URL + VALID_COURT_ID, Court.class))
             .thenReturn(ResponseEntity.ok(returnedCourt));
@@ -99,7 +106,13 @@ class DataManagementServiceTest {
     @Test
     void testGetCourtThrows() {
         assertThrows(CourtNotFoundException.class, () -> dataManagementService.getCourt(INVALID));
+    }
 
+    @Test
+    void testGetHearingByName() {
+        assertEquals(List.of(returnedHearing), dataManagementService.getHearingByName(VALID_CASE_NAME),
+                     "Should match the returned hearings on successful GET"
+        );
     }
 
 }
