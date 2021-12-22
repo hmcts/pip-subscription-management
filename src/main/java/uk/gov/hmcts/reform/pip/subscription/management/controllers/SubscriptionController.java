@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
-import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscriptions;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
+import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
 
@@ -81,7 +82,7 @@ public class SubscriptionController {
     })
     @ApiOperation("Returns the list of relevant subscriptions associated with a given user id.")
     @GetMapping("/user/{userId}")
-    public ResponseEntity<UserSubscriptions> findByUserId(@ApiParam(
+    public ResponseEntity<List<UserSubscription>> findByUserId(@ApiParam(
         value = "The specific user id to find subscription for", required = true)
                                     @PathVariable String userId) {
         return ResponseEntity.ok(subscriptionService.findByUserId(userId));

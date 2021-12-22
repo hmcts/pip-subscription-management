@@ -3,9 +3,6 @@ package uk.gov.hmcts.reform.pip.subscription.management.helpers;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Court;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Hearing;
-import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscriptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,25 +57,6 @@ public final class SubscriptionUtils {
         subscription.setUserId("Ralph");
         subscription.setId(UUID.randomUUID());
         return subscription;
-    }
-
-    public static UserSubscriptions mockUserSubscriptions() {
-        final int hearingInterval = 6;
-        List<Hearing> hearings = new ArrayList<>();
-        List<Court> courts = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
-            if (i < hearingInterval) {
-                hearings.add(new Hearing());
-            } else {
-                courts.add(new Court());
-            }
-        }
-
-        UserSubscriptions userSubscriptions = new UserSubscriptions();
-        userSubscriptions.setCaseSubscriptions(hearings);
-        userSubscriptions.setCourtSubscriptions(courts);
-
-        return userSubscriptions;
     }
 
 }

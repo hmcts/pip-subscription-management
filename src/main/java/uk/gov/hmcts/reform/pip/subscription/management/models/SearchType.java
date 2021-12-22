@@ -6,6 +6,7 @@ public enum SearchType {
      */
     COURT_ID,
     CASE_ID,
+    CASE_NAME,
     CASE_URN;
 }
 

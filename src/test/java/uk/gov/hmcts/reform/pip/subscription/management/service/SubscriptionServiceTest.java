@@ -12,7 +12,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Court;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Hearing;
-import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscriptions;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscription;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.findableSubscription;
-import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.mockUserSubscriptions;
 
 @ExtendWith({MockitoExtension.class})
 class SubscriptionServiceTest {
@@ -40,6 +39,7 @@ class SubscriptionServiceTest {
     private static final String CASE_ID = "123";
     private static final String URN = "312";
     private static final String COURT_ID = "354";
+    private static final String CASE_NAME = "case-name";
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
@@ -64,6 +64,8 @@ class SubscriptionServiceTest {
         lenient().when(subscriptionRepository.findByUserId(USER_ID_NO_SUBS)).thenReturn(new ArrayList<>());
         lenient().when(dataManagementService.getHearingByCaseId(any())).thenReturn(new Hearing());
         lenient().when(dataManagementService.getHearingByUrn(any())).thenReturn(new Hearing());
+        lenient().when(dataManagementService.getHearingByName(CASE_NAME))
+            .thenReturn(List.of(new Hearing(), new Hearing()));
         lenient().when(dataManagementService.getCourt(any())).thenReturn(new Court());
     }
 
@@ -120,7 +122,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testNoSubscriptionsReturnsEmpty() {
-        assertEquals(new UserSubscriptions(), subscriptionService.findByUserId(USER_ID_NO_SUBS),
+        assertEquals(new ArrayList<UserSubscription>(), subscriptionService.findByUserId(USER_ID_NO_SUBS),
                      "Should return empty user subscriptions");
     }
 
@@ -130,7 +132,7 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchValue(CASE_ID);
         when(subscriptionRepository.findByUserId(USER_ID))
             .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-        assertEquals(1, subscriptionService.findByUserId(USER_ID).getCaseSubscriptions().size(),
+        assertEquals(1, subscriptionService.findByUserId(USER_ID).get(0).getCaseSubscriptions().size(),
                      "Should populate 1 case");
     }
 
@@ -140,7 +142,7 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchValue(URN);
         when(subscriptionRepository.findByUserId(USER_ID))
             .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-        assertEquals(1, subscriptionService.findByUserId(USER_ID).getCaseSubscriptions().size(),
+        assertEquals(1, subscriptionService.findByUserId(USER_ID).get(0).getCaseSubscriptions().size(),
                      "Should populate 1 case");
     }
 
@@ -150,14 +152,41 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchValue(COURT_ID);
         when(subscriptionRepository.findByUserId(USER_ID))
             .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-        assertEquals(1, subscriptionService.findByUserId(USER_ID).getCourtSubscriptions().size(),
+        assertEquals(1, subscriptionService.findByUserId(USER_ID).get(0).getCourtSubscriptions().size(),
                      "Should populate 1 court");
     }
 
     @Test
+    void testUserSubscriptionsName() {
+        mockSubscription.setSearchType(SearchType.CASE_NAME);
+        mockSubscription.setSearchValue(CASE_NAME);
+        when(subscriptionRepository.findByUserId(USER_ID))
+            .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
+        assertEquals(2, subscriptionService.findByUserId(USER_ID).get(0).getCaseSubscriptions().size(),
+                     "Should populate 2 cases");
+    }
+
+    @Test
     void testUserSubscriptions() {
-        assertEquals(mockUserSubscriptions(), subscriptionService.findByUserId(USER_ID),
-                     "Should populate all user subscriptions");
+
+        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
+
+        assertEquals(mockSubscriptionList.size(), userSubscriptions.size(),
+                     "Number of returned subscriptions does not match mock subscriptions");
+
+        for (UserSubscription userSubscription : userSubscriptions) {
+            if (userSubscription.getSearchType().equals(SearchType.COURT_ID)) {
+                assertEquals(1, userSubscription.getCourtSubscriptions().size(),
+                             "Does not contain expected number of courts");
+                assertEquals(0, userSubscription.getCaseSubscriptions().size(),
+                             "Does not contain expected number of cases");
+            } else {
+                assertEquals(0, userSubscription.getCourtSubscriptions().size(),
+                             "Does not contain expected number of courts");
+                assertEquals(1, userSubscription.getCaseSubscriptions().size(),
+                             "Does not contain expected number of cases");
+            }
+        }
     }
 }
 

@@ -10,9 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscriptions;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,9 +36,14 @@ class SubscriptionControllerTest {
     @InjectMocks
     SubscriptionController subscriptionController;
 
+    UserSubscription userSubscription;
+
     @BeforeEach
     void setup() {
         mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE);
+        Subscription subscription = new Subscription();
+        subscription.setId(UUID.randomUUID());
+        userSubscription = new UserSubscription(subscription);
 
     }
 
@@ -85,14 +91,14 @@ class SubscriptionControllerTest {
 
     @Test
     void testFindByUserId() {
-        when(subscriptionService.findByUserId(USER_ID)).thenReturn(new UserSubscriptions());
-        assertEquals(new UserSubscriptions(), subscriptionController.findByUserId(USER_ID).getBody(),
+        when(subscriptionService.findByUserId(USER_ID)).thenReturn(List.of(userSubscription));
+        assertEquals(List.of(userSubscription), subscriptionController.findByUserId(USER_ID).getBody(),
                      "Should return users subscriptions");
     }
 
     @Test
     void testFindByUserIdReturnsOk() {
-        when(subscriptionService.findByUserId(USER_ID)).thenReturn(new UserSubscriptions());
+        when(subscriptionService.findByUserId(USER_ID)).thenReturn(List.of(userSubscription));
         assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID).getStatusCode(),
                      STATUS_CODE_MATCH);
     }

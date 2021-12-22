@@ -11,6 +11,9 @@ import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Court;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Hearing;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Component
 public class DataManagementService {
 
@@ -37,6 +40,21 @@ public class DataManagementService {
             return response.getBody();
         } catch (HttpStatusCodeException ex) {
             throw new HearingNotFoundException(ex.getResponseBodyAsString());
+        }
+    }
+
+    public List<Hearing> getHearingByName(String caseName) {
+        try {
+            ResponseEntity<Hearing[]> response = this.restTemplate.getForEntity(
+                String.format("%s/hearings/case-name/%s", url, caseName), Hearing[].class);
+
+            if (response.getBody() == null) {
+                return List.of();
+            }
+
+            return Arrays.asList(response.getBody());
+        } catch (HttpStatusCodeException ex) {
+            throw new CourtNotFoundException(ex.getResponseBodyAsString());
         }
     }
 
