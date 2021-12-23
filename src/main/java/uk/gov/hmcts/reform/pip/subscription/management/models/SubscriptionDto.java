@@ -45,7 +45,7 @@ public class SubscriptionDto {
     @NotNull
     private Channel channel;
 
-    private LocalDateTime createdDate;
+    private LocalDateTime createdDate = LocalDateTime.now();
 
     public Subscription toEntity() {
         Subscription entity = new Subscription();
