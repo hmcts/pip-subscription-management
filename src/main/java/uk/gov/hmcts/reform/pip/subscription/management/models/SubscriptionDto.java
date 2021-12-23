@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -44,6 +45,7 @@ public class SubscriptionDto {
     @NotNull
     private Channel channel;
 
+    private LocalDateTime createdDate;
 
     public Subscription toEntity() {
         Subscription entity = new Subscription();
@@ -52,6 +54,7 @@ public class SubscriptionDto {
         entity.setUserId(this.userId);
         entity.setSearchType(this.searchType);
         entity.setId(this.id);
+        entity.setCreatedDate(this.createdDate);
         return entity;
     }
 

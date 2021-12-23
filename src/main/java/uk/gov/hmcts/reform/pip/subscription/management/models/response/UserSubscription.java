@@ -37,7 +37,8 @@ public class UserSubscription extends Subscription {
               subscription.getUserId(),
               subscription.getSearchType(),
               subscription.getSearchValue(),
-              subscription.getChannel());
+              subscription.getChannel(),
+              subscription.getCreatedDate());
     }
 
 }

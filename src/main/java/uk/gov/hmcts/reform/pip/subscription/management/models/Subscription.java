@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -53,6 +54,9 @@ public class Subscription {
     @Enumerated(EnumType.STRING)
     private Channel channel;
 
+    @ApiModelProperty(hidden = true)
+    private LocalDateTime createdDate = LocalDateTime.now();
+
     public SubscriptionDto toDto() {
         SubscriptionDto dto = new SubscriptionDto();
         dto.setSearchValue(this.searchValue);
@@ -60,6 +64,7 @@ public class Subscription {
         dto.setUserId(this.userId);
         dto.setSearchType(this.searchType);
         dto.setId(this.id);
+        dto.setCreatedDate(this.createdDate);
         return dto;
     }
 }

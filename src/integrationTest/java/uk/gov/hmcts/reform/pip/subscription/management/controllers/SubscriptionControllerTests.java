@@ -55,6 +55,7 @@ class SubscriptionControllerTests {
     private static final String VALIDATION_SEARCH_TYPE = "Returned search type does not match expected type";
     private static final String VALIDATION_SEARCH_VALUE = "Returned search value does not match expected value";
     private static final String VALIDATION_USER_ID = "Returned user ID does not match expected user ID";
+    private static final String VALIDATION_DATE_TIME = "Created date time does not exist";
 
     private static final String COURT_ID = "53";
     private static final String CASE_ID = "T485913";
@@ -382,6 +383,8 @@ class SubscriptionControllerTests {
                      VALIDATION_SEARCH_TYPE);
         assertEquals(COURT_ID, userSubscription.getSearchValue(),
                      VALIDATION_SEARCH_VALUE);
+        assertNotNull(userSubscription.getCreatedDate(),
+                      VALIDATION_DATE_TIME);
 
         assertEquals(1, userSubscription.getCourtSubscriptions().size(),
                      "Court subscription list does not contain 1 court");
@@ -423,6 +426,8 @@ class SubscriptionControllerTests {
                      VALIDATION_SEARCH_TYPE);
         assertEquals(CASE_ID, userSubscription.getSearchValue(),
                      VALIDATION_SEARCH_VALUE);
+        assertNotNull(userSubscription.getCreatedDate(),
+                      VALIDATION_DATE_TIME);
 
         assertEquals(0, userSubscription.getCourtSubscriptions().size(),
                      VALIDATION_COURT_LIST);
@@ -463,6 +468,8 @@ class SubscriptionControllerTests {
                      VALIDATION_SEARCH_TYPE);
         assertEquals(CASE_URN, userSubscription.getSearchValue(),
                      VALIDATION_SEARCH_VALUE);
+        assertNotNull(userSubscription.getCreatedDate(),
+                      VALIDATION_DATE_TIME);
 
         assertEquals(0, userSubscription.getCourtSubscriptions().size(),
                      VALIDATION_COURT_LIST);
@@ -503,6 +510,8 @@ class SubscriptionControllerTests {
                      VALIDATION_SEARCH_TYPE);
         assertEquals(CASE_NAME, userSubscription.getSearchValue(),
                      VALIDATION_SEARCH_VALUE);
+        assertNotNull(userSubscription.getCreatedDate(),
+                      VALIDATION_DATE_TIME);
 
         assertEquals(0, userSubscription.getCourtSubscriptions().size(),
                      VALIDATION_COURT_LIST);
