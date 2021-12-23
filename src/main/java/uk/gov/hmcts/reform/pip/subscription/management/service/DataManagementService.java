@@ -54,7 +54,7 @@ public class DataManagementService {
 
             return Arrays.asList(response.getBody());
         } catch (HttpStatusCodeException ex) {
-            throw new CourtNotFoundException(ex.getResponseBodyAsString());
+            throw new HearingNotFoundException(ex.getResponseBodyAsString());
         }
     }
 
