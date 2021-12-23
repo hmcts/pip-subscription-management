@@ -61,6 +61,7 @@ class SubscriptionControllerTests {
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/tom1";
+
     private static final String VALIDATION_COURT_ID = "Court ID returned does not match expected court ID";
     private static final String VALIDATION_COURT_NAME = "Court name returned does not match expected court name";
     private static final String VALIDATION_HEARING_ID = "Hearing ID does not match expected hearing";
@@ -373,6 +374,15 @@ class SubscriptionControllerTests {
 
         UserSubscription userSubscription = userSubscriptions.get(0);
 
+        assertEquals(SUBSCRIPTION.getChannel(), userSubscription.getChannel(),
+                     VALIDATION_CHANNEL_NAME);
+        assertEquals(SUBSCRIPTION.getUserId(), userSubscription.getUserId(),
+                     VALIDATION_USER_ID);
+        assertEquals(SearchType.COURT_ID, userSubscription.getSearchType(),
+                     VALIDATION_SEARCH_TYPE);
+        assertEquals(COURT_ID, userSubscription.getSearchValue(),
+                     VALIDATION_SEARCH_VALUE);
+
         assertEquals(1, userSubscription.getCourtSubscriptions().size(),
                      "Court subscription list does not contain 1 court");
 
@@ -405,6 +415,15 @@ class SubscriptionControllerTests {
 
         UserSubscription userSubscription = userSubscriptions.get(0);
 
+        assertEquals(SUBSCRIPTION.getChannel(), userSubscription.getChannel(),
+                     VALIDATION_CHANNEL_NAME);
+        assertEquals(SUBSCRIPTION.getUserId(), userSubscription.getUserId(),
+                     VALIDATION_USER_ID);
+        assertEquals(SearchType.CASE_ID, userSubscription.getSearchType(),
+                     VALIDATION_SEARCH_TYPE);
+        assertEquals(CASE_ID, userSubscription.getSearchValue(),
+                     VALIDATION_SEARCH_VALUE);
+
         assertEquals(0, userSubscription.getCourtSubscriptions().size(),
                      VALIDATION_COURT_LIST);
 
@@ -436,6 +455,15 @@ class SubscriptionControllerTests {
 
         UserSubscription userSubscription = userSubscriptions.get(0);
 
+        assertEquals(SUBSCRIPTION.getChannel(), userSubscription.getChannel(),
+                     VALIDATION_CHANNEL_NAME);
+        assertEquals(SUBSCRIPTION.getUserId(), userSubscription.getUserId(),
+                     VALIDATION_USER_ID);
+        assertEquals(SearchType.CASE_URN, userSubscription.getSearchType(),
+                     VALIDATION_SEARCH_TYPE);
+        assertEquals(CASE_URN, userSubscription.getSearchValue(),
+                     VALIDATION_SEARCH_VALUE);
+
         assertEquals(0, userSubscription.getCourtSubscriptions().size(),
                      VALIDATION_COURT_LIST);
 
@@ -466,6 +494,15 @@ class SubscriptionControllerTests {
                      VALIDATION_SUBSCRIPTION_LIST);
 
         UserSubscription userSubscription = userSubscriptions.get(0);
+
+        assertEquals(SUBSCRIPTION.getChannel(), userSubscription.getChannel(),
+                     VALIDATION_CHANNEL_NAME);
+        assertEquals(SUBSCRIPTION.getUserId(), userSubscription.getUserId(),
+                     VALIDATION_USER_ID);
+        assertEquals(SearchType.CASE_NAME, userSubscription.getSearchType(),
+                     VALIDATION_SEARCH_TYPE);
+        assertEquals(CASE_NAME, userSubscription.getSearchValue(),
+                     VALIDATION_SEARCH_VALUE);
 
         assertEquals(0, userSubscription.getCourtSubscriptions().size(),
                      VALIDATION_COURT_LIST);

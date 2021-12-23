@@ -41,6 +41,10 @@ class SubscriptionServiceTest {
     private static final String COURT_ID = "354";
     private static final String CASE_NAME = "case-name";
 
+    private static final String VALIDATION_SEARCH_TYPE = "Search type does not match expected search type";
+    private static final String VALIDATION_SEARCH_VALUE = "Search value does not match expected search value";
+    private static final String VALIDATION_SINGLE_USER_SUBSCRIPTION = "A single user subscription is returned";
+
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
     private Subscription findableSubscription;
@@ -132,7 +136,16 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchValue(CASE_ID);
         when(subscriptionRepository.findByUserId(USER_ID))
             .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-        assertEquals(1, subscriptionService.findByUserId(USER_ID).get(0).getCaseSubscriptions().size(),
+
+        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
+
+        assertEquals(1, userSubscriptions.size(), VALIDATION_SINGLE_USER_SUBSCRIPTION);
+        UserSubscription userSubscription = userSubscriptions.get(0);
+        assertEquals(mockSubscription.getSearchType(), userSubscription.getSearchType(),
+                     VALIDATION_SEARCH_TYPE);
+        assertEquals(mockSubscription.getSearchValue(), userSubscription.getSearchValue(),
+                     VALIDATION_SEARCH_VALUE);
+        assertEquals(1, userSubscription.getCaseSubscriptions().size(),
                      "Should populate 1 case");
     }
 
@@ -142,7 +155,16 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchValue(URN);
         when(subscriptionRepository.findByUserId(USER_ID))
             .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-        assertEquals(1, subscriptionService.findByUserId(USER_ID).get(0).getCaseSubscriptions().size(),
+
+        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
+
+        assertEquals(1, userSubscriptions.size(), VALIDATION_SINGLE_USER_SUBSCRIPTION);
+        UserSubscription userSubscription = userSubscriptions.get(0);
+        assertEquals(mockSubscription.getSearchType(), userSubscription.getSearchType(),
+                     VALIDATION_SEARCH_TYPE);
+        assertEquals(mockSubscription.getSearchValue(), userSubscription.getSearchValue(),
+                     VALIDATION_SEARCH_VALUE);
+        assertEquals(1, userSubscription.getCaseSubscriptions().size(),
                      "Should populate 1 case");
     }
 
@@ -152,7 +174,17 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchValue(COURT_ID);
         when(subscriptionRepository.findByUserId(USER_ID))
             .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-        assertEquals(1, subscriptionService.findByUserId(USER_ID).get(0).getCourtSubscriptions().size(),
+
+        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
+
+        assertEquals(1, userSubscriptions.size(), VALIDATION_SINGLE_USER_SUBSCRIPTION);
+        UserSubscription userSubscription = userSubscriptions.get(0);
+        assertEquals(mockSubscription.getSearchType(), userSubscription.getSearchType(),
+                     VALIDATION_SEARCH_TYPE);
+        assertEquals(mockSubscription.getSearchValue(), userSubscription.getSearchValue(),
+                     VALIDATION_SEARCH_VALUE);
+
+        assertEquals(1, userSubscription.getCourtSubscriptions().size(),
                      "Should populate 1 court");
     }
 
@@ -162,7 +194,17 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchValue(CASE_NAME);
         when(subscriptionRepository.findByUserId(USER_ID))
             .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-        assertEquals(2, subscriptionService.findByUserId(USER_ID).get(0).getCaseSubscriptions().size(),
+
+        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
+
+        assertEquals(1, userSubscriptions.size(), VALIDATION_SINGLE_USER_SUBSCRIPTION);
+        UserSubscription userSubscription = userSubscriptions.get(0);
+        assertEquals(mockSubscription.getSearchType(), userSubscription.getSearchType(),
+                     VALIDATION_SEARCH_TYPE);
+        assertEquals(mockSubscription.getSearchValue(), userSubscription.getSearchValue(),
+                     VALIDATION_SEARCH_VALUE);
+
+        assertEquals(2, userSubscription.getCaseSubscriptions().size(),
                      "Should populate 2 cases");
     }
 
