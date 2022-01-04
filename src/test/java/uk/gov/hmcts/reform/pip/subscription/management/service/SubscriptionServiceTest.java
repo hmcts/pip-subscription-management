@@ -68,8 +68,6 @@ class SubscriptionServiceTest {
         lenient().when(subscriptionRepository.findByUserId(USER_ID_NO_SUBS)).thenReturn(new ArrayList<>());
         lenient().when(dataManagementService.getHearingByCaseId(any())).thenReturn(new Hearing());
         lenient().when(dataManagementService.getHearingByUrn(any())).thenReturn(new Hearing());
-        lenient().when(dataManagementService.getHearingByName(CASE_NAME))
-            .thenReturn(List.of(new Hearing(), new Hearing()));
         lenient().when(dataManagementService.getCourt(any())).thenReturn(new Court());
     }
 
@@ -186,26 +184,6 @@ class SubscriptionServiceTest {
 
         assertEquals(1, userSubscription.getCourtSubscriptions().size(),
                      "Should populate 1 court");
-    }
-
-    @Test
-    void testUserSubscriptionsName() {
-        mockSubscription.setSearchType(SearchType.CASE_NAME);
-        mockSubscription.setSearchValue(CASE_NAME);
-        when(subscriptionRepository.findByUserId(USER_ID))
-            .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-
-        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
-
-        assertEquals(1, userSubscriptions.size(), VALIDATION_SINGLE_USER_SUBSCRIPTION);
-        UserSubscription userSubscription = userSubscriptions.get(0);
-        assertEquals(mockSubscription.getSearchType(), userSubscription.getSearchType(),
-                     VALIDATION_SEARCH_TYPE);
-        assertEquals(mockSubscription.getSearchValue(), userSubscription.getSearchValue(),
-                     VALIDATION_SEARCH_VALUE);
-
-        assertEquals(2, userSubscription.getCaseSubscriptions().size(),
-                     "Should populate 2 cases");
     }
 
     @Test

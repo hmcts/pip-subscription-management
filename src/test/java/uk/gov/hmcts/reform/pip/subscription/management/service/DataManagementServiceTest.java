@@ -114,16 +114,4 @@ class DataManagementServiceTest {
         assertThrows(CourtNotFoundException.class, () -> dataManagementService.getCourt(INVALID));
     }
 
-    @Test
-    void testGetHearingByName() {
-        assertEquals(List.of(returnedHearing), dataManagementService.getHearingByName(VALID_CASE_NAME),
-                     "Should match the returned hearings on successful GET"
-        );
-    }
-
-    @Test
-    void testGetHearingByNameThrows() {
-        assertThrows(HearingNotFoundException.class, () -> dataManagementService.getHearingByName(INVALID));
-    }
-
 }

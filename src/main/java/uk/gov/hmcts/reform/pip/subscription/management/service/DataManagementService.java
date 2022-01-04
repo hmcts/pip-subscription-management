@@ -43,21 +43,6 @@ public class DataManagementService {
         }
     }
 
-    public List<Hearing> getHearingByName(String caseName) {
-        try {
-            ResponseEntity<Hearing[]> response = this.restTemplate.getForEntity(
-                String.format("%s/hearings/case-name/%s", url, caseName), Hearing[].class);
-
-            if (response.getBody() == null) {
-                return List.of();
-            }
-
-            return Arrays.asList(response.getBody());
-        } catch (HttpStatusCodeException ex) {
-            throw new HearingNotFoundException(ex.getResponseBodyAsString());
-        }
-    }
-
     public Court getCourt(String courtId) {
         try {
             ResponseEntity<Court> response = this.restTemplate.getForEntity(

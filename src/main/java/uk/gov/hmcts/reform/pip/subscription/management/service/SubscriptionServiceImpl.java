@@ -84,10 +84,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     userSubscription.getCaseSubscriptions()
                         .add(dataManagementService.getHearingByUrn(subscription.getSearchValue()));
                     break;
-                case CASE_NAME:
-                    userSubscription.getCaseSubscriptions()
-                        .addAll(dataManagementService.getHearingByName(subscription.getSearchValue()));
-                    break;
                 case COURT_ID:
                     userSubscription.getCourtSubscriptions()
                         .add(dataManagementService.getCourt(subscription.getSearchValue()));
