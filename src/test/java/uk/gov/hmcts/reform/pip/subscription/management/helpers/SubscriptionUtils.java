@@ -4,6 +4,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,14 +16,16 @@ public final class SubscriptionUtils {
     private SubscriptionUtils() {
     }
 
-    public static Subscription createMockSubscription(String userId, String courtId) {
+    public static Subscription createMockSubscription(String userId, String courtId, LocalDateTime createdDate) {
         Subscription subscription = new Subscription();
         subscription.setUserId(userId);
         subscription.setSearchValue(courtId);
+        subscription.setCourtName("Test court");
+        subscription.setCreatedDate(createdDate);
         return subscription;
     }
 
-    public static List<Subscription> createMockSubscriptionList() {
+    public static List<Subscription> createMockSubscriptionList(LocalDateTime createdDate) {
         final int caseIdInterval = 3;
         final int caseUrnInterval = 6;
         List<Subscription> subs = new ArrayList<>();
@@ -37,15 +40,22 @@ public final class SubscriptionUtils {
         mockData.put(7, "Cedric");
         mockData.put(8, "Jonathan");
         for (int i = 0; i < 8; i++) {
-            Subscription subscription = createMockSubscription(mockData.get(i), String.format("court-%s", i));
+            Subscription subscription = createMockSubscription(mockData.get(i), String.format("court-%s", i), createdDate);
             subscription.setChannel(i < 3 ? Channel.API : Channel.EMAIL);
             subscription.setId(UUID.randomUUID());
+            subscription.setCaseName("test name");
+            subscription.setUrn("321" + i);
+            subscription.setCaseNumber("123" + i);
             if (i < caseIdInterval) {
                 subscription.setSearchType(SearchType.CASE_ID);
             } else if (i < caseUrnInterval) {
                 subscription.setSearchType(SearchType.CASE_URN);
             } else {
                 subscription.setSearchType(SearchType.COURT_ID);
+                subscription.setCaseName(null);
+                subscription.setUrn(null);
+                subscription.setCaseNumber(null);
+                subscription.setCourtName("test court name");
             }
             subs.add(subscription);
         }

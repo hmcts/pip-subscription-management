@@ -22,10 +22,11 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Court;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Hearing;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -33,7 +34,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -55,22 +55,23 @@ class SubscriptionControllerTests {
     private static final String VALIDATION_SEARCH_TYPE = "Returned search type does not match expected type";
     private static final String VALIDATION_SEARCH_VALUE = "Returned search value does not match expected value";
     private static final String VALIDATION_USER_ID = "Returned user ID does not match expected user ID";
-    private static final String VALIDATION_DATE_TIME = "Created date time does not exist";
 
     private static final String COURT_ID = "53";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/tom1";
+    private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
-    private static final String VALIDATION_COURT_ID = "Court ID returned does not match expected court ID";
     private static final String VALIDATION_COURT_NAME = "Court name returned does not match expected court name";
-    private static final String VALIDATION_HEARING_ID = "Hearing ID does not match expected hearing";
     private static final String VALIDATION_CASE_ID = "Case ID does not match expected case";
     private static final String VALIDATION_CASE_URN = "Case URN does not match expected case";
+    private static final String VALIDATION_CASE_NAME = "Case name does not match expected case";
     private static final String VALIDATION_COURT_LIST = "Court subscription list contains unknown courts";
     private static final String VALIDATION_SUBSCRIPTION_LIST = "The expected subscription is not displayed";
     private static final String VALIDATION_NO_SUBSCRIPTIONS = "User has unknown subscriptions";
+    public static final String VALIDATION_ONE_CASE_COURT = "Court subscription list does not contain 1 case";
+    public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
 
     @Autowired
     protected MockMvc mvc;
@@ -90,6 +91,11 @@ class SubscriptionControllerTests {
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
 
         SUBSCRIPTION.setSearchValue(searchValue);
+        SUBSCRIPTION.setCourtName(COURT_NAME_1);
+        SUBSCRIPTION.setCaseName(CASE_NAME);
+        SUBSCRIPTION.setCaseNumber(CASE_ID);
+        SUBSCRIPTION.setUrn(CASE_URN);
+        SUBSCRIPTION.setCreatedDate(DATE_ADDED);
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
             .contentType(MediaType.APPLICATION_JSON);
@@ -313,47 +319,20 @@ class SubscriptionControllerTests {
 
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
-        List<UserSubscription> userSubscriptions =
-            Arrays.asList(
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription[].class));
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(3, userSubscriptions.size(),
+        assertEquals(3, userSubscriptions.getCourtSubscriptions().size() + userSubscriptions.getCaseSubscriptions().size(),
                      VALIDATION_SUBSCRIPTION_LIST);
 
-        UserSubscription userSubscription = userSubscriptions.get(0);
-        assertEquals(1, userSubscription.getCourtSubscriptions().size(),
-                     "Court subscription list does not contain 1 court");
+        CourtSubscription court = userSubscriptions.getCourtSubscriptions().get(0);
+        assertEquals(COURT_NAME_1, court.getCourtName(), VALIDATION_COURT_NAME);
+        assertEquals(DATE_ADDED, court.getDateAdded(), VALIDATION_DATE_ADDED);
 
-        assertEquals(0, userSubscription.getCaseSubscriptions().size(),
-                     "Case subscription list does not contain 0 cases");
-
-        Court court = userSubscription.getCourtSubscriptions().get(0);
-        assertEquals(Integer.valueOf(COURT_ID), court.getCourtId(),
-                     VALIDATION_COURT_ID);
-        assertEquals("Blackpool Magistrates' Court", court.getName(),
-                     VALIDATION_COURT_NAME);
-
-        userSubscription = userSubscriptions.get(1);
-        assertEquals(0, userSubscription.getCourtSubscriptions().size(),
-                     "Court subscription list does not contain 0 courts");
-
-        assertEquals(1, userSubscription.getCaseSubscriptions().size(),
-                     "Case subscription list does not contain 1 case");
-        Hearing hearing1 = userSubscription.getCaseSubscriptions().get(0);
-        assertEquals(1, hearing1.getHearingId(), VALIDATION_HEARING_ID);
-        assertEquals(CASE_ID, hearing1.getCaseNumber(), VALIDATION_CASE_ID);
-        assertEquals("N363N6R4OG", hearing1.getUrn(), VALIDATION_CASE_URN);
-
-        userSubscription = userSubscriptions.get(2);
-        assertEquals(0, userSubscription.getCourtSubscriptions().size(),
-                     "Court subscription list does not contain 0 courts");
-
-        assertEquals(1, userSubscription.getCaseSubscriptions().size(),
-                     "Case subscription list does not contain 1 case");
-        Hearing hearing2 = userSubscription.getCaseSubscriptions().get(0);
-        assertEquals(2, hearing2.getHearingId(), VALIDATION_HEARING_ID);
-        assertEquals("T485914", hearing2.getCaseNumber(), VALIDATION_CASE_ID);
-        assertEquals(CASE_URN, hearing2.getUrn(), VALIDATION_CASE_URN);
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
     }
 
     @Test
@@ -366,37 +345,18 @@ class SubscriptionControllerTests {
 
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
-        List<UserSubscription> userSubscriptions =
-            Arrays.asList(
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription[].class));
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(1, userSubscriptions.size(),
-                     VALIDATION_SUBSCRIPTION_LIST);
-
-        UserSubscription userSubscription = userSubscriptions.get(0);
-
-        assertEquals(SUBSCRIPTION.getChannel(), userSubscription.getChannel(),
-                     VALIDATION_CHANNEL_NAME);
-        assertEquals(SUBSCRIPTION.getUserId(), userSubscription.getUserId(),
-                     VALIDATION_USER_ID);
-        assertEquals(SearchType.COURT_ID, userSubscription.getSearchType(),
-                     VALIDATION_SEARCH_TYPE);
-        assertEquals(COURT_ID, userSubscription.getSearchValue(),
-                     VALIDATION_SEARCH_VALUE);
-        assertNotNull(userSubscription.getCreatedDate(),
-                      VALIDATION_DATE_TIME);
-
-        assertEquals(1, userSubscription.getCourtSubscriptions().size(),
+        assertEquals(1, userSubscriptions.getCourtSubscriptions().size(),
                      "Court subscription list does not contain 1 court");
 
-        assertEquals(0, userSubscription.getCaseSubscriptions().size(),
+        assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
                      "Court subscription list contains unknown cases");
 
-        Court court = userSubscription.getCourtSubscriptions().get(0);
-        assertEquals(Integer.valueOf(COURT_ID), court.getCourtId(),
-                     VALIDATION_COURT_ID);
-        assertEquals("Blackpool Magistrates' Court", court.getName(),
-                     VALIDATION_COURT_NAME);
+        CourtSubscription court = userSubscriptions.getCourtSubscriptions().get(0);
+        assertEquals(COURT_NAME_1, court.getCourtName(), VALIDATION_COURT_NAME);
+        assertEquals(DATE_ADDED, court.getDateAdded(), VALIDATION_DATE_ADDED);
     }
 
     @Test
@@ -409,36 +369,20 @@ class SubscriptionControllerTests {
 
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
-        List<UserSubscription> userSubscriptions =
-            Arrays.asList(
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription[].class));
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(1, userSubscriptions.size(),
-                     VALIDATION_SUBSCRIPTION_LIST);
-
-        UserSubscription userSubscription = userSubscriptions.get(0);
-
-        assertEquals(SUBSCRIPTION.getChannel(), userSubscription.getChannel(),
-                     VALIDATION_CHANNEL_NAME);
-        assertEquals(SUBSCRIPTION.getUserId(), userSubscription.getUserId(),
-                     VALIDATION_USER_ID);
-        assertEquals(SearchType.CASE_ID, userSubscription.getSearchType(),
-                     VALIDATION_SEARCH_TYPE);
-        assertEquals(CASE_ID, userSubscription.getSearchValue(),
-                     VALIDATION_SEARCH_VALUE);
-        assertNotNull(userSubscription.getCreatedDate(),
-                      VALIDATION_DATE_TIME);
-
-        assertEquals(0, userSubscription.getCourtSubscriptions().size(),
+        assertEquals(0, userSubscriptions.getCourtSubscriptions().size(),
                      VALIDATION_COURT_LIST);
 
-        assertEquals(1, userSubscription.getCaseSubscriptions().size(),
-                     "Court subscription list does not contain 1 case");
+        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
+                     VALIDATION_ONE_CASE_COURT
+        );
 
-        Hearing hearing1 = userSubscription.getCaseSubscriptions().get(0);
-        assertEquals(1, hearing1.getHearingId(), VALIDATION_HEARING_ID);
-        assertEquals(CASE_ID, hearing1.getCaseNumber(), VALIDATION_CASE_ID);
-        assertEquals("N363N6R4OG", hearing1.getUrn(), VALIDATION_CASE_URN);
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
     }
 
     @Test
@@ -451,78 +395,19 @@ class SubscriptionControllerTests {
 
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
-        List<UserSubscription> userSubscriptions =
-            Arrays.asList(
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription[].class));
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(1, userSubscriptions.size(),
-                     VALIDATION_SUBSCRIPTION_LIST);
-
-        UserSubscription userSubscription = userSubscriptions.get(0);
-
-        assertEquals(SUBSCRIPTION.getChannel(), userSubscription.getChannel(),
-                     VALIDATION_CHANNEL_NAME);
-        assertEquals(SUBSCRIPTION.getUserId(), userSubscription.getUserId(),
-                     VALIDATION_USER_ID);
-        assertEquals(SearchType.CASE_URN, userSubscription.getSearchType(),
-                     VALIDATION_SEARCH_TYPE);
-        assertEquals(CASE_URN, userSubscription.getSearchValue(),
-                     VALIDATION_SEARCH_VALUE);
-        assertNotNull(userSubscription.getCreatedDate(),
-                      VALIDATION_DATE_TIME);
-
-        assertEquals(0, userSubscription.getCourtSubscriptions().size(),
+        assertEquals(0, userSubscriptions.getCourtSubscriptions().size(),
                      VALIDATION_COURT_LIST);
 
-        assertEquals(1, userSubscription.getCaseSubscriptions().size(),
-                     "Court subscription list does not contain 1 case");
+        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
+                     VALIDATION_ONE_CASE_COURT);
 
-        Hearing hearing1 = userSubscription.getCaseSubscriptions().get(0);
-        assertEquals(2, hearing1.getHearingId(), VALIDATION_HEARING_ID);
-        assertEquals("T485914", hearing1.getCaseNumber(), VALIDATION_CASE_ID);
-        assertEquals(CASE_URN, hearing1.getUrn(), VALIDATION_CASE_URN);
-    }
-
-    @Test
-    void testGetUsersSubscriptionsByUserIdSingleCaseName() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_NAME, SearchType.CASE_NAME));
-
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
-
-        List<UserSubscription> userSubscriptions =
-            Arrays.asList(
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription[].class));
-
-        assertEquals(1, userSubscriptions.size(),
-                     VALIDATION_SUBSCRIPTION_LIST);
-
-        UserSubscription userSubscription = userSubscriptions.get(0);
-
-        assertEquals(SUBSCRIPTION.getChannel(), userSubscription.getChannel(),
-                     VALIDATION_CHANNEL_NAME);
-        assertEquals(SUBSCRIPTION.getUserId(), userSubscription.getUserId(),
-                     VALIDATION_USER_ID);
-        assertEquals(SearchType.CASE_NAME, userSubscription.getSearchType(),
-                     VALIDATION_SEARCH_TYPE);
-        assertEquals(CASE_NAME, userSubscription.getSearchValue(),
-                     VALIDATION_SEARCH_VALUE);
-        assertNotNull(userSubscription.getCreatedDate(),
-                      VALIDATION_DATE_TIME);
-
-        assertEquals(0, userSubscription.getCourtSubscriptions().size(),
-                     VALIDATION_COURT_LIST);
-
-        assertEquals(1, userSubscription.getCaseSubscriptions().size(),
-                     "Court subscription list does not contain 1 case");
-
-        Hearing hearing1 = userSubscription.getCaseSubscriptions().get(0);
-        assertEquals(1, hearing1.getHearingId(), VALIDATION_HEARING_ID);
-        assertEquals("T485913", hearing1.getCaseNumber(), VALIDATION_CASE_ID);
-        assertEquals("N363N6R4OG", hearing1.getUrn(), VALIDATION_CASE_URN);
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
     }
 
     @Test
@@ -533,30 +418,11 @@ class SubscriptionControllerTests {
 
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
-        List<UserSubscription> userSubscriptions =
-            Arrays.asList(
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription[].class));
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(0, userSubscriptions.size(),
+        assertEquals(new UserSubscription(), userSubscriptions,
                      VALIDATION_NO_SUBSCRIPTIONS);
     }
-
-    @Test
-    void testGetUsersSubscriptionsWithDatabaseInvalidSearchValue() throws Exception {
-        mvc.perform(setupMockSubscription("1234", SearchType.CASE_ID));
-
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
-            .andExpect(status().isBadGateway())
-            .andReturn();
-
-        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
-
-        ExceptionResponse exceptionResponse =
-            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), ExceptionResponse.class);
-
-        assertTrue(exceptionResponse.getMessage().contains("No hearing found for case number: 1234"),
-                   "Error message not present for unknown case number");
-    }
-
 }
 

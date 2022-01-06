@@ -10,20 +10,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Court;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Hearing;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -38,19 +37,12 @@ class SubscriptionServiceTest {
     private static final String SEARCH_VALUE = "193254";
     private static final String CASE_ID = "123";
     private static final String URN = "312";
-    private static final String COURT_ID = "354";
     private static final String CASE_NAME = "case-name";
-
-    private static final String VALIDATION_SEARCH_TYPE = "Search type does not match expected search type";
-    private static final String VALIDATION_SEARCH_VALUE = "Search value does not match expected search value";
-    private static final String VALIDATION_SINGLE_USER_SUBSCRIPTION = "A single user subscription is returned";
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
     private Subscription findableSubscription;
-
-    @Mock
-    DataManagementService dataManagementService;
+    private LocalDateTime dateAdded;
 
     @Mock
     SubscriptionRepository subscriptionRepository;
@@ -60,15 +52,13 @@ class SubscriptionServiceTest {
 
     @BeforeEach
     void setup() {
-        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE);
-        mockSubscriptionList = createMockSubscriptionList();
+        dateAdded = LocalDateTime.now();
+        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, dateAdded);
+        mockSubscriptionList = createMockSubscriptionList(dateAdded);
         findableSubscription = findableSubscription();
 
         lenient().when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         lenient().when(subscriptionRepository.findByUserId(USER_ID_NO_SUBS)).thenReturn(new ArrayList<>());
-        lenient().when(dataManagementService.getHearingByCaseId(any())).thenReturn(new Hearing());
-        lenient().when(dataManagementService.getHearingByUrn(any())).thenReturn(new Hearing());
-        lenient().when(dataManagementService.getCourt(any())).thenReturn(new Court());
     }
 
     @Test
@@ -124,89 +114,69 @@ class SubscriptionServiceTest {
 
     @Test
     void testNoSubscriptionsReturnsEmpty() {
-        assertEquals(new ArrayList<UserSubscription>(), subscriptionService.findByUserId(USER_ID_NO_SUBS),
+        assertEquals(new UserSubscription(), subscriptionService.findByUserId(USER_ID_NO_SUBS),
                      "Should return empty user subscriptions");
     }
 
     @Test
-    void testUserSubscriptionsCaseId() {
-        mockSubscription.setSearchType(SearchType.CASE_ID);
-        mockSubscription.setSearchValue(CASE_ID);
-        when(subscriptionRepository.findByUserId(USER_ID))
-            .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-
-        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
-
-        assertEquals(1, userSubscriptions.size(), VALIDATION_SINGLE_USER_SUBSCRIPTION);
-        UserSubscription userSubscription = userSubscriptions.get(0);
-        assertEquals(mockSubscription.getSearchType(), userSubscription.getSearchType(),
-                     VALIDATION_SEARCH_TYPE);
-        assertEquals(mockSubscription.getSearchValue(), userSubscription.getSearchValue(),
-                     VALIDATION_SEARCH_VALUE);
-        assertEquals(1, userSubscription.getCaseSubscriptions().size(),
-                     "Should populate 1 case");
-    }
-
-    @Test
-    void testUserSubscriptionsCaseUrn() {
-        mockSubscription.setSearchType(SearchType.CASE_URN);
-        mockSubscription.setSearchValue(URN);
-        when(subscriptionRepository.findByUserId(USER_ID))
-            .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
-
-        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
-
-        assertEquals(1, userSubscriptions.size(), VALIDATION_SINGLE_USER_SUBSCRIPTION);
-        UserSubscription userSubscription = userSubscriptions.get(0);
-        assertEquals(mockSubscription.getSearchType(), userSubscription.getSearchType(),
-                     VALIDATION_SEARCH_TYPE);
-        assertEquals(mockSubscription.getSearchValue(), userSubscription.getSearchValue(),
-                     VALIDATION_SEARCH_VALUE);
-        assertEquals(1, userSubscription.getCaseSubscriptions().size(),
-                     "Should populate 1 case");
-    }
-
-    @Test
-    void testUserSubscriptionsCourt() {
+    void testFindByUserIdOnlyCourt() {
         mockSubscription.setSearchType(SearchType.COURT_ID);
-        mockSubscription.setSearchValue(COURT_ID);
-        when(subscriptionRepository.findByUserId(USER_ID))
-            .thenReturn(new ArrayList<>(Collections.singleton(mockSubscription)));
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+        UserSubscription result = subscriptionService.findByUserId(USER_ID);
+        CourtSubscription expected = new CourtSubscription();
+        expected.setCourtName("Test court");
+        expected.setDateAdded(dateAdded);
 
-        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
-
-        assertEquals(1, userSubscriptions.size(), VALIDATION_SINGLE_USER_SUBSCRIPTION);
-        UserSubscription userSubscription = userSubscriptions.get(0);
-        assertEquals(mockSubscription.getSearchType(), userSubscription.getSearchType(),
-                     VALIDATION_SEARCH_TYPE);
-        assertEquals(mockSubscription.getSearchValue(), userSubscription.getSearchValue(),
-                     VALIDATION_SEARCH_VALUE);
-
-        assertEquals(1, userSubscription.getCourtSubscriptions().size(),
-                     "Should populate 1 court");
+        assertEquals(List.of(expected), result.getCourtSubscriptions(),
+                     "Should return court name");
+        assertEquals(0, result.getCaseSubscriptions().size(), "Cases should be empty");
     }
 
     @Test
-    void testUserSubscriptions() {
+    void testFindByUserIdCaseType() {
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setCaseNumber(CASE_ID);
+        mockSubscription.setCaseName(CASE_NAME);
+        mockSubscription.setUrn(URN);
 
-        List<UserSubscription> userSubscriptions = subscriptionService.findByUserId(USER_ID);
+        CaseSubscription expected = new CaseSubscription();
+        expected.setCaseNumber(CASE_ID);
+        expected.setCaseName(CASE_NAME);
+        expected.setUrn(URN);
+        expected.setUrn(URN);
+        expected.setDateAdded(dateAdded);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
 
-        assertEquals(mockSubscriptionList.size(), userSubscriptions.size(),
-                     "Number of returned subscriptions does not match mock subscriptions");
+        assertEquals(List.of(expected), subscriptionService.findByUserId(USER_ID).getCaseSubscriptions(),
+                     "Should return populated case");
+    }
 
-        for (UserSubscription userSubscription : userSubscriptions) {
-            if (userSubscription.getSearchType().equals(SearchType.COURT_ID)) {
-                assertEquals(1, userSubscription.getCourtSubscriptions().size(),
-                             "Does not contain expected number of courts");
-                assertEquals(0, userSubscription.getCaseSubscriptions().size(),
-                             "Does not contain expected number of cases");
-            } else {
-                assertEquals(0, userSubscription.getCourtSubscriptions().size(),
-                             "Does not contain expected number of courts");
-                assertEquals(1, userSubscription.getCaseSubscriptions().size(),
-                             "Does not contain expected number of cases");
-            }
+    @Test
+    void testFindByUserIdLength() {
+        UserSubscription result = subscriptionService.findByUserId(USER_ID);
+        assertEquals(6, result.getCaseSubscriptions().size(),
+                     "Should add all CaseSubscriptions to UserSubscriptions");
+        assertEquals(2, result.getCourtSubscriptions().size(), "Should add all court names");
+    }
+
+    @Test
+    void testFindByUserId() {
+        UserSubscription result = subscriptionService.findByUserId(USER_ID);
+        for (int i = 0; i < 6; i++) {
+            assertEquals(CASE_ID + i, result.getCaseSubscriptions().get(i).getCaseNumber(),
+                         "Should contain correct caseNumber");
         }
+        assertEquals("test court name", result.getCourtSubscriptions().get(0).getCourtName(), "Should match court name");
+    }
+
+    @Test
+    void testFindByUserIdCreatedDates() {
+        UserSubscription result = subscriptionService.findByUserId(USER_ID);
+        for (int i = 0; i < 6; i++) {
+            assertEquals(dateAdded, result.getCaseSubscriptions().get(i).getDateAdded(),
+                         "Should match dateAdded");
+        }
+        assertEquals(dateAdded, result.getCourtSubscriptions().get(0).getDateAdded(), "Should match dateAdded");
     }
 }
 

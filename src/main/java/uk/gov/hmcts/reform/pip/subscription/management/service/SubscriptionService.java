@@ -39,6 +39,6 @@ public interface SubscriptionService {
      * Find all subscriptions for a given user.
      * @return The list of subscriptions that have been found.
      */
-    List<UserSubscription> findByUserId(String userId);
+    UserSubscription findByUserId(String userId);
 
 }

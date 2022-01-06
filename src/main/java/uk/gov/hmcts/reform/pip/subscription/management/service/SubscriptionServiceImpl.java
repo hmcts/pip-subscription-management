@@ -4,11 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,9 +24,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Autowired
     SubscriptionRepository repository;
-
-    @Autowired
-    DataManagementService dataManagementService;
 
     @Override
     public Subscription createSubscription(Subscription subscription) {
@@ -63,37 +62,31 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public List<UserSubscription> findByUserId(String userId) {
+    public UserSubscription findByUserId(String userId) {
         List<Subscription> subscriptions = repository.findByUserId(userId);
         if (subscriptions.isEmpty()) {
-            return new ArrayList<>();
+            return new UserSubscription();
         }
         return collectSubscriptions(subscriptions);
     }
 
-    List<UserSubscription> collectSubscriptions(List<Subscription> subscriptions) {
-        List<UserSubscription> userSubscriptions = new ArrayList<>();
+    UserSubscription collectSubscriptions(List<Subscription> subscriptions) {
+        UserSubscription userSubscription = new UserSubscription();
         subscriptions.forEach(subscription -> {
-            UserSubscription userSubscription = new UserSubscription(subscription);
-            switch (subscription.getSearchType()) {
-                case CASE_ID:
-                    userSubscription.getCaseSubscriptions()
-                        .add(dataManagementService.getHearingByCaseId(subscription.getSearchValue()));
-                    break;
-                case CASE_URN:
-                    userSubscription.getCaseSubscriptions()
-                        .add(dataManagementService.getHearingByUrn(subscription.getSearchValue()));
-                    break;
-                case COURT_ID:
-                    userSubscription.getCourtSubscriptions()
-                        .add(dataManagementService.getCourt(subscription.getSearchValue()));
-                    break;
-                default:
-                    log.error("Subscription with id: {} did not have valid SearchType.", subscription.getId());
-                    break;
+            if (subscription.getSearchType() == SearchType.COURT_ID) {
+                CourtSubscription courtSubscription = new CourtSubscription();
+                courtSubscription.setCourtName(subscription.getCourtName());
+                courtSubscription.setDateAdded(subscription.getCreatedDate());
+                userSubscription.getCourtSubscriptions().add(courtSubscription);
+            } else {
+                CaseSubscription caseSubscription = new CaseSubscription();
+                caseSubscription.setCaseName(subscription.getCaseName());
+                caseSubscription.setCaseNumber(subscription.getCaseNumber());
+                caseSubscription.setUrn(subscription.getUrn());
+                caseSubscription.setDateAdded(subscription.getCreatedDate());
+                userSubscription.getCaseSubscriptions().add(caseSubscription);
             }
-            userSubscriptions.add(userSubscription);
         });
-        return userSubscriptions;
+        return userSubscription;
     }
 }

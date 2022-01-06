@@ -47,6 +47,18 @@ public class SubscriptionDto {
 
     private LocalDateTime createdDate = LocalDateTime.now();
 
+    @Valid
+    private String caseNumber;
+
+    @Valid
+    private String caseName;
+
+    @Valid
+    private String urn;
+
+    @Valid
+    private String courtName;
+
     public Subscription toEntity() {
         Subscription entity = new Subscription();
         entity.setSearchValue(this.searchValue);
@@ -55,6 +67,10 @@ public class SubscriptionDto {
         entity.setSearchType(this.searchType);
         entity.setId(this.id);
         entity.setCreatedDate(this.createdDate);
+        entity.setCaseName(this.caseName);
+        entity.setCaseNumber(this.caseNumber);
+        entity.setUrn(this.urn);
+        entity.setCourtName(this.courtName);
         return entity;
     }
 

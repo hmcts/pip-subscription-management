@@ -13,6 +13,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,10 +41,8 @@ class SubscriptionControllerTest {
 
     @BeforeEach
     void setup() {
-        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE);
-        Subscription subscription = new Subscription();
-        subscription.setId(UUID.randomUUID());
-        userSubscription = new UserSubscription(subscription);
+        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, LocalDateTime.now());
+        userSubscription = new UserSubscription();
 
     }
 
@@ -91,14 +90,14 @@ class SubscriptionControllerTest {
 
     @Test
     void testFindByUserId() {
-        when(subscriptionService.findByUserId(USER_ID)).thenReturn(List.of(userSubscription));
-        assertEquals(List.of(userSubscription), subscriptionController.findByUserId(USER_ID).getBody(),
+        when(subscriptionService.findByUserId(USER_ID)).thenReturn((userSubscription));
+        assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID).getBody(),
                      "Should return users subscriptions");
     }
 
     @Test
     void testFindByUserIdReturnsOk() {
-        when(subscriptionService.findByUserId(USER_ID)).thenReturn(List.of(userSubscription));
+        when(subscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
         assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID).getStatusCode(),
                      STATUS_CODE_MATCH);
     }

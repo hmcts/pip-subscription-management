@@ -57,6 +57,18 @@ public class Subscription {
     @ApiModelProperty(hidden = true)
     private LocalDateTime createdDate = LocalDateTime.now();
 
+    @Valid
+    private String caseNumber;
+
+    @Valid
+    private String caseName;
+
+    @Valid
+    private String urn;
+
+    @Valid
+    private String courtName;
+
     public SubscriptionDto toDto() {
         SubscriptionDto dto = new SubscriptionDto();
         dto.setSearchValue(this.searchValue);
@@ -65,6 +77,10 @@ public class Subscription {
         dto.setSearchType(this.searchType);
         dto.setId(this.id);
         dto.setCreatedDate(this.createdDate);
+        dto.setCaseNumber(this.caseNumber);
+        dto.setCaseName(this.caseName);
+        dto.setUrn(this.urn);
+        dto.setCourtName(this.courtName);
         return dto;
     }
 }
