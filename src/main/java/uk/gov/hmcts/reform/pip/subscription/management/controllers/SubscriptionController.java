@@ -20,7 +20,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
-import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
 
