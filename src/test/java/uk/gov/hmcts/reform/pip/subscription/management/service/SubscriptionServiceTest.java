@@ -122,11 +122,12 @@ class SubscriptionServiceTest {
     void testFindByUserIdOnlyCourt() {
         mockSubscription.setSearchType(SearchType.COURT_ID);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
-        UserSubscription result = subscriptionService.findByUserId(USER_ID);
         CourtSubscription expected = new CourtSubscription();
         expected.setSubscriptionId(mockSubscription.getId());
         expected.setCourtName("Test court");
         expected.setDateAdded(dateAdded);
+
+        UserSubscription result = subscriptionService.findByUserId(USER_ID);
 
         assertEquals(List.of(expected), result.getCourtSubscriptions(),
                      "Should return court name");
