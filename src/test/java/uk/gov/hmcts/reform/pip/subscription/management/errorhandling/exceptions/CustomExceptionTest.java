@@ -18,23 +18,4 @@ class CustomExceptionTest {
                      ASSERTION_MESSAGE);
 
     }
-
-    @Test
-    void testNotFoundException() {
-        NotFoundException notFoundException = new NotFoundException(TEST_MESSAGE);
-        assertEquals(TEST_MESSAGE, notFoundException.getMessage(), ASSERTION_MESSAGE);
-    }
-
-    @Test
-    void testHearingNotFoundException() {
-        HearingNotFoundException hearingNotFoundException = new HearingNotFoundException(TEST_MESSAGE);
-        assertEquals(TEST_MESSAGE, hearingNotFoundException.getMessage(), ASSERTION_MESSAGE);
-    }
-
-    @Test
-    void testCourtNotFoundException() {
-        CourtNotFoundException courtNotFoundException = new CourtNotFoundException(TEST_MESSAGE);
-        assertEquals(TEST_MESSAGE, courtNotFoundException.getMessage(), ASSERTION_MESSAGE);
-    }
-
 }

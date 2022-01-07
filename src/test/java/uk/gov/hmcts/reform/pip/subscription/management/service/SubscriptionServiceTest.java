@@ -166,7 +166,8 @@ class SubscriptionServiceTest {
             assertEquals(CASE_ID + i, result.getCaseSubscriptions().get(i).getCaseNumber(),
                          "Should contain correct caseNumber");
         }
-        assertEquals("test court name", result.getCourtSubscriptions().get(0).getCourtName(), "Should match court name");
+        assertEquals("test court name", result.getCourtSubscriptions().get(0).getCourtName(),
+                     "Should match court name");
     }
 
     @Test

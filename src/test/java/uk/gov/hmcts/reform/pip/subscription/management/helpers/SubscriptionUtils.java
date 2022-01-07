@@ -40,7 +40,8 @@ public final class SubscriptionUtils {
         mockData.put(7, "Cedric");
         mockData.put(8, "Jonathan");
         for (int i = 0; i < 8; i++) {
-            Subscription subscription = createMockSubscription(mockData.get(i), String.format("court-%s", i), createdDate);
+            Subscription subscription = createMockSubscription(mockData.get(i),
+                                                               String.format("court-%s", i), createdDate);
             subscription.setChannel(i < 3 ? Channel.API : Channel.EMAIL);
             subscription.setId(UUID.randomUUID());
             subscription.setCaseName("test name");

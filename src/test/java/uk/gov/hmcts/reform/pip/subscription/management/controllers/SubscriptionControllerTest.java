@@ -14,7 +14,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubsc
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -90,7 +89,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testFindByUserId() {
-        when(subscriptionService.findByUserId(USER_ID)).thenReturn((userSubscription));
+        when(subscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
         assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID).getBody(),
                      "Should return users subscriptions");
     }

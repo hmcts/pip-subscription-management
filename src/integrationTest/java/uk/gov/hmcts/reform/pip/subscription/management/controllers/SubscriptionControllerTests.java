@@ -29,7 +29,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubsc
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -322,7 +321,8 @@ class SubscriptionControllerTests {
         UserSubscription userSubscriptions =
                 OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(3, userSubscriptions.getCourtSubscriptions().size() + userSubscriptions.getCaseSubscriptions().size(),
+        assertEquals(3,
+                     userSubscriptions.getCourtSubscriptions().size() + userSubscriptions.getCaseSubscriptions().size(),
                      VALIDATION_SUBSCRIPTION_LIST);
 
         CourtSubscription court = userSubscriptions.getCourtSubscriptions().get(0);

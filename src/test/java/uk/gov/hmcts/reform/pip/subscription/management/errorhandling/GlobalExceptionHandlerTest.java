@@ -12,7 +12,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.NotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 
@@ -85,18 +84,5 @@ class GlobalExceptionHandlerTest {
                    "Incorrect response " + "text");
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode(), BAD_REQUEST_ASSERTION);
 
-    }
-
-    @Test
-    void testNotFoundException() {
-        NotFoundException notFoundException = new NotFoundException(TEST_MESSAGE);
-
-        ResponseEntity<ExceptionResponse> responseEntity =
-            globalExceptionHandler.handle(notFoundException);
-
-        assertEquals(HttpStatus.BAD_GATEWAY, responseEntity.getStatusCode(), "Status code should be Bad Gateway");
-        assertNotNull(responseEntity.getBody(), "Response should contain a body");
-        assertEquals(TEST_MESSAGE, responseEntity.getBody().getMessage(),
-                     "The message should match the message passed in");
     }
 }
