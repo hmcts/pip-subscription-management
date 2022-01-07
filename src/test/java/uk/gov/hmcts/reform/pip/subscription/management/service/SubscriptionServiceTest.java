@@ -178,5 +178,25 @@ class SubscriptionServiceTest {
         }
         assertEquals(dateAdded, result.getCourtSubscriptions().get(0).getDateAdded(), "Should match dateAdded");
     }
+
+    @Test
+    void testFindByUserIdAssignsIdForCourt() {
+        mockSubscription.setSearchType(SearchType.COURT_ID);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        assertEquals(mockSubscription.getId(),
+                     subscriptionService.findByUserId(USER_ID).getCourtSubscriptions().get(0).getSubscriptionId(),
+                     "Should match subscriptionId");
+    }
+
+    @Test
+    void testFindByUserIdAssignsIdForCase() {
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        assertEquals(mockSubscription.getId(),
+                     subscriptionService.findByUserId(USER_ID).getCaseSubscriptions().get(0).getSubscriptionId(),
+                     "Should match subscriptionId");
+    }
 }
 

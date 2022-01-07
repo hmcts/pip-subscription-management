@@ -25,8 +25,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Autowired
     SubscriptionRepository repository;
 
+    @Autowired
+    DataManagementService dataManagementService;
+
     @Override
     public Subscription createSubscription(Subscription subscription) {
+        if (subscription.getSearchType().equals(SearchType.COURT_ID)) {
+            subscription.setCourtName(dataManagementService.getCourtName(subscription.getSearchValue()));
+        }
         return repository.save(subscription);
     }
 
@@ -75,12 +81,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptions.forEach(subscription -> {
             if (subscription.getSearchType() == SearchType.COURT_ID) {
                 CourtSubscription courtSubscription = new CourtSubscription();
+                courtSubscription.setSubscriptionId(subscription.getId());
                 courtSubscription.setCourtName(subscription.getCourtName());
                 courtSubscription.setDateAdded(subscription.getCreatedDate());
                 userSubscription.getCourtSubscriptions().add(courtSubscription);
             } else {
                 CaseSubscription caseSubscription = new CaseSubscription();
                 caseSubscription.setCaseName(subscription.getCaseName());
+                caseSubscription.setSubscriptionId(subscription.getId());
                 caseSubscription.setCaseNumber(subscription.getCaseNumber());
                 caseSubscription.setUrn(subscription.getUrn());
                 caseSubscription.setDateAdded(subscription.getCreatedDate());
