@@ -124,6 +124,7 @@ class SubscriptionServiceTest {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
         UserSubscription result = subscriptionService.findByUserId(USER_ID);
         CourtSubscription expected = new CourtSubscription();
+        expected.setSubscriptionId(mockSubscription.getId());
         expected.setCourtName("Test court");
         expected.setDateAdded(dateAdded);
 
@@ -143,7 +144,7 @@ class SubscriptionServiceTest {
         expected.setCaseNumber(CASE_ID);
         expected.setCaseName(CASE_NAME);
         expected.setUrn(URN);
-        expected.setUrn(URN);
+        expected.setSubscriptionId(mockSubscription.getId());
         expected.setDateAdded(dateAdded);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
 
