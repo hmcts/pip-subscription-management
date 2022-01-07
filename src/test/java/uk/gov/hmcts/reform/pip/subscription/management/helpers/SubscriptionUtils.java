@@ -18,6 +18,7 @@ public final class SubscriptionUtils {
 
     public static Subscription createMockSubscription(String userId, String courtId, LocalDateTime createdDate) {
         Subscription subscription = new Subscription();
+        subscription.setId(UUID.randomUUID());
         subscription.setUserId(userId);
         subscription.setSearchValue(courtId);
         subscription.setCourtName("Test court");
@@ -43,7 +44,6 @@ public final class SubscriptionUtils {
             Subscription subscription = createMockSubscription(mockData.get(i),
                                                                String.format("court-%s", i), createdDate);
             subscription.setChannel(i < 3 ? Channel.API : Channel.EMAIL);
-            subscription.setId(UUID.randomUUID());
             subscription.setCaseName("test name");
             subscription.setUrn("321" + i);
             subscription.setCaseNumber("123" + i);
