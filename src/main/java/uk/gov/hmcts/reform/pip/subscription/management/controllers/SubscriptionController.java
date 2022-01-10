@@ -59,7 +59,7 @@ public class SubscriptionController {
                              @PathVariable UUID subId) {
 
         subscriptionService.deleteById(subId);
-        return String.format("Subscription %s deleted", subId);
+        return String.format("Subscription: %s deleted", subId);
     }
 
 

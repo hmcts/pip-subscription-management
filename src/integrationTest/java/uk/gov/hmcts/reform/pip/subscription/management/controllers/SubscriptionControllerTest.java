@@ -37,14 +37,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {Application.class, RestTemplateConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "test")
+@ActiveProfiles(profiles = "integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class SubscriptionControllerTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static SubscriptionDto subscription;
 
-    private static final String COURT_NAME_1 = "Glasgow-Court-1";
+    private static final String COURT_NAME_1 = "Blackpool Magistrates' Court";
     private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
 
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
@@ -53,6 +52,10 @@ class SubscriptionControllerTest {
     private static final String VALIDATION_SEARCH_TYPE = "Returned search type does not match expected type";
     private static final String VALIDATION_SEARCH_VALUE = "Returned search value does not match expected value";
     private static final String VALIDATION_USER_ID = "Returned user ID does not match expected user ID";
+    private static final String VALIDATION_CASE_NAME = "Returned case name does not match expected case name";
+    private static final String VALIDATION_CASE_NUMBER = "Returned case number does not match expected case number";
+    private static final String VALIDATION_CASE_URN = "Returned URN does not match expected URN";
+    private static final String VALIDATION_COURT_NAME = "Returned court name does not match expected court name";
 
     private static final String COURT_ID = "53";
     private static final String CASE_ID = "T485913";
@@ -77,7 +80,6 @@ class SubscriptionControllerTest {
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
 
         SUBSCRIPTION.setSearchValue(searchValue);
-        SUBSCRIPTION.setCourtName(COURT_NAME_1);
         SUBSCRIPTION.setCaseName(CASE_NAME);
         SUBSCRIPTION.setCaseNumber(CASE_ID);
         SUBSCRIPTION.setUrn(CASE_URN);
@@ -100,7 +102,7 @@ class SubscriptionControllerTest {
     @DisplayName("Post a new subscription and then get it from db.")
     @Test
     void postEndpoint() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -138,12 +140,20 @@ class SubscriptionControllerTest {
         assertNotEquals(
             returnedSubscription.getId(), 0L, "id should not equal zero"
         );
+        assertEquals(SUBSCRIPTION.getCaseName(), returnedSubscription.getCaseName(),
+                     VALIDATION_CASE_NAME);
+        assertEquals(SUBSCRIPTION.getCaseNumber(), returnedSubscription.getCaseNumber(),
+                     VALIDATION_CASE_NUMBER);
+        assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
+                     VALIDATION_CASE_URN);
+        assertEquals(COURT_NAME_1, returnedSubscription.getCourtName(),
+                     VALIDATION_COURT_NAME);
     }
 
     @DisplayName("Ensure post endpoint actually posts a subscription to db")
     @Test
     void checkPostToDb() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -190,6 +200,14 @@ class SubscriptionControllerTest {
         assertNotEquals(
             returnedSubscription2.getId(), 0L, "id should not equal zero"
         );
+        assertEquals(SUBSCRIPTION.getCaseName(), returnedSubscription.getCaseName(),
+                     VALIDATION_CASE_NAME);
+        assertEquals(SUBSCRIPTION.getCaseNumber(), returnedSubscription.getCaseNumber(),
+                     VALIDATION_CASE_NUMBER);
+        assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
+                     VALIDATION_CASE_URN);
+        assertEquals(COURT_NAME_1, returnedSubscription.getCourtName(),
+                     VALIDATION_COURT_NAME);
 
     }
 
@@ -223,7 +241,7 @@ class SubscriptionControllerTest {
     @DisplayName("Delete an individual subscription")
     @Test
     void deleteEndpoint() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -243,7 +261,7 @@ class SubscriptionControllerTest {
         ))).andExpect(status().isOk()).andReturn();
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
         assertEquals(
-            String.format("Subscription: %s was deleted", returnedSubscription.getId()),
+            String.format("Subscription: %s deleted", returnedSubscription.getId()),
             deleteResponse.getResponse().getContentAsString(),
             "Responses are not equal"
         );
