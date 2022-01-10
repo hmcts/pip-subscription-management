@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Objects;
+
 @Slf4j
 @Component
 public class DataManagementService {
@@ -24,7 +26,7 @@ public class DataManagementService {
         try {
             ResponseEntity<JsonNode> response = this.restTemplate.getForEntity(
                 String.format("%s/courts/%s", url, courtId), JsonNode.class);
-            return response.getBody().path("name").asText();
+            return Objects.requireNonNull(response.getBody()).path("name").asText();
         } catch (HttpStatusCodeException ex) {
             log.error("Data management request failed for CourtId: {}. Response: {}",
                       courtId, ex.getResponseBodyAsString());
