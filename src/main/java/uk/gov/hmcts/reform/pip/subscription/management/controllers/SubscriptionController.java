@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,15 +36,15 @@ public class SubscriptionController {
     @ApiOperation("Endpoint to create a new unique subscription - the 'id' field is hidden from swagger as it is auto"
         + " generated on creation")
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscription successfully created with the id: {subscription id} "
+        @ApiResponse(code = 201, message = "Subscription successfully created with the id: {subscription id} "
             + "for user: {userId}"),
         @ApiResponse(code = 400, message = "This subscription object has an invalid format. Please check again.")
     })
     public ResponseEntity<String> createSubscription(@RequestBody @Valid SubscriptionDto sub) {
         Subscription subscription = subscriptionService.createSubscription(sub.toEntity());
-        return ResponseEntity.ok(String.format("Subscription created with the id %s for user '%s'",
-                                               subscription.getId(), subscription.getUserId()
-        ));
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(String.format("Subscription created with the id %s for user '%s'",
+                                                        subscription.getId(), subscription.getUserId()));
     }
 
     @ApiResponses({

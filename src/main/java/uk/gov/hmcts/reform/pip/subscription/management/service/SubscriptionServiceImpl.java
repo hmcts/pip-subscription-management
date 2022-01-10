@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
@@ -19,8 +20,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Autowired
     SubscriptionRepository repository;
 
+    @Autowired
+    DataManagementService dataManagementService;
+
     @Override
     public Subscription createSubscription(Subscription subscription) {
+        if (subscription.getSearchType().equals(SearchType.COURT_ID)) {
+            subscription.setCourtName(dataManagementService.getCourtName(subscription.getSearchValue()));
+        }
         return repository.save(subscription);
     }
 

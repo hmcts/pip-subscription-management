@@ -7,6 +7,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
@@ -45,10 +46,9 @@ class SubscriptionControllerTest {
     void testCreateSubscription() {
         when(subscriptionService.createSubscription(mockSubscription))
             .thenReturn(mockSubscription);
-        assertEquals(subscriptionController.createSubscription(mockSubscription.toDto()),
-                     ResponseEntity.ok(String.format("Subscription created with the id %s for user '%s'",
-                                                     mockSubscription.getId(), mockSubscription.getUserId()
-                     )),
+        assertEquals(new ResponseEntity<>(String.format("Subscription created with the id %s for user '%s'",
+                                                          mockSubscription.getId(), mockSubscription.getUserId()), HttpStatus.CREATED),
+                     subscriptionController.createSubscription(mockSubscription.toDto()),
                      "Returned subscription does not match expected subscription"
         );
     }

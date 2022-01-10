@@ -47,6 +47,9 @@ spring:
       # this ensures the db persists after spring boot connection drops.
       ddl-auto: update
 
+service-to-service:
+  data-management: ${DATA_MANAGEMENT_URL:https://pip-data-management.staging.platform.hmcts.net}
 azure:
+
   application-insights:
     instrumentation-key: ${rpe.AppInsightsInstrumentationKey:00000000-0000-0000-0000-000000000000}

@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
@@ -32,6 +33,8 @@ class SubscriptionServiceTest {
     private Subscription mockSubscription;
     private Subscription findableSubscription;
 
+    @Mock
+    DataManagementService dataManagementService;
 
     @Mock
     SubscriptionRepository subscriptionRepository;
@@ -55,6 +58,17 @@ class SubscriptionServiceTest {
 
     @Test
     void testCreateSubscription() {
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
+        assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
+                     "The returned subscription does not match the expected subscription"
+        );
+    }
+
+    @Test
+    void testCreateSubscriptionWithCourtName() {
+        mockSubscription.setSearchType(SearchType.COURT_ID);
+        when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn("test court name");
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
                      "The returned subscription does not match the expected subscription"

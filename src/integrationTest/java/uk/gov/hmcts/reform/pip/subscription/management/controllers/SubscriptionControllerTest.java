@@ -1,6 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -16,12 +16,14 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
+import uk.gov.hmcts.reform.pip.subscription.management.config.RestTemplateConfig;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -32,7 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {Application.class},
+@SpringBootTest(classes = {Application.class, RestTemplateConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles(profiles = "test")
@@ -43,53 +45,64 @@ class SubscriptionControllerTest {
     private static SubscriptionDto subscription;
 
     private static final String COURT_NAME_1 = "Glasgow-Court-1";
+    private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
+
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
     private static final String VALIDATION_CHANNEL_NAME = "Returned subscription channel "
         + "does not match expected channel";
     private static final String VALIDATION_SEARCH_TYPE = "Returned search type does not match expected type";
     private static final String VALIDATION_SEARCH_VALUE = "Returned search value does not match expected value";
     private static final String VALIDATION_USER_ID = "Returned user ID does not match expected user ID";
-    private static final String SUBSCRIPTION_PATH = "/subscription";
-    private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
-    @Autowired
-    private MockMvc mvc;
 
+    private static final String COURT_ID = "53";
+    private static final String CASE_ID = "T485913";
+    private static final String CASE_URN = "IBRANE1BVW";
+    private static final String CASE_NAME = "Tom Clancy";
+    private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
+
+    @Autowired
+    protected MockMvc mvc;
+
+    protected static final String SUBSCRIPTION_PATH = "/subscription";
+    protected static final SubscriptionDto SUBSCRIPTION = new SubscriptionDto();
 
     @BeforeAll
     static void setup() {
         OBJECT_MAPPER.findAndRegisterModules();
-        subscription = new SubscriptionDto();
-        subscription.setChannel(Channel.API);
-        subscription.setSearchType(SearchType.COURT_ID);
-        subscription.setUserId("tom1");
+        SUBSCRIPTION.setChannel(Channel.API);
+        SUBSCRIPTION.setSearchType(SearchType.COURT_ID);
+        SUBSCRIPTION.setUserId("tom1");
     }
 
+    protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
 
-    private MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws Exception {
-
-        subscription.setSearchValue(searchValue);
+        SUBSCRIPTION.setSearchValue(searchValue);
+        SUBSCRIPTION.setCourtName(COURT_NAME_1);
+        SUBSCRIPTION.setCaseName(CASE_NAME);
+        SUBSCRIPTION.setCaseNumber(CASE_ID);
+        SUBSCRIPTION.setUrn(CASE_URN);
+        SUBSCRIPTION.setCreatedDate(DATE_ADDED);
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
-            .content(OBJECT_MAPPER.writeValueAsString(subscription))
+            .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
             .contentType(MediaType.APPLICATION_JSON);
     }
 
-    private MockHttpServletRequestBuilder getSubscriptionbyuuid(String searchValue) throws Exception {
+    private MockHttpServletRequestBuilder getSubscriptionByUuid(String searchValue) throws Exception {
         return get(SUBSCRIPTION_PATH + '/' + searchValue);
     }
 
-    private MockHttpServletRequestBuilder setupRawJsonSubscription(String json) throws Exception {
+    protected MockHttpServletRequestBuilder setupRawJsonSubscription(String json) {
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(json)
             .contentType(MediaType.APPLICATION_JSON);
     }
-
 
     @DisplayName("Post a new subscription and then get it from db.")
     @Test
     void postEndpoint() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
 
-        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isOk()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String subscriptionResponse = response.getResponse().getContentAsString();
@@ -97,28 +110,28 @@ class SubscriptionControllerTest {
             Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
                 .orElse(null);
 
-        MvcResult getResponse = mvc.perform(getSubscriptionbyuuid(ourUuid)).andReturn();
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
             getResponse.getResponse().getContentAsString(),
             Subscription.class
         );
         assertEquals(
-            subscription.getChannel(),
+            SUBSCRIPTION.getChannel(),
             returnedSubscription.getChannel(),
             VALIDATION_CHANNEL_NAME
         );
         assertEquals(
-            subscription.getSearchType(),
+            SUBSCRIPTION.getSearchType(),
             returnedSubscription.getSearchType(),
             VALIDATION_SEARCH_TYPE
         );
         assertEquals(
-            subscription.getSearchValue(),
+            SUBSCRIPTION.getSearchValue(),
             returnedSubscription.getSearchValue(),
             VALIDATION_SEARCH_VALUE
         );
         assertEquals(
-            subscription.getUserId(),
+            SUBSCRIPTION.getUserId(),
             returnedSubscription.getUserId(),
             VALIDATION_USER_ID
         );
@@ -132,7 +145,7 @@ class SubscriptionControllerTest {
     void checkPostToDb() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
 
-        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isOk()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String subscriptionResponse = response.getResponse().getContentAsString();
@@ -140,7 +153,7 @@ class SubscriptionControllerTest {
             Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
                 .orElse(null);
 
-        MvcResult getResponse = mvc.perform(getSubscriptionbyuuid(ourUuid)).andReturn();
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
             getResponse.getResponse().getContentAsString(),
             Subscription.class
@@ -155,29 +168,28 @@ class SubscriptionControllerTest {
         Subscription returnedSubscription2 = OBJECT_MAPPER.readValue(subscriptionResponse2, Subscription.class);
 
         assertEquals(
-            subscription.getChannel(),
+            SUBSCRIPTION.getChannel(),
             returnedSubscription2.getChannel(),
             VALIDATION_CHANNEL_NAME
         );
         assertEquals(
-            subscription.getSearchType(),
+            SUBSCRIPTION.getSearchType(),
             returnedSubscription2.getSearchType(),
             VALIDATION_SEARCH_TYPE
         );
         assertEquals(
-            subscription.getSearchValue(),
+            SUBSCRIPTION.getSearchValue(),
             returnedSubscription2.getSearchValue(),
             VALIDATION_SEARCH_VALUE
         );
         assertEquals(
-            subscription.getUserId(),
+            SUBSCRIPTION.getUserId(),
             returnedSubscription2.getUserId(),
             VALIDATION_USER_ID
         );
         assertNotEquals(
             returnedSubscription2.getId(), 0L, "id should not equal zero"
         );
-
 
     }
 
@@ -213,14 +225,14 @@ class SubscriptionControllerTest {
     void deleteEndpoint() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
 
-        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isOk()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
         String subscriptionResponse = response.getResponse().getContentAsString();
         String ourUuid =
             Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
                 .orElse(null);
 
-        MvcResult getResponse = mvc.perform(getSubscriptionbyuuid(ourUuid)).andReturn();
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
             getResponse.getResponse().getContentAsString(),
             Subscription.class
@@ -231,8 +243,8 @@ class SubscriptionControllerTest {
         ))).andExpect(status().isOk()).andReturn();
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
         assertEquals(
+            String.format("Subscription: %s was deleted", returnedSubscription.getId()),
             deleteResponse.getResponse().getContentAsString(),
-            String.format("Subscription %s deleted", returnedSubscription.getId()),
             "Responses are not equal"
         );
     }
