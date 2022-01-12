@@ -56,11 +56,18 @@ class SubscriptionControllerTest {
     private static final String VALIDATION_CASE_NUMBER = "Returned case number does not match expected case number";
     private static final String VALIDATION_CASE_URN = "Returned URN does not match expected URN";
     private static final String VALIDATION_COURT_NAME = "Returned court name does not match expected court name";
+    public static final String VALIDATION_BAD_REQUEST = "Incorrect response - should be 400.";
+
+    private static final String RAW_JSON_MISSING_SEARCH_VALUE =
+        "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
+    private static final String RAW_JSON_MISSING_SEARCH_TYPE =
+        "{\"userId\": \"3\", \"searchType\": \"123\",\"channel\": \"EMAIL\"}";
+    private static final String RAW_JSON_MISSING_CHANNEL =
+        "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
 
     private static final String COURT_ID = "53";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
-    private static final String CASE_NAME = "Tom Clancy";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
     @Autowired
@@ -80,7 +87,6 @@ class SubscriptionControllerTest {
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
 
         SUBSCRIPTION.setSearchValue(searchValue);
-        SUBSCRIPTION.setCaseName(CASE_NAME);
         SUBSCRIPTION.setCaseNumber(CASE_ID);
         SUBSCRIPTION.setUrn(CASE_URN);
         SUBSCRIPTION.setCreatedDate(DATE_ADDED);
@@ -217,7 +223,7 @@ class SubscriptionControllerTest {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'searchType': 'INVALID_TYPE'}");
         MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
-        assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
     @DisplayName("Checks for bad request for invalid channel enum.")
@@ -226,7 +232,7 @@ class SubscriptionControllerTest {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'channel': 'INVALID_TYPE'}");
         MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
-        assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
 
     }
 
@@ -235,7 +241,28 @@ class SubscriptionControllerTest {
     void checkEmptyPost() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription("{}");
         MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
-        assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
+    }
+
+    @Test
+    void checkMissingSearchType() throws Exception {
+        MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_SEARCH_TYPE);
+        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
+    }
+
+    @Test
+    void checkMissingSearchValue() throws Exception {
+        MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_SEARCH_VALUE);
+        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
+    }
+
+    @Test
+    void checkMissingChannel() throws Exception {
+        MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_CHANNEL);
+        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
     @DisplayName("Delete an individual subscription")

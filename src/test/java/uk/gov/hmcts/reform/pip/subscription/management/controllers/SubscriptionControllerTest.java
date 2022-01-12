@@ -10,9 +10,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,6 +29,7 @@ class SubscriptionControllerTest {
     private Subscription findableSubscription;
     private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
+    private static final Channel EMAIL = Channel.EMAIL;
 
     @Mock
     SubscriptionService subscriptionService;
@@ -36,11 +39,10 @@ class SubscriptionControllerTest {
 
     @BeforeEach
     void setup() {
-        mockSubscription = SubscriptionHelper.createMockSubscription(USER_ID, SEARCH_VALUE);
+        mockSubscription = SubscriptionHelper.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
         findableSubscription = SubscriptionHelper.findableSubscription();
 
     }
-
 
     @Test
     void testCreateSubscription() {

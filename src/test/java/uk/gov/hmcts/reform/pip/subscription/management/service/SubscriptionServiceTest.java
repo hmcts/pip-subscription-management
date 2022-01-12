@@ -8,10 +8,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,6 +30,7 @@ import static uk.gov.hmcts.reform.pip.subscription.management.helpers.Subscripti
 class SubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
+    private static final Channel EMAIL = Channel.EMAIL;
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
@@ -44,8 +47,8 @@ class SubscriptionServiceTest {
 
     @BeforeEach
     void setup() {
-        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE);
-        mockSubscriptionList = createMockSubscriptionList();
+        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
+        mockSubscriptionList = createMockSubscriptionList(LocalDateTime.now());
         findableSubscription = findableSubscription();
     }
 
