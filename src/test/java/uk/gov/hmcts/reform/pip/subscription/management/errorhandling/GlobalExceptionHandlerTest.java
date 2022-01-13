@@ -41,7 +41,6 @@ class GlobalExceptionHandlerTest {
     @Mock
     BindingResult bindingResult;
 
-
     @Test
     void testHandleSubscriptionNotFoundMethod() {
         SubscriptionNotFoundException subscriptionNotFoundException
@@ -56,7 +55,7 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode(), "Status code should be not found");
         assertNotNull(responseEntity.getBody(), "Response should contain a body");
-        assertEquals("This is a test message", responseEntity.getBody().getMessage(),
+        assertEquals(TEST_MESSAGE, responseEntity.getBody().getMessage(),
                      "The message should match the message passed in");
     }
 
@@ -88,6 +87,5 @@ class GlobalExceptionHandlerTest {
         assertTrue(responseEntity.getBody().getMessage().contains("Bad Request: "), "Incorrect response");
         assertTrue(responseEntity.getBody().getMessage().contains("COURT_ID CASE_ID CASE_URN"),
                    "Incorrect response " + "text");
-
     }
 }
