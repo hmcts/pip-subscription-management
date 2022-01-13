@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
@@ -29,6 +30,7 @@ class SubscriptionControllerTest {
     private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
+    private static final Channel EMAIL = Channel.EMAIL;
 
     @Mock
     SubscriptionService subscriptionService;
@@ -40,19 +42,18 @@ class SubscriptionControllerTest {
 
     @BeforeEach
     void setup() {
-        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, LocalDateTime.now());
+        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
         userSubscription = new UserSubscription();
-
     }
 
     @Test
     void testCreateSubscription() {
         when(subscriptionService.createSubscription(mockSubscription))
             .thenReturn(mockSubscription);
-        assertEquals(subscriptionController.createSubscription(mockSubscription.toDto()),
-                     ResponseEntity.ok(String.format("Subscription created with the id %s for user '%s'",
-                                                     mockSubscription.getId(), mockSubscription.getUserId()
-                     )),
+        assertEquals(new ResponseEntity<>(String.format("Subscription created with the id %s for user '%s'",
+                                                          mockSubscription.getId(), mockSubscription.getUserId()),
+                                          HttpStatus.CREATED),
+                     subscriptionController.createSubscription(mockSubscription.toDto()),
                      "Returned subscription does not match expected subscription"
         );
     }

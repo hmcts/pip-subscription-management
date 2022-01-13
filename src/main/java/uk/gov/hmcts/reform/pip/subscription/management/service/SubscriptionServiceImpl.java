@@ -25,8 +25,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Autowired
     SubscriptionRepository repository;
 
+    @Autowired
+    DataManagementService dataManagementService;
+
     @Override
     public Subscription createSubscription(Subscription subscription) {
+        if (subscription.getSearchType().equals(SearchType.COURT_ID)) {
+            subscription.setCourtName(dataManagementService.getCourtName(subscription.getSearchValue()));
+        }
         return repository.save(subscription);
     }
 

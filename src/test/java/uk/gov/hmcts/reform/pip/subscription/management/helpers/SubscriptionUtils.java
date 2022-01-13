@@ -16,19 +16,23 @@ public final class SubscriptionUtils {
     private SubscriptionUtils() {
     }
 
-    public static Subscription createMockSubscription(String userId, String courtId, LocalDateTime createdDate) {
+    public static Subscription createMockSubscription(String userId, String courtId, Channel channel,
+                                                      LocalDateTime createdDate) {
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID());
         subscription.setUserId(userId);
         subscription.setSearchValue(courtId);
-        subscription.setCourtName("Test court");
+        subscription.setChannel(channel);
+        subscription.setId(UUID.randomUUID());
         subscription.setCreatedDate(createdDate);
+        subscription.setSearchType(SearchType.COURT_ID);
         return subscription;
     }
 
     public static List<Subscription> createMockSubscriptionList(LocalDateTime createdDate) {
         final int caseIdInterval = 3;
         final int caseUrnInterval = 6;
+
         List<Subscription> subs = new ArrayList<>();
         Map<Integer, String> mockData = new ConcurrentHashMap<>();
         mockData.put(0, "Ralph");
@@ -41,8 +45,8 @@ public final class SubscriptionUtils {
         mockData.put(7, "Cedric");
         mockData.put(8, "Jonathan");
         for (int i = 0; i < 8; i++) {
-            Subscription subscription = createMockSubscription(mockData.get(i),
-                                                               String.format("court-%s", i), createdDate);
+            Subscription subscription = createMockSubscription(mockData.get(i), String.format("court-%s", i),
+                                                               i < 3 ? Channel.API : Channel.EMAIL, createdDate);
             subscription.setChannel(i < 3 ? Channel.API : Channel.EMAIL);
             subscription.setCaseName("test name");
             subscription.setUrn("321" + i);

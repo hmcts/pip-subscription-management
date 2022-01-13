@@ -45,7 +45,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SuppressWarnings("PMD.ExcessiveImports")
 class SubscriptionControllerTests {
 
-    private static final String COURT_NAME_1 = "Glasgow-Court-1";
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    private static final String COURT_NAME_1 = "Blackpool Magistrates' Court";
     private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
 
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
@@ -54,6 +56,24 @@ class SubscriptionControllerTests {
     private static final String VALIDATION_SEARCH_TYPE = "Returned search type does not match expected type";
     private static final String VALIDATION_SEARCH_VALUE = "Returned search value does not match expected value";
     private static final String VALIDATION_USER_ID = "Returned user ID does not match expected user ID";
+    private static final String VALIDATION_CASE_NAME = "Returned case name does not match expected case name";
+    private static final String VALIDATION_CASE_NUMBER = "Returned case number does not match expected case number";
+    private static final String VALIDATION_CASE_URN = "Returned URN does not match expected URN";
+    private static final String VALIDATION_COURT_NAME = "Returned court name does not match expected court name";
+    public static final String VALIDATION_BAD_REQUEST = "Incorrect response - should be 400.";
+    private static final String VALIDATION_CASE_ID = "Case ID does not match expected case";
+    private static final String VALIDATION_COURT_LIST = "Court subscription list contains unknown courts";
+    private static final String VALIDATION_SUBSCRIPTION_LIST = "The expected subscription is not displayed";
+    private static final String VALIDATION_NO_SUBSCRIPTIONS = "User has unknown subscriptions";
+    public static final String VALIDATION_ONE_CASE_COURT = "Court subscription list does not contain 1 case";
+    public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
+
+    private static final String RAW_JSON_MISSING_SEARCH_VALUE =
+        "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
+    private static final String RAW_JSON_MISSING_SEARCH_TYPE =
+        "{\"userId\": \"3\", \"searchType\": \"123\",\"channel\": \"EMAIL\"}";
+    private static final String RAW_JSON_MISSING_CHANNEL =
+        "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
 
     private static final String COURT_ID = "53";
     private static final String CASE_ID = "T485913";
@@ -62,20 +82,9 @@ class SubscriptionControllerTests {
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/tom1";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
-    private static final String VALIDATION_COURT_NAME = "Court name returned does not match expected court name";
-    private static final String VALIDATION_CASE_ID = "Case ID does not match expected case";
-    private static final String VALIDATION_CASE_URN = "Case URN does not match expected case";
-    private static final String VALIDATION_CASE_NAME = "Case name does not match expected case";
-    private static final String VALIDATION_COURT_LIST = "Court subscription list contains unknown courts";
-    private static final String VALIDATION_SUBSCRIPTION_LIST = "The expected subscription is not displayed";
-    private static final String VALIDATION_NO_SUBSCRIPTIONS = "User has unknown subscriptions";
-    public static final String VALIDATION_ONE_CASE_COURT = "Court subscription list does not contain 1 case";
-    public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
-
     @Autowired
     protected MockMvc mvc;
 
-    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     protected static final String SUBSCRIPTION_PATH = "/subscription";
     protected static final SubscriptionDto SUBSCRIPTION = new SubscriptionDto();
 
@@ -120,9 +129,9 @@ class SubscriptionControllerTests {
     @DisplayName("Post a new subscription and then get it from db.")
     @Test
     void postEndpoint() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
-        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isOk()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String subscriptionResponse = response.getResponse().getContentAsString();
@@ -158,14 +167,22 @@ class SubscriptionControllerTests {
         assertNotEquals(
             returnedSubscription.getId(), 0L, "id should not equal zero"
         );
+        assertEquals(SUBSCRIPTION.getCaseName(), returnedSubscription.getCaseName(),
+                     VALIDATION_CASE_NAME);
+        assertEquals(SUBSCRIPTION.getCaseNumber(), returnedSubscription.getCaseNumber(),
+                     VALIDATION_CASE_NUMBER);
+        assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
+                     VALIDATION_CASE_URN);
+        assertEquals(COURT_NAME_1, returnedSubscription.getCourtName(),
+                     VALIDATION_COURT_NAME);
     }
 
     @DisplayName("Ensure post endpoint actually posts a subscription to db")
     @Test
     void checkPostToDb() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
-        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isOk()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String subscriptionResponse = response.getResponse().getContentAsString();
@@ -210,6 +227,14 @@ class SubscriptionControllerTests {
         assertNotEquals(
             returnedSubscription2.getId(), 0L, "id should not equal zero"
         );
+        assertEquals(SUBSCRIPTION.getCaseName(), returnedSubscription.getCaseName(),
+                     VALIDATION_CASE_NAME);
+        assertEquals(SUBSCRIPTION.getCaseNumber(), returnedSubscription.getCaseNumber(),
+                     VALIDATION_CASE_NUMBER);
+        assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
+                     VALIDATION_CASE_URN);
+        assertEquals(COURT_NAME_1, returnedSubscription.getCourtName(),
+                     VALIDATION_COURT_NAME);
 
     }
 
@@ -219,7 +244,7 @@ class SubscriptionControllerTests {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'searchType': 'INVALID_TYPE'}");
         MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
-        assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
     @DisplayName("Checks for bad request for invalid channel enum.")
@@ -228,7 +253,7 @@ class SubscriptionControllerTests {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'channel': 'INVALID_TYPE'}");
         MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
-        assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
 
     }
 
@@ -237,15 +262,36 @@ class SubscriptionControllerTests {
     void checkEmptyPost() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription("{}");
         MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
-        assertEquals(400, response.getResponse().getStatus(), "Incorrect response - should be 400.");
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
+    }
+
+    @Test
+    void checkMissingSearchType() throws Exception {
+        MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_SEARCH_TYPE);
+        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
+    }
+
+    @Test
+    void checkMissingSearchValue() throws Exception {
+        MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_SEARCH_VALUE);
+        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
+    }
+
+    @Test
+    void checkMissingChannel() throws Exception {
+        MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_CHANNEL);
+        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
     @DisplayName("Delete an individual subscription")
     @Test
     void deleteEndpoint() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_NAME_1);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
-        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isOk()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
         String subscriptionResponse = response.getResponse().getContentAsString();
         String ourUuid =

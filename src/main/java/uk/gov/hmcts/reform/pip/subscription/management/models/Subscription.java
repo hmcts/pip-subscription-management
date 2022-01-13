@@ -45,12 +45,15 @@ public class Subscription {
     @NotNull
     private String userId;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private SearchType searchType;
 
+    @NotNull
     @Valid
     private String searchValue;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private Channel channel;
 

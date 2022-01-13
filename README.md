@@ -190,8 +190,8 @@ Here are some other functionalities it provides:
 This service exposes various RESTful api's that help complete its purpose. Below is a list of endpoints and their
 operations.
 
-POST `/subscription` - Creates a new unique subscription based on a valid JSON body conforming to the [Subscription
-model](#subscription-model). Returns 200 on success with a message of "Subscription successfully created with the
+POST `/subscription` - Creates a new unique subscription based on a valid JSON body conforming to the [Subscription model](#subscription-model). Returns 201
+on success with a message of "Subscription successfully created with the
 id: {subscription id}" or 400 on invalid payload
 
 DELETE `/subscription/{subscriptionId}` - Deletes a subscription from the database that matches the subscription ID.

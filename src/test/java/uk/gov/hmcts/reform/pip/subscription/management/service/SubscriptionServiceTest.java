@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
@@ -38,11 +39,16 @@ class SubscriptionServiceTest {
     private static final String CASE_ID = "123";
     private static final String URN = "312";
     private static final String CASE_NAME = "case-name";
+    private static final Channel EMAIL = Channel.EMAIL;
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
     private Subscription findableSubscription;
     private LocalDateTime dateAdded;
+
+
+    @Mock
+    DataManagementService dataManagementService;
 
     @Mock
     SubscriptionRepository subscriptionRepository;
@@ -53,7 +59,7 @@ class SubscriptionServiceTest {
     @BeforeEach
     void setup() {
         dateAdded = LocalDateTime.now();
-        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, dateAdded);
+        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, dateAdded);
         mockSubscriptionList = createMockSubscriptionList(dateAdded);
         findableSubscription = findableSubscription();
 
@@ -70,6 +76,17 @@ class SubscriptionServiceTest {
 
     @Test
     void testCreateSubscription() {
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
+        assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
+                     "The returned subscription does not match the expected subscription"
+        );
+    }
+
+    @Test
+    void testCreateSubscriptionWithCourtName() {
+        mockSubscription.setSearchType(SearchType.COURT_ID);
+        when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn("test court name");
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
                      "The returned subscription does not match the expected subscription"
@@ -121,6 +138,7 @@ class SubscriptionServiceTest {
     @Test
     void testFindByUserIdOnlyCourt() {
         mockSubscription.setSearchType(SearchType.COURT_ID);
+        mockSubscription.setCourtName("Test court");
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
         CourtSubscription expected = new CourtSubscription();
         expected.setSubscriptionId(mockSubscription.getId());
