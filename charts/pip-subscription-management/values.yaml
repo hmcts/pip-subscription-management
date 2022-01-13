@@ -18,3 +18,4 @@ java:
         - name: pip-shared-POSTGRES-USER
           alias: DB_USER
   environment:
+
