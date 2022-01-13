@@ -26,6 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper.createMockSubscription;
+import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper.createMockSubscriptionList;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscription;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.findableSubscription;
@@ -59,6 +61,9 @@ class SubscriptionServiceTest {
 
         lenient().when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         lenient().when(subscriptionRepository.findByUserId(USER_ID_NO_SUBS)).thenReturn(new ArrayList<>());
+        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE);
+        mockSubscriptionList = createMockSubscriptionList();
+        findableSubscription = findableSubscription();
     }
 
     @Test

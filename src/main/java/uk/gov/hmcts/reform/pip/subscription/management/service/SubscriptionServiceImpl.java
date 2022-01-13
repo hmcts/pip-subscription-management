@@ -48,7 +48,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return repository.findAll();
     }
 
-
     @Override
     public Subscription findById(UUID subscriptionId) {
         Optional<Subscription> subscription = repository.findById(subscriptionId);

@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 
 import java.time.LocalDateTime;
@@ -24,8 +25,10 @@ public class GlobalExceptionHandler {
      * @param ex      The exception that has been thrown.
      * @return The error response, modelled using the ExceptionResponse object.
      */
+
     @ExceptionHandler(SubscriptionNotFoundException.class)
-    public ResponseEntity<ExceptionResponse> handle(SubscriptionNotFoundException ex) {
+    public ResponseEntity<ExceptionResponse> handleSubscriptionNotFound(
+        SubscriptionNotFoundException ex, WebRequest request) {
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());

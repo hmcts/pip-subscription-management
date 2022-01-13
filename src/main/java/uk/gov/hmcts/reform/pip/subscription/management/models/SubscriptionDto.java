@@ -73,7 +73,6 @@ public class SubscriptionDto {
         entity.setCourtName(this.courtName);
         return entity;
     }
-
 }
 
 

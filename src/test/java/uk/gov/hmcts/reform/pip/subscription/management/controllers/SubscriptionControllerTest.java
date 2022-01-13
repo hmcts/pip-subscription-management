@@ -1,5 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
+
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,12 +10,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils;
+import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionHelper;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,6 +30,7 @@ class SubscriptionControllerTest {
     private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
+    private Subscription findableSubscription;
 
     @Mock
     SubscriptionService subscriptionService;
@@ -38,10 +40,11 @@ class SubscriptionControllerTest {
 
     UserSubscription userSubscription;
 
+
     @BeforeEach
     void setup() {
-        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, LocalDateTime.now());
-        userSubscription = new UserSubscription();
+        mockSubscription = SubscriptionHelper.createMockSubscription(USER_ID, SEARCH_VALUE);
+        findableSubscription = SubscriptionHelper.findableSubscription();
 
     }
 
