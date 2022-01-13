@@ -42,6 +42,11 @@
     <exclude name="LoosePackageCoupling"/>
     <exclude name="DataClass"/>
   </rule>
+  <rule ref="category/java/design.xml/TooManyMethods">
+    <properties>
+      <property name="violationSuppressXPath" value="./ancestor::ClassOrInterfaceDeclaration[contains(@SimpleName, 'Test')]"/>
+    </properties>
+  </rule>
   <rule ref="category/java/design.xml/ExcessiveImports">
     <properties>
       <property name="minimum" value="35"/><!-- should be reduced -->
