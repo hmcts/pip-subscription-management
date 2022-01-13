@@ -50,8 +50,8 @@ public class SubscriptionController {
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription: {subId} was deleted"),
+        @ApiResponse(code = 200, message = "Subscription {subId} deleted"),
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
-
     })
     @Transactional
     @ApiOperation("Endpoint to delete a given unique subscription, using subscription ID as a parameter.")
@@ -87,5 +87,4 @@ public class SubscriptionController {
                                     @PathVariable String userId) {
         return ResponseEntity.ok(subscriptionService.findByUserId(userId));
     }
-
 }
