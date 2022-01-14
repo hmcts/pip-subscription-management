@@ -23,9 +23,9 @@ public class GlobalExceptionHandler {
      * and returns a 404 in the standard format.
      *
      * @param ex      The exception that has been thrown.
-     * @param request The request made to the endpoint.
      * @return The error response, modelled using the ExceptionResponse object.
      */
+
     @ExceptionHandler(SubscriptionNotFoundException.class)
     public ResponseEntity<ExceptionResponse> handleSubscriptionNotFound(
         SubscriptionNotFoundException ex, WebRequest request) {
@@ -46,8 +46,7 @@ public class GlobalExceptionHandler {
      * @return - a ResponseEntity containing the exception response
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ExceptionResponse> handleArgumentNotValid(
-        MethodArgumentNotValidException ex) {
+    public ResponseEntity<ExceptionResponse> handle(MethodArgumentNotValidException ex) {
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         StringBuilder responseText = new StringBuilder("Bad Request: ");
         for (int i = 0; i < ex.getBindingResult().getErrorCount(); i++) {
@@ -71,8 +70,7 @@ public class GlobalExceptionHandler {
      * @return - a ResponseEntity containing the exception response
      */
     @ExceptionHandler(InvalidFormatException.class)
-    public ResponseEntity<ExceptionResponse> handleInvalidFormat(
-        InvalidFormatException ex) {
+    public ResponseEntity<ExceptionResponse> handle(InvalidFormatException ex) {
         StringBuilder responseText = new StringBuilder(100);
         responseText.append("Bad Request: ").append(ex.getTargetType().getSimpleName()).append(' ')
             .append(ex.getValue()).append(" should be one of the following types: [ ");
@@ -87,5 +85,4 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }
-
 }

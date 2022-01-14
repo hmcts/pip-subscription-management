@@ -2,7 +2,9 @@ package uk.gov.hmcts.reform.pip.subscription.management.models;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
@@ -19,6 +21,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table
 @JsonPropertyOrder({"id", "channel", "searchType", "searchValue", "userID"})

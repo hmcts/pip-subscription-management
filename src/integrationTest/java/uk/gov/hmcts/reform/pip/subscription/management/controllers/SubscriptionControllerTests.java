@@ -22,6 +22,9 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -37,11 +40,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {Application.class, RestTemplateConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-class SubscriptionControllerTest {
+@SuppressWarnings("PMD.ExcessiveImports")
+class SubscriptionControllerTests {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String COURT_NAME_1 = "Blackpool Magistrates' Court";
     private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
@@ -57,6 +61,12 @@ class SubscriptionControllerTest {
     private static final String VALIDATION_CASE_URN = "Returned URN does not match expected URN";
     private static final String VALIDATION_COURT_NAME = "Returned court name does not match expected court name";
     public static final String VALIDATION_BAD_REQUEST = "Incorrect response - should be 400.";
+    private static final String VALIDATION_CASE_ID = "Case ID does not match expected case";
+    private static final String VALIDATION_COURT_LIST = "Court subscription list contains unknown courts";
+    private static final String VALIDATION_SUBSCRIPTION_LIST = "The expected subscription is not displayed";
+    private static final String VALIDATION_NO_SUBSCRIPTIONS = "User has unknown subscriptions";
+    public static final String VALIDATION_ONE_CASE_COURT = "Court subscription list does not contain 1 case";
+    public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
 
     private static final String RAW_JSON_MISSING_SEARCH_VALUE =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
@@ -68,6 +78,8 @@ class SubscriptionControllerTest {
     private static final String COURT_ID = "53";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
+    private static final String CASE_NAME = "Tom Clancy";
+    private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/tom1";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
     @Autowired
@@ -87,6 +99,8 @@ class SubscriptionControllerTest {
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
 
         SUBSCRIPTION.setSearchValue(searchValue);
+        SUBSCRIPTION.setCourtName(COURT_NAME_1);
+        SUBSCRIPTION.setCaseName(CASE_NAME);
         SUBSCRIPTION.setCaseNumber(CASE_ID);
         SUBSCRIPTION.setUrn(CASE_URN);
         SUBSCRIPTION.setCreatedDate(DATE_ADDED);
@@ -95,7 +109,14 @@ class SubscriptionControllerTest {
             .contentType(MediaType.APPLICATION_JSON);
     }
 
-    private MockHttpServletRequestBuilder getSubscriptionByUuid(String searchValue) throws Exception {
+    protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType)
+        throws JsonProcessingException {
+
+        SUBSCRIPTION.setSearchType(searchType);
+        return setupMockSubscription(searchValue);
+    }
+
+    protected MockHttpServletRequestBuilder getSubscriptionByUuid(String searchValue) {
         return get(SUBSCRIPTION_PATH + '/' + searchValue);
     }
 
@@ -288,7 +309,7 @@ class SubscriptionControllerTest {
         ))).andExpect(status().isOk()).andReturn();
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
         assertEquals(
-            String.format("Subscription: %s deleted", returnedSubscription.getId()),
+            String.format("Subscription: %s was deleted", returnedSubscription.getId()),
             deleteResponse.getResponse().getContentAsString(),
             "Responses are not equal"
         );
@@ -331,5 +352,123 @@ class SubscriptionControllerTest {
         );
     }
 
+    @Test
+    void testGetUsersSubscriptionsByUserIdSuccessful() throws Exception {
+        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID));
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID));
+        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
+
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+
+        assertEquals(3,
+                     userSubscriptions.getCourtSubscriptions().size() + userSubscriptions.getCaseSubscriptions().size(),
+                     VALIDATION_SUBSCRIPTION_LIST);
+
+        CourtSubscription court = userSubscriptions.getCourtSubscriptions().get(0);
+        assertEquals(COURT_NAME_1, court.getCourtName(), VALIDATION_COURT_NAME);
+        assertEquals(DATE_ADDED, court.getDateAdded(), VALIDATION_DATE_ADDED);
+
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
+    }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdSingleCourt() throws Exception {
+        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID));
+
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+
+        assertEquals(1, userSubscriptions.getCourtSubscriptions().size(),
+                     "Court subscription list does not contain 1 court");
+
+        assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
+                     "Court subscription list contains unknown cases");
+
+        CourtSubscription court = userSubscriptions.getCourtSubscriptions().get(0);
+        assertEquals(COURT_NAME_1, court.getCourtName(), VALIDATION_COURT_NAME);
+        assertEquals(DATE_ADDED, court.getDateAdded(), VALIDATION_DATE_ADDED);
+    }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdSingleCaseId() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID));
+
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+
+        assertEquals(0, userSubscriptions.getCourtSubscriptions().size(),
+                     VALIDATION_COURT_LIST);
+
+        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
+                     VALIDATION_ONE_CASE_COURT
+        );
+
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
+    }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdSingleCaseUrn() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
+
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+
+        assertEquals(0, userSubscriptions.getCourtSubscriptions().size(),
+                     VALIDATION_COURT_LIST);
+
+        assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
+                     VALIDATION_ONE_CASE_COURT);
+
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
+    }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdNoSubscriptions() throws Exception {
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscription userSubscriptions =
+                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+
+        assertEquals(new UserSubscription(), userSubscriptions,
+                     VALIDATION_NO_SUBSCRIPTIONS);
+    }
 }
 
