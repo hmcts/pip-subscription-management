@@ -101,5 +101,4 @@ class SubscriptionControllerTest {
         assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID).getStatusCode(),
                      STATUS_CODE_MATCH);
     }
-
 }

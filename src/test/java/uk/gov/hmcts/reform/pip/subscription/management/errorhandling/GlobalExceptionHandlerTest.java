@@ -46,7 +46,6 @@ class GlobalExceptionHandlerTest {
         SubscriptionNotFoundException subscriptionNotFoundException
             = new SubscriptionNotFoundException(TEST_MESSAGE);
 
-
         MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
         ServletWebRequest servletWebRequest = new ServletWebRequest(mockHttpServletRequest);
 

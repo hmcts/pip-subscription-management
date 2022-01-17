@@ -45,12 +45,11 @@ public class SubscriptionController {
         Subscription subscription = subscriptionService.createSubscription(sub.toEntity());
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user '%s'",
-                                                        subscription.getId(), subscription.getUserId()));
+                                subscription.getId(), subscription.getUserId()));
     }
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription: {subId} was deleted"),
-        @ApiResponse(code = 200, message = "Subscription {subId} deleted"),
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
     })
     @Transactional
@@ -72,7 +71,7 @@ public class SubscriptionController {
     @GetMapping("/{subId}")
     public ResponseEntity<Subscription> findBySubId(@ApiParam(value = "The specific subscription id to find",
         required = true)
-                                    @PathVariable UUID subId) {
+                                                    @PathVariable UUID subId) {
         return ResponseEntity.ok(subscriptionService.findById(subId));
     }
 
@@ -84,7 +83,7 @@ public class SubscriptionController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<UserSubscription> findByUserId(@ApiParam(
         value = "The specific user id to find subscription for", required = true)
-                                    @PathVariable String userId) {
+                                                         @PathVariable String userId) {
         return ResponseEntity.ok(subscriptionService.findByUserId(userId));
     }
 }
