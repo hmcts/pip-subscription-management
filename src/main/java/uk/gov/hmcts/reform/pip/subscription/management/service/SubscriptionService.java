@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,5 +34,11 @@ public interface SubscriptionService {
      * @return The subscription that has been found.
      */
     Subscription findById(UUID subscriptionId);
+
+    /**
+     * Find all subscriptions for a given user.
+     * @return The list of subscriptions that have been found.
+     */
+    UserSubscription findByUserId(String userId);
 
 }
