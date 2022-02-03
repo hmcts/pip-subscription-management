@@ -230,6 +230,7 @@ that exist in this model but are created automatically once the object has been 
 {
   "caseSubscriptions": [
     {
+      "subscriptionId": "UUID of the subscription",
       "caseName": "Name of the case",
       "caseNumber": "Case number of the case being subscribed to",
       "urn": "URN number being subscribed to",
@@ -238,6 +239,7 @@ that exist in this model but are created automatically once the object has been 
   ],
   "courtSubscriptions": [
     {
+      "subscriptionId": "UUID of the subscription",
       "courtName": "Name of the court being subscribed to",
       "dateAdded": "LocalDateTime of when the subscription was created"
     }
