@@ -186,6 +186,67 @@ Here are some other functionalities it provides:
  * [Request caching](https://github.com/Netflix/Hystrix/wiki/How-it-Works#request-caching), allowing
  different code paths to execute Hystrix Commands without worrying about duplicating work
 
+## API
+This service exposes various RESTful api's that help complete its purpose. Below is a list of endpoints and their
+operations.
+
+POST `/subscription` - Creates a new unique subscription based on a valid JSON body conforming to the [Subscription model](#subscription-model). Returns 201
+on success with a message of "Subscription successfully created with the
+id: {subscription id}" or 400 on invalid payload
+
+DELETE `/subscription/{subscriptionId}` - Deletes a subscription from the database that matches the subscription ID.
+Returns a 200 on success with the message "Subscription: {subId} was deleted" or 404 if the supplied ID was not found.
+
+GET - `/subscription/{subscriptionId}` - Returns a single subscription based on the subscription ID. Returns a 200
+on success or a 404 if the subscription ID was not found.
+
+GET - `/subscription/user/{userId}` - Returns a [User Subscription Model](#usersubscription-model) containing the
+cases and courts a user is subscribed to. Returns a 200 on success.
+
+
+## Models
+Various models are used to build the objects needed to send and receive data, see models used in Subscription
+Management below.
+
+### Subscription Model
+Subscription model representing the incoming data, please note that `ID`, `createdDate` and `courtName` are attributes
+that exist in this model but are created automatically once the object has been received.
+
+```json
+{
+  "userId": "ID of the user, linking to the user table",
+  "searchType": "ENUM of searchType",
+  "searchValue": "The Search value that is used against the search type",
+  "channel": "ENUM of the channel the user is to receive subscriptions by",
+  "caseNumber": "Case number of the case being subscribed to",
+  "caseName": "Name of the case being subscribed to",
+  "urn": "URN number being subscribed to"
+}
+```
+
+### UserSubscription Model
+
+```json
+{
+  "caseSubscriptions": [
+    {
+      "subscriptionId": "UUID of the subscription",
+      "caseName": "Name of the case",
+      "caseNumber": "Case number of the case being subscribed to",
+      "urn": "URN number being subscribed to",
+      "dateAdded": "LocalDateTime of when the subscription was created"
+    }
+  ],
+  "courtSubscriptions": [
+    {
+      "subscriptionId": "UUID of the subscription",
+      "courtName": "Name of the court being subscribed to",
+      "dateAdded": "LocalDateTime of when the subscription was created"
+    }
+  ]
+}
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details

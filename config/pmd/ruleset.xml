@@ -9,6 +9,7 @@
   <rule ref="category/java/bestpractices.xml">
     <exclude name="GuardLogStatement"/>
     <exclude name="JUnitTestContainsTooManyAsserts"/>
+    <exclude name="PreserveStackTrace"/>
   </rule>
   <rule ref="category/java/codestyle.xml">
     <exclude name="AtLeastOneConstructor"/>
@@ -41,6 +42,11 @@
     <exclude name="UseUtilityClass"/>
     <exclude name="LoosePackageCoupling"/>
     <exclude name="DataClass"/>
+  </rule>
+  <rule ref="category/java/design.xml/TooManyMethods">
+    <properties>
+      <property name="violationSuppressXPath" value="./ancestor::ClassOrInterfaceDeclaration[contains(@SimpleName, 'Test')]"/>
+    </properties>
   </rule>
   <rule ref="category/java/design.xml/ExcessiveImports">
     <properties>

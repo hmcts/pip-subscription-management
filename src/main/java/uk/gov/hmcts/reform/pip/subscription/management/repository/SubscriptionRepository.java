@@ -15,10 +15,12 @@ import java.util.UUID;
 @Repository
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
 
+    Optional<Subscription> findById(UUID id);
+
+    List<Subscription> findByUserId(String userId);
+
     @Override
     List<Subscription> findAll();
-
-    Optional<Subscription> findById(UUID id);
 
     void deleteById(UUID id);
 
