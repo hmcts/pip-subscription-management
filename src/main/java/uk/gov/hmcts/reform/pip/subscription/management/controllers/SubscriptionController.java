@@ -16,11 +16,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
 
@@ -85,5 +91,15 @@ public class SubscriptionController {
         value = "The specific user id to find subscription for", required = true)
                                                          @PathVariable String userId) {
         return ResponseEntity.ok(subscriptionService.findByUserId(userId));
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 202, message = "Subscriber request has been accepted"),
+    })
+    @ApiOperation("Takes in artefact to build subscriber list.")
+    @PostMapping("/artefact-recipients")
+    public ResponseEntity<String> buildSubscriberList(@RequestBody Artefact artefact) {
+        subscriptionService.collectSubscribers(artefact);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body("Subscriber request has been accepted");
     }
 }

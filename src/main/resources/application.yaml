@@ -49,6 +49,7 @@ spring:
 
 service-to-service:
   data-management: ${DATA_MANAGEMENT_URL:https://pip-data-management.staging.platform.hmcts.net}
+  account-management: ${ACCOUNT_MANAGEMENT_URL:http://localhost:6969}
 
 azure:
   application-insights:
