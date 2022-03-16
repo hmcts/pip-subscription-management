@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.applicationinsights.web.dependencies.apachecommons.io.IOUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,9 +27,11 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubsc
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -40,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {Application.class, RestTemplateConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles({"integration", "non-async"})
+@ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @SuppressWarnings("PMD.ExcessiveImports")
 class SubscriptionControllerTests {
@@ -49,6 +52,7 @@ class SubscriptionControllerTests {
 
     private static final String COURT_NAME_1 = "Blackpool Magistrates' Court";
     private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
+    private static final String VALID_USER_ID = "60e75e34-ad8e-4ac3-8f26-7de73e5c987b";
 
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
     private static final String VALIDATION_CHANNEL_NAME = "Returned subscription channel "
@@ -80,7 +84,10 @@ class SubscriptionControllerTests {
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/tom1";
+    private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
+
+    private static String rawArtefact;
 
     @Autowired
     protected MockMvc mvc;
@@ -89,11 +96,15 @@ class SubscriptionControllerTests {
     protected static final SubscriptionDto SUBSCRIPTION = new SubscriptionDto();
 
     @BeforeAll
-    static void setup() {
+    static void setup() throws IOException {
         OBJECT_MAPPER.findAndRegisterModules();
         SUBSCRIPTION.setChannel(Channel.API);
         SUBSCRIPTION.setSearchType(SearchType.COURT_ID);
         SUBSCRIPTION.setUserId("tom1");
+
+        rawArtefact = new String(IOUtils.toByteArray(
+            Objects.requireNonNull(SubscriptionControllerTests.class.getClassLoader()
+                                       .getResourceAsStream("mock/artefact.json"))));
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
@@ -109,9 +120,11 @@ class SubscriptionControllerTests {
             .contentType(MediaType.APPLICATION_JSON);
     }
 
-    protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType)
+    protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType,
+                                                                  String userId)
         throws JsonProcessingException {
 
+        SUBSCRIPTION.setUserId(userId);
         SUBSCRIPTION.setSearchType(searchType);
         return setupMockSubscription(searchValue);
     }
@@ -354,9 +367,9 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdSuccessful() throws Exception {
-        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID));
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID));
-        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
+        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID, UUID_STRING));
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, UUID_STRING));
+        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN, UUID_STRING));
 
         MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
@@ -383,7 +396,7 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdSingleCourt() throws Exception {
-        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID));
+        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID, UUID_STRING));
 
         MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
@@ -407,7 +420,7 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdSingleCaseId() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID));
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, UUID_STRING));
 
         MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
@@ -433,7 +446,7 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdSingleCaseUrn() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
+        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN, UUID_STRING));
 
         MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
@@ -472,8 +485,13 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testBuildSubscribersListReturnsAccepted() {
-
+    void testBuildSubscribersListReturnsAccepted() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ARTEFACT_RECIPIENT_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(rawArtefact);
+        mvc.perform(request).andExpect(status().isAccepted());
     }
 }
 

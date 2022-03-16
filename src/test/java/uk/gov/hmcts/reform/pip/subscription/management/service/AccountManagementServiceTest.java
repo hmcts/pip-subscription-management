@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 import nl.altindag.log.LogCaptor;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,6 +32,11 @@ class AccountManagementServiceTest {
     private AccountManagementService accountManagementService;
 
     private static MockWebServer mockWebServer;
+
+    @AfterEach
+    void tearDown() throws IOException {
+        mockWebServer.shutdown();
+    }
 
     @Test
     void testIsAuthenticatedReturnsTrue() throws IOException {
