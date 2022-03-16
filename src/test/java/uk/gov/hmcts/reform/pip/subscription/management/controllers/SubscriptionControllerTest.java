@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
@@ -99,6 +100,13 @@ class SubscriptionControllerTest {
     void testFindByUserIdReturnsOk() {
         when(subscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
         assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID).getStatusCode(),
+                     STATUS_CODE_MATCH);
+    }
+
+    @Test
+    void testArtefactRecipientsReturnsAccepted() {
+        doNothing().when(subscriptionService).collectSubscribers(any());
+        assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildSubscriberList(new Artefact()).getStatusCode(),
                      STATUS_CODE_MATCH);
     }
 }

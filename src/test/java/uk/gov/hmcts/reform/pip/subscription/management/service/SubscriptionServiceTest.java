@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
+import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,20 +8,28 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -31,6 +40,7 @@ import static uk.gov.hmcts.reform.pip.subscription.management.helpers.Subscripti
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.findableSubscription;
 
+@ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
 class SubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
@@ -40,12 +50,26 @@ class SubscriptionServiceTest {
     private static final String URN = "312";
     private static final String CASE_NAME = "case-name";
     private static final Channel EMAIL = Channel.EMAIL;
+    private static final String COURT_MATCH = "1";
+    private static final String CASE_MATCH = "case match";
+    private static final String ACCEPTED_USER_ID = "2";
+    private static final String FORBIDDEN_USER_ID = "3";
+    private static final String SUBSCRIBER_NOTIFICATION_LOG = "Subscriber list created. Notifying %s subscribers.";
+    private static final String LOG_MESSAGE_MATCH = "Log messages should match.";
+    private static final String CASE_NUMBER_KEY = "caseNumber";
+    private static final String CASE_URN_KEY = "caseUrn";
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
     private Subscription findableSubscription;
     private LocalDateTime dateAdded;
 
+    private final Artefact classifiedArtefactMatches = new Artefact();
+    private final Artefact publicArtefactMatches = new Artefact();
+    private final Subscription returnedSubscription = new Subscription();
+    private final Subscription restrictedSubscription = new Subscription();
+    private final List<Object> cases = new ArrayList<>();
+    private final Map<String, List<Object>> searchTerms = new ConcurrentHashMap<>();
 
     @Mock
     DataManagementService dataManagementService;
@@ -53,11 +77,37 @@ class SubscriptionServiceTest {
     @Mock
     SubscriptionRepository subscriptionRepository;
 
+    @Mock
+    AccountManagementService accountManagementService;
+
     @InjectMocks
     SubscriptionServiceImpl subscriptionService;
 
     @BeforeEach
     void setup() {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        LinkedHashMap<String, String> map2 = new LinkedHashMap<>();
+        map.put(CASE_NUMBER_KEY, CASE_MATCH);
+        map.put(CASE_URN_KEY, "test");
+        map2.put(CASE_NUMBER_KEY, "test");
+        map2.put(CASE_URN_KEY, CASE_MATCH);
+
+        cases.add(map);
+        cases.add(map2);
+
+        searchTerms.put("cases", cases);
+        classifiedArtefactMatches.setSensitivity(Sensitivity.CLASSIFIED);
+        classifiedArtefactMatches.setSearch(searchTerms);
+        classifiedArtefactMatches.setCourtId(COURT_MATCH);
+        classifiedArtefactMatches.setListType(ListType.SJP_PRESS_LIST);
+
+        publicArtefactMatches.setSensitivity(Sensitivity.PUBLIC);
+        publicArtefactMatches.setCourtId(COURT_MATCH);
+        publicArtefactMatches.setSearch(searchTerms);
+
+        returnedSubscription.setUserId(ACCEPTED_USER_ID);
+        restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
+
         dateAdded = LocalDateTime.now();
         mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, dateAdded);
         mockSubscriptionList = createMockSubscriptionList(dateAdded);
@@ -218,6 +268,81 @@ class SubscriptionServiceTest {
         assertEquals(mockSubscription.getId(),
                      subscriptionService.findByUserId(USER_ID).getCaseSubscriptions().get(0).getSubscriptionId(),
                      "Should match subscriptionId");
+    }
+
+    @Test
+    void testCollectSubscribersCourtSubscriptionNotClassified() throws IOException {
+        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.COURT_ID.name(), COURT_MATCH))
+            .thenReturn(List.of(returnedSubscription));
+        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(publicArtefactMatches);
+            assertEquals(String.format(SUBSCRIBER_NOTIFICATION_LOG, 1), logCaptor.getInfoLogs().get(0),
+                         LOG_MESSAGE_MATCH);
+        } catch (Exception ex) {
+            throw new IOException(ex.getMessage());
+        }
+    }
+
+    @Test
+    void testCollectSubscribersCaseSubscriptionsNotClassified() throws IOException {
+        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_MATCH))
+            .thenReturn(List.of(returnedSubscription));
+        lenient().when((subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_URN.name(), CASE_MATCH)))
+            .thenReturn(List.of(returnedSubscription));
+        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(publicArtefactMatches);
+            assertEquals(String.format(SUBSCRIBER_NOTIFICATION_LOG, 2), logCaptor.getInfoLogs().get(0),
+                         LOG_MESSAGE_MATCH);
+        } catch (Exception ex) {
+            throw new IOException(ex.getMessage());
+        }
+    }
+
+    @Test
+    void testCollectSubscribersNoSubscribers() throws IOException {
+        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), "test"))
+            .thenReturn(List.of());
+        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(publicArtefactMatches);
+            assertEquals(String.format(SUBSCRIBER_NOTIFICATION_LOG, 0), logCaptor.getInfoLogs().get(0),
+                         LOG_MESSAGE_MATCH);
+        } catch (Exception ex) {
+            throw new IOException(ex.getMessage());
+        }
+    }
+
+    @Test
+    void testCollectSubscribersWarnsMissingSearchValues() throws IOException {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        map.put(CASE_NUMBER_KEY, null);
+        map.put(CASE_URN_KEY, null);
+        cases.add(map);
+        searchTerms.put("cases", cases);
+        publicArtefactMatches.setSearch(searchTerms);
+
+        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(publicArtefactMatches);
+            assertEquals(1, logCaptor.getWarnLogs().size(),
+                         LOG_MESSAGE_MATCH);
+        } catch (Exception ex) {
+            throw new IOException(ex.getMessage());
+        }
+    }
+
+    @Test
+    void testCollectSubscribersRestrictsClassified() throws IOException {
+        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_MATCH))
+            .thenReturn(List.of(returnedSubscription, restrictedSubscription));
+        when(accountManagementService.isUserAuthenticated(ACCEPTED_USER_ID, ListType.SJP_PRESS_LIST)).thenReturn(true);
+        when(accountManagementService.isUserAuthenticated(FORBIDDEN_USER_ID, ListType.SJP_PRESS_LIST)).thenReturn(false);
+
+        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(classifiedArtefactMatches);
+            assertEquals(1, logCaptor.getInfoLogs().size(),
+                         LOG_MESSAGE_MATCH);
+        } catch (Exception ex) {
+            throw new IOException(ex.getMessage());
+        }
     }
 }
 

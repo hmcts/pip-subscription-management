@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {Application.class, RestTemplateConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("integration")
+@ActiveProfiles({"integration", "non-async"})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @SuppressWarnings("PMD.ExcessiveImports")
 class SubscriptionControllerTests {
@@ -469,6 +469,11 @@ class SubscriptionControllerTests {
 
         assertEquals(new UserSubscription(), userSubscriptions,
                      VALIDATION_NO_SUBSCRIPTIONS);
+    }
+
+    @Test
+    void testBuildSubscribersListReturnsAccepted() {
+
     }
 }
 

@@ -119,6 +119,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else {
             subscriptionsToEmail = subscriptionList;
         }
+
+        log.info("Subscriber list created. Notifying {} subscribers.", subscriptionsToEmail.size());
     }
 
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {

@@ -1,2 +1,3 @@
 service-to-service:
   data-management: testUrl
+  account-management: localhost:6969
