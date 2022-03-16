@@ -47,7 +47,7 @@ class SubscriptionControllerTests {
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final String COURT_NAME_1 = "Blackpool Magistrates' Court";
+    private static final String COURT_NAME_1 = "Single Justice Procedure (SJP)";
     private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
 
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
@@ -75,7 +75,7 @@ class SubscriptionControllerTests {
     private static final String RAW_JSON_MISSING_CHANNEL =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
 
-    private static final String COURT_ID = "53";
+    private static final String COURT_ID = "0";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
