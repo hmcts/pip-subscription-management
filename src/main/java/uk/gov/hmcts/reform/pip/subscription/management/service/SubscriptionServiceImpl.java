@@ -26,6 +26,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingNPE"})
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Autowired

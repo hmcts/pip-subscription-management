@@ -42,6 +42,8 @@ import static uk.gov.hmcts.reform.pip.subscription.management.helpers.Subscripti
 
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
+@SuppressWarnings("PMD.LawOfDemeter")
+
 class SubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
     private static final String USER_ID_NO_SUBS = "Tina21";
@@ -272,9 +274,9 @@ class SubscriptionServiceTest {
 
     @Test
     void testCollectSubscribersCourtSubscriptionNotClassified() throws IOException {
-        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.COURT_ID.name(), COURT_MATCH))
+        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.COURT_ID.toString(), COURT_MATCH))
             .thenReturn(List.of(returnedSubscription));
-        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
             assertEquals(String.format(SUBSCRIBER_NOTIFICATION_LOG, 1), logCaptor.getInfoLogs().get(0),
                          LOG_MESSAGE_MATCH);
@@ -287,9 +289,9 @@ class SubscriptionServiceTest {
     void testCollectSubscribersCaseSubscriptionsNotClassified() throws IOException {
         lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_MATCH))
             .thenReturn(List.of(returnedSubscription));
-        lenient().when((subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_URN.name(), CASE_MATCH)))
+        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_URN.name(), CASE_MATCH))
             .thenReturn(List.of(returnedSubscription));
-        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
             assertEquals(String.format(SUBSCRIBER_NOTIFICATION_LOG, 2), logCaptor.getInfoLogs().get(0),
                          LOG_MESSAGE_MATCH);
@@ -302,7 +304,7 @@ class SubscriptionServiceTest {
     void testCollectSubscribersNoSubscribers() throws IOException {
         lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), "test"))
             .thenReturn(List.of());
-        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
             assertEquals(String.format(SUBSCRIBER_NOTIFICATION_LOG, 0), logCaptor.getInfoLogs().get(0),
                          LOG_MESSAGE_MATCH);
@@ -320,7 +322,7 @@ class SubscriptionServiceTest {
         searchTerms.put("cases", cases);
         publicArtefactMatches.setSearch(searchTerms);
 
-        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
             assertEquals(1, logCaptor.getWarnLogs().size(),
                          LOG_MESSAGE_MATCH);
@@ -334,9 +336,10 @@ class SubscriptionServiceTest {
         lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_MATCH))
             .thenReturn(List.of(returnedSubscription, restrictedSubscription));
         when(accountManagementService.isUserAuthenticated(ACCEPTED_USER_ID, ListType.SJP_PRESS_LIST)).thenReturn(true);
-        when(accountManagementService.isUserAuthenticated(FORBIDDEN_USER_ID, ListType.SJP_PRESS_LIST)).thenReturn(false);
+        when(accountManagementService.isUserAuthenticated(FORBIDDEN_USER_ID, ListType.SJP_PRESS_LIST))
+            .thenReturn(false);
 
-        try(LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(classifiedArtefactMatches);
             assertEquals(1, logCaptor.getInfoLogs().size(),
                          LOG_MESSAGE_MATCH);

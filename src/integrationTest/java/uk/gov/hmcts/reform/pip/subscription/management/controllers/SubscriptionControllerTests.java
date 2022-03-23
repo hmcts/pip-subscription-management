@@ -491,7 +491,10 @@ class SubscriptionControllerTests {
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
             .content(rawArtefact);
-        mvc.perform(request).andExpect(status().isAccepted());
+        MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
+
+        assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
+                     "Response should match");
     }
 }
 

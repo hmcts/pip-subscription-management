@@ -12,7 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfigTest {
 
     @Mock
-    private WebClient webClient;
+    private WebClient webClientMock;
 
     public WebClientConfigTest() {
         MockitoAnnotations.openMocks(this);
@@ -20,6 +20,6 @@ public class WebClientConfigTest {
 
     @Bean
     public WebClient webClient() {
-        return webClient;
+        return webClientMock;
     }
 }

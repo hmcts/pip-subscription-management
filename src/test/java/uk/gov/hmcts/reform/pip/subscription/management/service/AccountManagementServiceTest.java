@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
+
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 @SpringBootTest(classes = {Application.class})
+@SuppressWarnings("PMD.LawOfDemeter")
 class AccountManagementServiceTest {
 
     private static final String LOG_MESSAGE_MATCH = "Log messages should match.";

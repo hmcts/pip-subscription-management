@@ -29,7 +29,8 @@ public class AccountManagementService {
             if (ex.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
                 log.info("User failed list type auth check with response: " + ex.getResponseBodyAsString());
             } else {
-                log.error("Request to Account Management isAuthenticated failed due to: " + ex.getResponseBodyAsString());
+                log.error("Request to Account Management isAuthenticated failed due to: "
+                              + ex.getResponseBodyAsString());
             }
         }
         return false;
