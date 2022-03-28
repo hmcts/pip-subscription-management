@@ -21,6 +21,13 @@ public class AccountManagementService {
     @Autowired
     private WebClient webClient;
 
+    /**
+     * REST call to account management to check if user is authorised to see classified publication.
+     *
+     * @param userId user id to check is authorised
+     * @param listType the list type to check against
+     * @return bool of true if user can see, false if they are forbidden or if request errored
+     */
     public Boolean isUserAuthenticated(String userId, ListType listType) {
         try {
             return webClient.get().uri(String.format("%s/%s/%s/%s", url, IS_AUTHORISED, userId, listType))
