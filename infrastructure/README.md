@@ -1,17 +1,11 @@
 # App infrastructure
 
-This is the application specific infrastructure for PIP Subscription Management.
+Add any application specific infrastructure to the terraform files in this folder
 
-## Local validating
-To validate against Azure, create a `override.tf` file in this folder with the following content
+This could be things like:
+* a database
+* redis
+* vault
+* application insights
 
-```terraform
-terraform {
-  backend "azurerm" {
-    resource_group_name  = "jenkins-state-stg"
-    storage_account_name = "sdsstatestg"
-    container_name       = "tfstate-stg"
-    key                  = "pip-subscription-management/stg/terraform.tfstate"
-  }
-}
-```
+If you don't need any application infrastructure here, you can delete the whole folder (it will speed up your Jenkins build)
