@@ -1,22 +1,22 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.subscriptionmanagement.Court;
 
-import java.util.Objects;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Slf4j
 @Component
 public class DataManagementService {
 
     @Autowired
-    private RestTemplate restTemplate;
+    private WebClient webClient;
 
     @Value("${service-to-service.data-management}")
     private String url;
@@ -24,12 +24,13 @@ public class DataManagementService {
 
     public String getCourtName(String courtId) {
         try {
-            ResponseEntity<JsonNode> response = this.restTemplate.getForEntity(
-                String.format("%s/courts/%s", url, courtId), JsonNode.class);
-            return Objects.requireNonNull(response.getBody()).path("name").asText();
-        } catch (HttpStatusCodeException ex) {
+            Court court = webClient.get().uri(new URI(String.format("%s/courts/%s", url, courtId)))
+                .retrieve()
+                .bodyToMono(Court.class).block();
+            return court.getName();
+        } catch (WebClientException | URISyntaxException ex) {
             log.error("Data management request failed for CourtId: {}. Response: {}",
-                      courtId, ex.getResponseBodyAsString());
+                      courtId, ex.getMessage());
             return null;
         }
     }

@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
-import uk.gov.hmcts.reform.pip.subscription.management.config.RestTemplateConfig;
+import uk.gov.hmcts.reform.pip.subscription.management.config.WebClientConfigurationTest;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
@@ -36,12 +37,11 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {Application.class, RestTemplateConfig.class},
+@SpringBootTest(classes = {Application.class, WebClientConfigurationTest.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
@@ -137,7 +137,7 @@ class SubscriptionControllerTests {
     void postEndpoint() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
-        MvcResult response = mvc.perform(mappedSubscription.with(csrf())).andExpect(status().isCreated()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String subscriptionResponse = response.getResponse().getContentAsString();
@@ -145,7 +145,7 @@ class SubscriptionControllerTests {
             Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
                 .orElse(null);
 
-        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid).with(csrf())).andReturn();
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
             getResponse.getResponse().getContentAsString(),
             Subscription.class
@@ -188,7 +188,7 @@ class SubscriptionControllerTests {
     void checkPostToDb() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
-        MvcResult response = mvc.perform(mappedSubscription.with(csrf())).andExpect(status().isCreated()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String subscriptionResponse = response.getResponse().getContentAsString();
@@ -196,7 +196,7 @@ class SubscriptionControllerTests {
             Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
                 .orElse(null);
 
-        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid).with(csrf())).andReturn();
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
             getResponse.getResponse().getContentAsString(),
             Subscription.class
@@ -204,7 +204,7 @@ class SubscriptionControllerTests {
         MvcResult findResponse = mvc.perform(get(String.format(
             "/subscription/%s",
             returnedSubscription.getId()
-        )).with(csrf())).andExpect(status().isOk()).andReturn();
+        ))).andExpect(status().isOk()).andReturn();
         assertNotNull(findResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
         String subscriptionResponse2 = findResponse.getResponse().getContentAsString();
@@ -249,7 +249,7 @@ class SubscriptionControllerTests {
     void checkSearchTypeEnum() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'searchType': 'INVALID_TYPE'}");
-        MvcResult response = mvc.perform(brokenSubscription.with(csrf()))
+        MvcResult response = mvc.perform(brokenSubscription)
             .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
@@ -259,7 +259,7 @@ class SubscriptionControllerTests {
     void checkChannelEnum() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'channel': 'INVALID_TYPE'}");
-        MvcResult response = mvc.perform(brokenSubscription.with(csrf()))
+        MvcResult response = mvc.perform(brokenSubscription)
             .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
 
@@ -269,7 +269,7 @@ class SubscriptionControllerTests {
     @Test
     void checkEmptyPost() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription("{}");
-        MvcResult response = mvc.perform(brokenSubscription.with(csrf()))
+        MvcResult response = mvc.perform(brokenSubscription)
             .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
@@ -277,7 +277,7 @@ class SubscriptionControllerTests {
     @Test
     void checkMissingSearchType() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_SEARCH_TYPE);
-        MvcResult response = mvc.perform(brokenSubscription.with(csrf()))
+        MvcResult response = mvc.perform(brokenSubscription)
             .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
@@ -285,7 +285,7 @@ class SubscriptionControllerTests {
     @Test
     void checkMissingSearchValue() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_SEARCH_VALUE);
-        MvcResult response = mvc.perform(brokenSubscription.with(csrf()))
+        MvcResult response = mvc.perform(brokenSubscription)
             .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
@@ -293,7 +293,7 @@ class SubscriptionControllerTests {
     @Test
     void checkMissingChannel() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_CHANNEL);
-        MvcResult response = mvc.perform(brokenSubscription.with(csrf()))
+        MvcResult response = mvc.perform(brokenSubscription)
             .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
@@ -303,14 +303,14 @@ class SubscriptionControllerTests {
     void deleteEndpoint() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
-        MvcResult response = mvc.perform(mappedSubscription.with(csrf())).andExpect(status().isCreated()).andReturn();
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
         String subscriptionResponse = response.getResponse().getContentAsString();
         String ourUuid =
             Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
                 .orElse(null);
 
-        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid).with(csrf())).andReturn();
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
         Subscription returnedSubscription = OBJECT_MAPPER.readValue(
             getResponse.getResponse().getContentAsString(),
             Subscription.class
@@ -318,7 +318,7 @@ class SubscriptionControllerTests {
         MvcResult deleteResponse = mvc.perform(delete(String.format(
             "/subscription/%s",
             returnedSubscription.getId()
-        )).with(csrf())).andExpect(status().isOk()).andReturn();
+        ))).andExpect(status().isOk()).andReturn();
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
         assertEquals(
             String.format("Subscription: %s was deleted", returnedSubscription.getId()),
@@ -331,7 +331,7 @@ class SubscriptionControllerTests {
     @Test
     void failedDelete() throws Exception {
         String randomUuid = UUID_STRING;
-        MvcResult response = mvc.perform(delete("/subscription/" + randomUuid).with(csrf()))
+        MvcResult response = mvc.perform(delete("/subscription/" + randomUuid))
             .andExpect(status().isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
@@ -350,7 +350,7 @@ class SubscriptionControllerTests {
     @Test
     void failedFind() throws Exception {
         String randomUuid = UUID_STRING;
-        MvcResult response = mvc.perform(get("/subscription/" + randomUuid).with(csrf()))
+        MvcResult response = mvc.perform(get("/subscription/" + randomUuid))
             .andExpect(status()
                                                                                            .isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -367,11 +367,11 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdSuccessful() throws Exception {
-        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID).with(csrf()));
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID).with(csrf()));
-        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN).with(csrf()));
+        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID));
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID));
+        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).with(csrf()))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -396,9 +396,9 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdSingleCourt() throws Exception {
-        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID).with(csrf()));
+        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).with(csrf()))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -420,9 +420,9 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdSingleCaseId() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID).with(csrf()));
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).with(csrf()))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -446,9 +446,9 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdSingleCaseUrn() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN).with(csrf()));
+        mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
 
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).with(csrf()))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -471,7 +471,7 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdNoSubscriptions() throws Exception {
-        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH).with(csrf()))
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -490,7 +490,7 @@ class SubscriptionControllerTests {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
 
         MvcResult mvcResult =
-            mvc.perform(mappedSubscription.with(csrf())).andExpect(status().isForbidden()).andReturn();
+            mvc.perform(mappedSubscription).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE);
@@ -500,7 +500,7 @@ class SubscriptionControllerTests {
     @WithMockUser(username = "unauthorized_delete", authorities = { "APPROLE_unknown.delete" })
     void testUnauthorizedDeleteById() throws Exception {
         MvcResult mvcResult = mvc.perform(getSubscriptionByUuid(UUID.randomUUID().toString())
-                                                .with(csrf())).andExpect(status().isForbidden()).andReturn();
+                                                ).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE);
