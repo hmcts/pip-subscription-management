@@ -43,6 +43,17 @@ class DataManagementServiceTest {
     }
 
     @Test
+    void testNullCourt() throws IOException {
+        mockDataManagementCourtEndpoint = new MockWebServer();
+        mockDataManagementCourtEndpoint.start(4550);
+        mockDataManagementCourtEndpoint.enqueue(new MockResponse());
+
+        String courtName = dataManagementService.getCourtName("1");
+        assertNull(courtName, "Court return is null");
+        mockDataManagementCourtEndpoint.shutdown();
+    }
+
+    @Test
     void testGetCourtThrows() throws IOException {
         mockDataManagementCourtEndpoint = new MockWebServer();
         mockDataManagementCourtEndpoint.start(4550);

@@ -13,7 +13,6 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 @Configuration
 @Profile("!test")
-@SuppressWarnings("java:S4502")
 public class WebClientConfiguration {
 
     @Bean

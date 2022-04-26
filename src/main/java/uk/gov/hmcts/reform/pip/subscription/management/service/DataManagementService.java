@@ -27,7 +27,10 @@ public class DataManagementService {
             Court court = webClient.get().uri(new URI(String.format("%s/courts/%s", url, courtId)))
                 .retrieve()
                 .bodyToMono(Court.class).block();
-            return court.getName();
+            if (court != null) {
+                return court.getName();
+            }
+            return null;
         } catch (WebClientException | URISyntaxException ex) {
             log.error("Data management request failed for CourtId: {}. Response: {}",
                       courtId, ex.getMessage());
