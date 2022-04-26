@@ -1,27 +1,20 @@
+## Defaults
 variable "product" {
   default = "pip"
 }
-
 variable "component" {
-  default = "subscription-mangement"
+  default = "sds"
 }
-
 variable "location" {
   default = "UK South"
 }
-
-variable "env" {
-  default = "sbox"
-}
-
+variable "env" {}
 variable "subscription" {
-  default = "sbox"
+  default = ""
 }
-
 variable "deployment_namespace" {
   default = ""
 }
-
 variable "common_tags" {
-  type = map(any)
+  type = map(string)
 }
