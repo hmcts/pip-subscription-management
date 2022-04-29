@@ -50,7 +50,7 @@ class SubscriptionControllerTests {
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final String COURT_NAME_1 = "Single Justice Procedure (SJP)";
+    private static final String COURT_NAME_1 = "Single Justice Procedure";
     private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
     private static final String VALID_USER_ID = "60e75e34-ad8e-4ac3-8f26-7de73e5c987b";
 
@@ -83,7 +83,7 @@ class SubscriptionControllerTests {
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
-    private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/tom1";
+    private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
@@ -100,7 +100,7 @@ class SubscriptionControllerTests {
         OBJECT_MAPPER.findAndRegisterModules();
         SUBSCRIPTION.setChannel(Channel.API);
         SUBSCRIPTION.setSearchType(SearchType.COURT_ID);
-        SUBSCRIPTION.setUserId("tom1");
+        SUBSCRIPTION.setUserId(UUID_STRING);
 
         rawArtefact = new String(IOUtils.toByteArray(
             Objects.requireNonNull(SubscriptionControllerTests.class.getClassLoader()

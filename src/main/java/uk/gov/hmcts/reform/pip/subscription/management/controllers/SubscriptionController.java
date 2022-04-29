@@ -45,7 +45,7 @@ public class SubscriptionController {
     public ResponseEntity<String> createSubscription(@RequestBody @Valid SubscriptionDto sub) {
         Subscription subscription = subscriptionService.createSubscription(sub.toEntity());
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(String.format("Subscription created with the id %s for user '%s'",
+            .body(String.format("Subscription created with the id %s for user %s",
                                 subscription.getId(), subscription.getUserId()));
     }
 
