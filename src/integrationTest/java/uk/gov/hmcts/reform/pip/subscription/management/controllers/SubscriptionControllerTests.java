@@ -444,6 +444,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void testGetUsersSubscriptionsByUserIdSingleCaseUrn() throws Exception {
         mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
 
