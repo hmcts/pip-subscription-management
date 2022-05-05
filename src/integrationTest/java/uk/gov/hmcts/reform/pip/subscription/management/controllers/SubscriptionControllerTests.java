@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,7 +18,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
-import uk.gov.hmcts.reform.pip.subscription.management.config.RestTemplateConfig;
+import uk.gov.hmcts.reform.pip.subscription.management.config.WebClientConfigurationTest;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
@@ -29,6 +31,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubsc
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -37,17 +40,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {Application.class, RestTemplateConfig.class},
+@SpringBootTest(classes = {Application.class, WebClientConfigurationTest.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@SuppressWarnings("PMD.ExcessiveImports")
+@WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
+@SuppressWarnings({"PMD.ExcessiveImports", "PMD.LawOfDemeter"})
 class SubscriptionControllerTests {
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final String COURT_NAME_1 = "Single Justice Procedure (SJP)";
+    private static final String COURT_NAME_1 = "Single Justice Procedure";
     private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
 
     private static final String VALIDATION_EMPTY_RESPONSE = "Returned response is empty";
@@ -67,6 +71,7 @@ class SubscriptionControllerTests {
     private static final String VALIDATION_NO_SUBSCRIPTIONS = "User has unknown subscriptions";
     public static final String VALIDATION_ONE_CASE_COURT = "Court subscription list does not contain 1 case";
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
+    private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
 
     private static final String RAW_JSON_MISSING_SEARCH_VALUE =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
@@ -243,7 +248,8 @@ class SubscriptionControllerTests {
     void checkSearchTypeEnum() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'searchType': 'INVALID_TYPE'}");
-        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        MvcResult response = mvc.perform(brokenSubscription)
+            .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
@@ -252,7 +258,8 @@ class SubscriptionControllerTests {
     void checkChannelEnum() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(
             "{'channel': 'INVALID_TYPE'}");
-        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        MvcResult response = mvc.perform(brokenSubscription)
+            .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
 
     }
@@ -261,28 +268,32 @@ class SubscriptionControllerTests {
     @Test
     void checkEmptyPost() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription("{}");
-        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        MvcResult response = mvc.perform(brokenSubscription)
+            .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
     @Test
     void checkMissingSearchType() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_SEARCH_TYPE);
-        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        MvcResult response = mvc.perform(brokenSubscription)
+            .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
     @Test
     void checkMissingSearchValue() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_SEARCH_VALUE);
-        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        MvcResult response = mvc.perform(brokenSubscription)
+            .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
     @Test
     void checkMissingChannel() throws Exception {
         MockHttpServletRequestBuilder brokenSubscription = setupRawJsonSubscription(RAW_JSON_MISSING_CHANNEL);
-        MvcResult response = mvc.perform(brokenSubscription).andExpect(status().isBadRequest()).andReturn();
+        MvcResult response = mvc.perform(brokenSubscription)
+            .andExpect(status().isBadRequest()).andReturn();
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
@@ -338,7 +349,8 @@ class SubscriptionControllerTests {
     @Test
     void failedFind() throws Exception {
         String randomUuid = UUID_STRING;
-        MvcResult response = mvc.perform(get("/subscription/" + randomUuid)).andExpect(status()
+        MvcResult response = mvc.perform(get("/subscription/" + randomUuid))
+            .andExpect(status()
                                                                                            .isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
@@ -432,6 +444,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void testGetUsersSubscriptionsByUserIdSingleCaseUrn() throws Exception {
         mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN));
 
@@ -469,6 +482,47 @@ class SubscriptionControllerTests {
 
         assertEquals(new UserSubscription(), userSubscriptions,
                      VALIDATION_NO_SUBSCRIPTIONS);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_create", authorities = { "APPROLE_unknown.create" })
+    void testUnauthorizedCreateSubscription() throws Exception {
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
+
+        MvcResult mvcResult =
+            mvc.perform(mappedSubscription).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_delete", authorities = { "APPROLE_unknown.delete" })
+    void testUnauthorizedDeleteById() throws Exception {
+        MvcResult mvcResult = mvc.perform(getSubscriptionByUuid(UUID.randomUUID().toString())
+                                                ).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_find_by_id", authorities = { "APPROLE_unknown.find" })
+    void testUnauthorizedFindSubscriptionById() throws Exception {
+        MvcResult mvcResult = mvc.perform(get(String.format("/subscription/%s", UUID.randomUUID())))
+             .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_find_by_user_id", authorities = { "APPROLE_unknown.find" })
+    void testUnauthorizedFindSubscriptionByUserId() throws Exception {
+        MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_USER_PATH)).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
     }
 }
 

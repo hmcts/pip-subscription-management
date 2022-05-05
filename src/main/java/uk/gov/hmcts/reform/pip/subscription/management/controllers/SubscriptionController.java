@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.hmcts.reform.pip.subscription.management.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -28,7 +29,10 @@ import javax.validation.Valid;
 @Api(tags = "Subscription management API")
 @RequestMapping("/subscription")
 @Valid
+@IsAdmin
 public class SubscriptionController {
+
+    private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
 
     @Autowired
     SubscriptionService subscriptionService;
@@ -39,7 +43,8 @@ public class SubscriptionController {
     @ApiResponses({
         @ApiResponse(code = 201, message = "Subscription successfully created with the id: {subscription id} "
             + "for user: {userId}"),
-        @ApiResponse(code = 400, message = "This subscription object has an invalid format. Please check again.")
+        @ApiResponse(code = 400, message = "This subscription object has an invalid format. Please check again."),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
     })
     public ResponseEntity<String> createSubscription(@RequestBody @Valid SubscriptionDto sub) {
         Subscription subscription = subscriptionService.createSubscription(sub.toEntity());
@@ -50,6 +55,7 @@ public class SubscriptionController {
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription: {subId} was deleted"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
     })
     @Transactional
@@ -65,6 +71,7 @@ public class SubscriptionController {
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscription {subId} found"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
     })
     @ApiOperation("Returns the subscription object associated with a given subscription id.")
@@ -77,6 +84,7 @@ public class SubscriptionController {
 
     @ApiResponses({
         @ApiResponse(code = 200, message = "Subscriptions list for user id {userId} found"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
         @ApiResponse(code = 404, message = "No subscription found with the user id {userId}")
     })
     @ApiOperation("Returns the list of relevant subscriptions associated with a given user id.")
