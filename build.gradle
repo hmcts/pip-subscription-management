@@ -9,6 +9,7 @@ plugins {
   id 'org.sonarqube' version '3.3'
   id 'com.github.ben-manes.versions' version '0.42.0'
   id 'io.freefair.lombok' version '6.4.1'
+  id 'org.jetbrains.kotlin.jvm' version '1.6.21'
 }
 
 apply plugin: 'org.owasp.dependencycheck'
@@ -168,11 +169,15 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-json'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux'
   implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
   implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.5.5'
+  implementation 'com.azure.spring:spring-cloud-azure-starter-active-directory:4.0.0'
+  implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+  implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
   implementation 'org.springframework.boot:spring-boot-starter-validation:2.6.0'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.3'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.6.4'
@@ -188,6 +193,7 @@ dependencies {
   testImplementation group: 'com.h2database', name: 'h2', version: '2.1.210'
   testImplementation group: 'io.github.hakky54', name: 'logcaptor', version: '2.7.9'
   testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.9.3'
+  testImplementation group: 'org.springframework.security', name: 'spring-security-test'
 
   integrationTestImplementation sourceSets.main.runtimeClasspath
   integrationTestImplementation sourceSets.test.runtimeClasspath

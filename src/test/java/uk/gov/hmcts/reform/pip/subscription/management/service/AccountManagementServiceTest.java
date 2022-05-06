@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "non-async"})
 @SpringBootTest(classes = {Application.class})
 @SuppressWarnings("PMD.LawOfDemeter")
 class AccountManagementServiceTest {

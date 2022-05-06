@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 
+import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
+
 @Slf4j
 @Service
 public class AccountManagementService {
@@ -31,6 +33,7 @@ public class AccountManagementService {
     public Boolean isUserAuthenticated(String userId, ListType listType) {
         try {
             return webClient.get().uri(String.format("%s/%s/%s/%s", url, IS_AUTHORISED, userId, listType))
+                .attributes(clientRegistrationId("accountManagementApi"))
                 .retrieve().bodyToMono(Boolean.class).block();
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
