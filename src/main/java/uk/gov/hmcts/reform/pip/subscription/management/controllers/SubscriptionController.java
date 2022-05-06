@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.subscription.management.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
@@ -49,7 +50,7 @@ public class SubscriptionController {
     public ResponseEntity<String> createSubscription(@RequestBody @Valid SubscriptionDto sub) {
         Subscription subscription = subscriptionService.createSubscription(sub.toEntity());
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(String.format("Subscription created with the id %s for user '%s'",
+            .body(String.format("Subscription created with the id %s for user %s",
                                 subscription.getId(), subscription.getUserId()));
     }
 
@@ -93,5 +94,15 @@ public class SubscriptionController {
         value = "The specific user id to find subscription for", required = true)
                                                          @PathVariable String userId) {
         return ResponseEntity.ok(subscriptionService.findByUserId(userId));
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 202, message = "Subscriber request has been accepted"),
+    })
+    @ApiOperation("Takes in artefact to build subscriber list.")
+    @PostMapping("/artefact-recipients")
+    public ResponseEntity<String> buildSubscriberList(@RequestBody Artefact artefact) {
+        subscriptionService.collectSubscribers(artefact);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body("Subscriber request has been accepted");
     }
 }

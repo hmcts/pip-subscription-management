@@ -5,13 +5,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.reactive.function.client.WebClient;
 
+@Profile({"test", "non-async"})
 @Configuration
-@Profile("test")
-public class WebClientConfigurationTest {
+public class WebClientConfigTest {
 
     @Bean
     public WebClient webClient() {
         return WebClient.create();
     }
-
 }

@@ -2,15 +2,21 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,6 +26,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingNPE"})
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Autowired
@@ -27,6 +34,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Autowired
     DataManagementService dataManagementService;
+
+    @Autowired
+    AccountManagementService accountManagementService;
 
     @Override
     public Subscription createSubscription(Subscription subscription) {
@@ -95,5 +105,49 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         });
         return userSubscription;
+    }
+
+    @Async
+    @Override
+    public void collectSubscribers(Artefact artefact) {
+        List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
+            SearchType.COURT_ID.name(), artefact.getCourtId()));
+        artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
+
+        List<Subscription> subscriptionsToEmail;
+        if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED)) {
+            subscriptionsToEmail = validateSubscriptionPermissions(subscriptionList, artefact.getListType());
+        } else {
+            subscriptionsToEmail = subscriptionList;
+        }
+
+        log.info("Subscriber list created. Notifying {} subscribers.", subscriptionsToEmail.size());
+    }
+
+    private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {
+        List<Subscription> filteredList = new ArrayList<>();
+        subscriptions.forEach(subscription -> {
+            if (accountManagementService.isUserAuthenticated(subscription.getUserId(), listType)) {
+                filteredList.add(subscription);
+            }
+        });
+        return filteredList;
+    }
+
+    private List<Subscription> querySubscriptionValue(String term, String value) {
+        return repository.findSubscriptionsBySearchValue(term, value);
+    }
+
+    private List<Subscription> extractSearchValue(Object caseObject) {
+        List<Subscription> subscriptionList = new ArrayList<>();
+        try {
+            subscriptionList.addAll(querySubscriptionValue(SearchType.CASE_ID.name(),
+                                                           ((LinkedHashMap) caseObject).get("caseNumber").toString()));
+            subscriptionList.addAll(querySubscriptionValue(SearchType.CASE_URN.name(),
+                                                           ((LinkedHashMap) caseObject).get("caseUrn").toString()));
+        } catch (NullPointerException ex) {
+            log.warn("No value found in {} for case number or urn. Method threw: {}", caseObject, ex.getMessage());
+        }
+        return subscriptionList;
     }
 }

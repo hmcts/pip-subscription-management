@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 
 import java.util.List;
@@ -40,5 +41,7 @@ public interface SubscriptionService {
      * @return The list of subscriptions that have been found.
      */
     UserSubscription findByUserId(String userId);
+
+    void collectSubscribers(Artefact artefact);
 
 }
