@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
@@ -114,14 +115,25 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             SearchType.COURT_ID.name(), artefact.getCourtId()));
         artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
 
-        List<Subscription> subscriptionsToEmail;
+        List<Subscription> subscriptionsToContact;
         if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED)) {
-            subscriptionsToEmail = validateSubscriptionPermissions(subscriptionList, artefact.getListType());
+            subscriptionsToContact = validateSubscriptionPermissions(subscriptionList, artefact.getListType());
         } else {
-            subscriptionsToEmail = subscriptionList;
+            subscriptionsToContact = subscriptionList;
         }
-
-        log.info("Subscriber list created. Notifying {} subscribers.", subscriptionsToEmail.size());
+        List<Subscription> subscriptionsForAPI = new ArrayList<Subscription>();
+        List<Subscription> subscriptionsForEmail = new ArrayList<Subscription>();
+        subscriptionsToContact.forEach((Subscription subscription) -> {
+            if (subscription.getChannel().equals(Channel.EMAIL)){
+                subscriptionsForEmail.add(subscription);
+            }
+            else if (subscription.getChannel().equals(Channel.API)){
+                subscriptionsForAPI.add(subscription);
+            }
+        }
+        );
+        log.info("Subscriber list created. Notifying {} subscribers. {} will be contacted by email, {} via API",
+                 subscriptionsToContact.size(), subscriptionsForEmail.size(), subscriptionsForAPI.size());
     }
 
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {
