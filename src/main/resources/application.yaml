@@ -68,7 +68,7 @@ spring:
 service-to-service:
   data-management: ${DATA_MANAGEMENT_URL:https://pip-data-management.staging.platform.hmcts.net}
   account-management: ${ACCOUNT_MANAGEMENT_URL:https://pip-account-management.staging.platform.hmcts.net}
-
+  channel-management: ${CHANNEL_MANAGEMENT_URL:https://pip-channel-management.staging.platform.hmcts.net}
 azure:
   application-insights:
     instrumentation-key: ${rpe.AppInsightsInstrumentationKey:00000000-0000-0000-0000-000000000000}

@@ -37,6 +37,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     DataManagementService dataManagementService;
 
     @Autowired
+    ChannelManagementService channelManagementService;
+
+    @Autowired
     AccountManagementService accountManagementService;
 
     @Override
@@ -113,7 +116,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void collectSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
             SearchType.COURT_ID.name(), artefact.getCourtId()));
-        artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
+        log.info(channelManagementService.testConnection());
+        if(artefact.getSearch().get("cases") != null) {
+            artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
+        }
 
         List<Subscription> subscriptionsToContact;
         if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED)) {
