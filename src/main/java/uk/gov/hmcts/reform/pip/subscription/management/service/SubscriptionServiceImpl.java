@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
-import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
-import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
-import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.*;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
@@ -16,11 +14,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubs
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Service layer for dealing with subscriptions.
@@ -116,6 +110,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void collectSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
             SearchType.COURT_ID.name(), artefact.getCourtId()));
+
         if(artefact.getSearch().get("cases") != null) {
             artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
         }
@@ -126,16 +121,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else {
             subscriptionsToContact = subscriptionList;
         }
-        List<Subscription> subscriptionsForAPI = new ArrayList<>();
-        List<Subscription> subscriptionsForEmail = new ArrayList<>();
-        subscriptionsToContact.forEach((Subscription subscription) -> {
-            if (subscription.getChannel().equals(Channel.EMAIL)){
-                subscriptionsForEmail.add(subscription);
-            }
-            else if (subscription.getChannel().equals(Channel.API)){
-                subscriptionsForAPI.add(subscription);
-            }});
-        channelManagementService.getMappedEmails(subscriptionsForEmail);
+
+        List<Subscription> subscriptionsForEmail = sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL);
+        List<Subscription> subscriptionsForAPI = sortSubscriptionByChannel(subscriptionsToContact, Channel.API);
+
+        Map<String, List<Subscription>> returnedMappings = channelManagementService.getMappedEmails(subscriptionsForEmail);
+
+
+        returnedMappings.forEach((email, listOfSubscriptions) -> {
+            UserSubscriptionDto test = formatNotifySubscription(artefact.getArtefactId(), email, listOfSubscriptions);
+            log.info(test.toString());
+        });
+
+
+
 
         log.info("Subscriber list created. Found {} subscribers (pre-de-duplication). {} in the email channel, "
                      + "{} via API",
@@ -159,13 +158,63 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private List<Subscription> extractSearchValue(Object caseObject) {
         List<Subscription> subscriptionList = new ArrayList<>();
         try {
-            subscriptionList.addAll(querySubscriptionValue(SearchType.CASE_ID.name(),
-                                                           ((LinkedHashMap) caseObject).get("caseNumber").toString()));
-            subscriptionList.addAll(querySubscriptionValue(SearchType.CASE_URN.name(),
-                                                           ((LinkedHashMap) caseObject).get("caseUrn").toString()));
+            subscriptionList.addAll(querySubscriptionValue(
+                SearchType.CASE_ID.name(),
+                ((LinkedHashMap) caseObject).get("caseNumber").toString()
+            ));
+            subscriptionList.addAll(querySubscriptionValue(
+                SearchType.CASE_URN.name(),
+                ((LinkedHashMap) caseObject).get("caseUrn").toString()
+            ));
         } catch (NullPointerException ex) {
             log.warn("No value found in {} for case number or urn. Method threw: {}", caseObject, ex.getMessage());
         }
         return subscriptionList;
+    }
+
+    private List<Subscription> sortSubscriptionByChannel(List<Subscription> subscriptionsList, Channel channel) {
+        List<Subscription> sortedSubscriptionsList = new ArrayList<>();
+
+        subscriptionsList.forEach((Subscription subscription) -> {
+            if (channel.equals(subscription.getChannel())) {
+                sortedSubscriptionsList.add(subscription);
+            }
+        });
+
+        return sortedSubscriptionsList;
+    }
+
+    private UserSubscriptionDto formatNotifySubscription(UUID artefactId, String email, List<Subscription> listOfSubscriptions) {
+        UserSubscriptionDto userSubscriptionDto = new UserSubscriptionDto();
+        userSubscriptionDto.setArtefactId(artefactId);
+        userSubscriptionDto.setEmail(email);
+
+        SubscriptionsSummaryDto subscriptionsSummaryDto = new SubscriptionsSummaryDto();
+
+        ArrayList<String> caseUrnList = new ArrayList<>();
+        ArrayList<String> caseIdList = new ArrayList<>();
+        ArrayList<String> locationIdList = new ArrayList<>();
+
+        listOfSubscriptions.forEach(subscription -> {
+            switch(subscription.getSearchType()) {
+                case CASE_URN:
+                    caseUrnList.add(subscription.getSearchValue());
+                    break;
+                case CASE_ID:
+                    caseIdList.add(subscription.getSearchValue());
+                    break;
+                case COURT_ID:
+                    locationIdList.add(subscription.getSearchValue());
+                    break;
+            }
+        });
+
+        subscriptionsSummaryDto.setCaseUrn(caseUrnList);
+        subscriptionsSummaryDto.setCaseNumber(caseIdList);
+        subscriptionsSummaryDto.setLocationId(locationIdList);
+
+        userSubscriptionDto.setSubscriptions(subscriptionsSummaryDto);
+
+        return userSubscriptionDto;
     }
 }
