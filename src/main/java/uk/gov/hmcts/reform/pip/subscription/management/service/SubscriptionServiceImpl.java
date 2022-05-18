@@ -116,7 +116,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void collectSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
             SearchType.COURT_ID.name(), artefact.getCourtId()));
-        log.info(channelManagementService.testConnection());
         if(artefact.getSearch().get("cases") != null) {
             artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
         }
@@ -127,18 +126,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else {
             subscriptionsToContact = subscriptionList;
         }
-        List<Subscription> subscriptionsForAPI = new ArrayList<Subscription>();
-        List<Subscription> subscriptionsForEmail = new ArrayList<Subscription>();
+        List<Subscription> subscriptionsForAPI = new ArrayList<>();
+        List<Subscription> subscriptionsForEmail = new ArrayList<>();
         subscriptionsToContact.forEach((Subscription subscription) -> {
             if (subscription.getChannel().equals(Channel.EMAIL)){
                 subscriptionsForEmail.add(subscription);
             }
             else if (subscription.getChannel().equals(Channel.API)){
                 subscriptionsForAPI.add(subscription);
-            }
-        }
-        );
-        log.info("Subscriber list created. Notifying {} subscribers. {} will be contacted by email, {} via API",
+            }});
+        channelManagementService.getMappedEmails(subscriptionsForEmail);
+
+        log.info("Subscriber list created. Found {} subscribers (pre-de-duplication). {} in the email channel, "
+                     + "{} via API",
                  subscriptionsToContact.size(), subscriptionsForEmail.size(), subscriptionsForAPI.size());
     }
 
