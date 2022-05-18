@@ -5,8 +5,8 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class UserSubscriptionDto {
+public class SubscriptionsSummary {
     private String email;
     private UUID artefactId;
-    private SubscriptionsSummaryDto subscriptions;
+    private SubscriptionsSummaryDetails subscriptions;
 }

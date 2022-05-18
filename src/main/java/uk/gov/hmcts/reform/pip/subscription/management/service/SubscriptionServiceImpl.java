@@ -36,6 +36,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Autowired
     AccountManagementService accountManagementService;
 
+    @Autowired
+    PublicationServicesService publicationServicesService;
+
     @Override
     public Subscription createSubscription(Subscription subscription) {
         if (subscription.getSearchType().equals(SearchType.COURT_ID)) {
@@ -123,22 +126,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
 
         List<Subscription> subscriptionsForEmail = sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL);
-        List<Subscription> subscriptionsForAPI = sortSubscriptionByChannel(subscriptionsToContact, Channel.API);
 
         Map<String, List<Subscription>> returnedMappings = channelManagementService.getMappedEmails(subscriptionsForEmail);
 
-
         returnedMappings.forEach((email, listOfSubscriptions) -> {
-            UserSubscriptionDto test = formatNotifySubscription(artefact.getArtefactId(), email, listOfSubscriptions);
-            log.info(test.toString());
+            String summaryToSend = formatSubscriptionsSummary(
+                artefact.getArtefactId(), email, listOfSubscriptions).toString();
+            publicationServicesService.postSubscriptionSummaries(summaryToSend);
+
+            log.info("SUMMARY TO SEND: " + summaryToSend);
         });
-
-
-
-
-        log.info("Subscriber list created. Found {} subscribers (pre-de-duplication). {} in the email channel, "
-                     + "{} via API",
-                 subscriptionsToContact.size(), subscriptionsForEmail.size(), subscriptionsForAPI.size());
     }
 
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {
@@ -172,6 +169,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionList;
     }
 
+    /**
+     * Create a list of subscriptions for the correct channel.
+     *
+     * @param subscriptionsList The list of subscriptions to sort through
+     * @param channel The channel we want the subscriptions of
+     * @return A list of subscriptions
+     */
     private List<Subscription> sortSubscriptionByChannel(List<Subscription> subscriptionsList, Channel channel) {
         List<Subscription> sortedSubscriptionsList = new ArrayList<>();
 
@@ -184,37 +188,38 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return sortedSubscriptionsList;
     }
 
-    private UserSubscriptionDto formatNotifySubscription(UUID artefactId, String email, List<Subscription> listOfSubscriptions) {
-        UserSubscriptionDto userSubscriptionDto = new UserSubscriptionDto();
-        userSubscriptionDto.setArtefactId(artefactId);
-        userSubscriptionDto.setEmail(email);
+    /**
+     * Process data to form a subscriptions summary model which can be sent to publication services.
+     *
+     * @param artefactId The artefact id associated with the list of subscriptions
+     * @param email The email of the user associated with the list of subscriptions
+     * @param listOfSubscriptions The list of subscriptions to format
+     * @return A subscriptions summary model
+     */
+    private SubscriptionsSummary formatSubscriptionsSummary(UUID artefactId, String email,
+                                                            List<Subscription> listOfSubscriptions) {
 
-        SubscriptionsSummaryDto subscriptionsSummaryDto = new SubscriptionsSummaryDto();
-
-        ArrayList<String> caseUrnList = new ArrayList<>();
-        ArrayList<String> caseIdList = new ArrayList<>();
-        ArrayList<String> locationIdList = new ArrayList<>();
+        SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
 
         listOfSubscriptions.forEach(subscription -> {
             switch(subscription.getSearchType()) {
                 case CASE_URN:
-                    caseUrnList.add(subscription.getSearchValue());
+                    subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
                     break;
                 case CASE_ID:
-                    caseIdList.add(subscription.getSearchValue());
+                    subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
                     break;
                 case COURT_ID:
-                    locationIdList.add(subscription.getSearchValue());
+                    subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
                     break;
             }
         });
 
-        subscriptionsSummaryDto.setCaseUrn(caseUrnList);
-        subscriptionsSummaryDto.setCaseNumber(caseIdList);
-        subscriptionsSummaryDto.setLocationId(locationIdList);
+        SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
+        subscriptionsSummary.setArtefactId(artefactId);
+        subscriptionsSummary.setEmail(email);
+        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
 
-        userSubscriptionDto.setSubscriptions(subscriptionsSummaryDto);
-
-        return userSubscriptionDto;
+        return subscriptionsSummary;
     }
 }
