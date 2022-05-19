@@ -3,16 +3,16 @@ package uk.gov.hmcts.reform.pip.subscription.management.models;
 import lombok.Data;
 import lombok.ToString;
 
-import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class SubscriptionsSummaryDetails {
     @ToString.Include(name = "CASE_URN")
-    private ArrayList<String> caseUrn;
+    private List<String> caseUrn;
     @ToString.Include(name = "CASE_NUMBER")
-    private ArrayList<String> caseNumber;
+    private List<String> caseNumber;
     @ToString.Include(name = "LOCATION_ID")
-    private ArrayList<String> locationId;
+    private List<String> locationId;
 
     public void addToCaseUrn(String caseUrn) {
         this.caseUrn.add(caseUrn);

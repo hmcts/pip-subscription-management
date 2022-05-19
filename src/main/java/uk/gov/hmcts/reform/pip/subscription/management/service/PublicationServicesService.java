@@ -28,7 +28,6 @@ public class PublicationServicesService {
                 .body(BodyInserters.fromValue(subscriptionSummary));
 
         } catch (WebClientException | URISyntaxException ex) {
-            ex.printStackTrace();
             log.error("request failed", ex.getMessage());
         }
     }

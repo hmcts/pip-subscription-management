@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +20,7 @@ import java.util.Map;
 @Component
 public class ChannelManagementService {
 
-    private String emailPath = "/account/emails";
-    private String apiPath = "/account/api";
+    private static final String EMAIL_PATH = "/account/emails";
 
     @Autowired
     private WebClient webClient;
@@ -30,18 +30,15 @@ public class ChannelManagementService {
 
     public Map<String, List<Subscription>> getMappedEmails(List<Subscription> listOfSubs) {
         try {
-            return webClient.post().uri(new URI(url + emailPath))
+            return webClient.post().uri(new URI(url + EMAIL_PATH))
                 .body(BodyInserters.fromValue(listOfSubs))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, List<Subscription>>>() {})
                 .block();
-
         } catch (WebClientException | URISyntaxException ex) {
-            ex.printStackTrace();
             log.error("request failed", ex.getMessage());
-            return null;
+            return Collections.emptyMap();
         }
     }
-
 }
 

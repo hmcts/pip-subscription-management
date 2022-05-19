@@ -5,7 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
-import uk.gov.hmcts.reform.pip.subscription.management.models.*;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
@@ -14,14 +18,19 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubs
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Service layer for dealing with subscriptions.
  */
 @Slf4j
 @Service
-@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingNPE"})
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingNPE", "PMD.TooManyMethods"})
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Autowired
@@ -114,7 +123,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
             SearchType.COURT_ID.name(), artefact.getCourtId()));
 
-        if(artefact.getSearch().get("cases") != null) {
+        if (artefact.getSearch().get("cases") != null) {
             artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
         }
 
@@ -127,7 +136,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         List<Subscription> subscriptionsForEmail = sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL);
 
-        Map<String, List<Subscription>> returnedMappings = channelManagementService.getMappedEmails(subscriptionsForEmail);
+        Map<String, List<Subscription>> returnedMappings =
+            channelManagementService.getMappedEmails(subscriptionsForEmail);
 
         returnedMappings.forEach((email, listOfSubscriptions) -> {
             String summaryToSend = formatSubscriptionsSummary(
@@ -202,7 +212,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
 
         listOfSubscriptions.forEach(subscription -> {
-            switch(subscription.getSearchType()) {
+            switch (subscription.getSearchType()) {
                 case CASE_URN:
                     subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
                     break;
@@ -211,6 +221,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     break;
                 case COURT_ID:
                     subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
+                    break;
+                default:
                     break;
             }
         });
