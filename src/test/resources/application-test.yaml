@@ -13,3 +13,4 @@ spring:
 service-to-service:
   data-management: localhost:4550
   account-management: localhost:6969
+  channel-management: localhost:8181
