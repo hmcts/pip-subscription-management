@@ -210,7 +210,7 @@ Management below.
 
 ### Subscription Model
 Subscription model representing the incoming data, please note that `ID`, `createdDate` and `courtName` are attributes
-that exist in this model but are created automatically once the object has been received
+that exist in this model but are created automatically once the object has been received.
 
 ```json
 {
