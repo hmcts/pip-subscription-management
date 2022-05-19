@@ -25,7 +25,7 @@ public class PublicationServicesService {
     public void postSubscriptionSummaries(String subscriptionSummary) {
         try {
             webClient.post().uri(new URI(url + NOTIFY_SUBSCRIPTION_PATH))
-                .body(BodyInserters.fromValue(subscriptionSummary));
+                .body(BodyInserters.fromValue(subscriptionSummary)).retrieve().bodyToMono(String.class).block();
 
         } catch (WebClientException | URISyntaxException ex) {
             log.error("request failed", ex.getMessage());
