@@ -142,9 +142,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         returnedMappings.forEach((email, listOfSubscriptions) -> {
             String summaryToSend = formatSubscriptionsSummary(
                 artefact.getArtefactId(), email, listOfSubscriptions).toString();
-            publicationServicesService.postSubscriptionSummaries(summaryToSend);
 
-            log.info("SUMMARY TO SEND: " + summaryToSend);
+            log.info("Summary being sent to publication services: " + summaryToSend);
+
+            publicationServicesService.postSubscriptionSummaries(summaryToSend);
         });
     }
 

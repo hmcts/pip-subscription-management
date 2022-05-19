@@ -13,6 +13,8 @@ import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
@@ -21,7 +23,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubs
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -42,7 +43,7 @@ import static uk.gov.hmcts.reform.pip.subscription.management.helpers.Subscripti
 
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
-@SuppressWarnings("PMD.LawOfDemeter")
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.TooManyFields"})
 
 class SubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
@@ -56,10 +57,11 @@ class SubscriptionServiceTest {
     private static final String CASE_MATCH = "case match";
     private static final String ACCEPTED_USER_ID = "2";
     private static final String FORBIDDEN_USER_ID = "3";
-    private static final String SUBSCRIBER_NOTIFICATION_LOG = "Subscriber list created. Notifying %s subscribers.";
     private static final String LOG_MESSAGE_MATCH = "Log messages should match.";
     private static final String CASE_NUMBER_KEY = "caseNumber";
     private static final String CASE_URN_KEY = "caseUrn";
+    private static final UUID TEST_UUID = UUID.randomUUID();
+    private static final String TEST_UUID_STRING = TEST_UUID.toString();
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
@@ -82,6 +84,12 @@ class SubscriptionServiceTest {
     @Mock
     AccountManagementService accountManagementService;
 
+    @Mock
+    ChannelManagementService channelManagementService;
+
+    @Mock
+    PublicationServicesService publicationServicesService;
+
     @InjectMocks
     SubscriptionServiceImpl subscriptionService;
 
@@ -103,6 +111,7 @@ class SubscriptionServiceTest {
         classifiedArtefactMatches.setCourtId(COURT_MATCH);
         classifiedArtefactMatches.setListType(ListType.SJP_PRESS_LIST);
 
+        publicArtefactMatches.setArtefactId(TEST_UUID);
         publicArtefactMatches.setSensitivity(Sensitivity.PUBLIC);
         publicArtefactMatches.setCourtId(COURT_MATCH);
         publicArtefactMatches.setSearch(searchTerms);
@@ -273,78 +282,36 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void testCollectSubscribersCourtSubscriptionNotClassified() throws IOException {
+    void testCollectSubscribers() {
+
+        Subscription mockSub = new Subscription();
+        mockSub.setUserId(TEST_UUID_STRING);
+        mockSub.setSearchType(SearchType.COURT_ID);
+        mockSub.setSearchValue(COURT_MATCH);
+        mockSub.setChannel(Channel.EMAIL);
+        mockSub.setCaseNumber(COURT_MATCH);
+
+        SubscriptionsSummary summary = new SubscriptionsSummary();
+        summary.setEmail("a@b.com");
+        summary.setArtefactId(TEST_UUID);
+        SubscriptionsSummaryDetails summaryDetails = new SubscriptionsSummaryDetails();
+        summaryDetails.addToLocationId(COURT_MATCH);
+        summary.setSubscriptions(summaryDetails);
+
         when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.COURT_ID.toString(), COURT_MATCH))
-            .thenReturn(List.of(returnedSubscription));
-        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
-            subscriptionService.collectSubscribers(publicArtefactMatches);
-            assertEquals(String.format(SUBSCRIBER_NOTIFICATION_LOG, 1), logCaptor.getInfoLogs().get(0),
-                         LOG_MESSAGE_MATCH);
-        } catch (Exception ex) {
-            throw new IOException(ex.getMessage());
-        }
-    }
+            .thenReturn(List.of(mockSub));
 
-    @Test
-    void testCollectSubscribersCaseSubscriptionsNotClassified() throws IOException {
-        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_MATCH))
-            .thenReturn(List.of(returnedSubscription));
-        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_URN.name(), CASE_MATCH))
-            .thenReturn(List.of(returnedSubscription));
-        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
-            subscriptionService.collectSubscribers(publicArtefactMatches);
-            assertEquals(String.format(SUBSCRIBER_NOTIFICATION_LOG, 2), logCaptor.getInfoLogs().get(0),
-                         LOG_MESSAGE_MATCH);
-        } catch (Exception ex) {
-            throw new IOException(ex.getMessage());
-        }
-    }
+        Map<String, List<Subscription>> returnedMappedEmails = new ConcurrentHashMap<>();
+        returnedMappedEmails.put("a@b.com", List.of(mockSub));
 
-    @Test
-    void testCollectSubscribersNoSubscribers() throws IOException {
-        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), "test"))
-            .thenReturn(List.of());
-        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
-            subscriptionService.collectSubscribers(publicArtefactMatches);
-            assertEquals(String.format(SUBSCRIBER_NOTIFICATION_LOG, 0), logCaptor.getInfoLogs().get(0),
-                         LOG_MESSAGE_MATCH);
-        } catch (Exception ex) {
-            throw new IOException(ex.getMessage());
-        }
-    }
-
-    @Test
-    void testCollectSubscribersWarnsMissingSearchValues() throws IOException {
-        LinkedHashMap<String, String> map = new LinkedHashMap<>();
-        map.put(CASE_NUMBER_KEY, null);
-        map.put(CASE_URN_KEY, null);
-        cases.add(map);
-        searchTerms.put("cases", cases);
-        publicArtefactMatches.setSearch(searchTerms);
+        when(channelManagementService.getMappedEmails(List.of(mockSub))).thenReturn(returnedMappedEmails);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
-            assertEquals(1, logCaptor.getWarnLogs().size(),
-                         LOG_MESSAGE_MATCH);
-        } catch (Exception ex) {
-            throw new IOException(ex.getMessage());
-        }
-    }
 
-    @Test
-    void testCollectSubscribersRestrictsClassified() throws IOException {
-        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_MATCH))
-            .thenReturn(List.of(returnedSubscription, restrictedSubscription));
-        when(accountManagementService.isUserAuthenticated(ACCEPTED_USER_ID, ListType.SJP_PRESS_LIST)).thenReturn(true);
-        when(accountManagementService.isUserAuthenticated(FORBIDDEN_USER_ID, ListType.SJP_PRESS_LIST))
-            .thenReturn(false);
+            assertEquals(String.format("Summary being sent to publication services: %s", summary),
+                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
 
-        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
-            subscriptionService.collectSubscribers(classifiedArtefactMatches);
-            assertEquals(1, logCaptor.getInfoLogs().size(),
-                         LOG_MESSAGE_MATCH);
-        } catch (Exception ex) {
-            throw new IOException(ex.getMessage());
         }
     }
 }
