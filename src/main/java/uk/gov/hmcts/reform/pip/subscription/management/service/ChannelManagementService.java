@@ -18,7 +18,7 @@ import java.util.Map;
 @Component
 public class ChannelManagementService {
 
-    private static final String EMAIL_PATH = "/account/emails";
+    private static final String EMAIL_PATH = "/channel/emails";
 
     @Autowired
     private WebClient webClient;
