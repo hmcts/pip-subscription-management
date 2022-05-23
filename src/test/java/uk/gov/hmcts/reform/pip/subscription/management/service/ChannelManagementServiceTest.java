@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(classes = {Application.class})
 @ActiveProfiles({"test", "non-async"})
@@ -71,6 +72,19 @@ class ChannelManagementServiceTest {
             channelManagementService.getMappedEmails(subscriptionList);
 
         assertEquals(expectedMap, returnedMap, "Returned map does not equal expected map");
+        mockChannelManagementEmailsEndpoint.shutdown();
+    }
+
+    @Test
+    void testGetMappedEmailsThrows() throws IOException {
+        mockChannelManagementEmailsEndpoint = new MockWebServer();
+        mockChannelManagementEmailsEndpoint.start(8181);
+        mockChannelManagementEmailsEndpoint.enqueue(new MockResponse().setResponseCode(404));
+
+        Map<String, List<Subscription>> returnedMap =
+            channelManagementService.getMappedEmails(subscriptionList);
+
+        assertNotNull(returnedMap, "List was null when error occurred");
         mockChannelManagementEmailsEndpoint.shutdown();
     }
 }

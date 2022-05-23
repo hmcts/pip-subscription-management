@@ -10,8 +10,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +28,14 @@ public class ChannelManagementService {
 
     public Map<String, List<Subscription>> getMappedEmails(List<Subscription> listOfSubs) {
         try {
-            return webClient.post().uri(new URI(url + EMAIL_PATH))
+            return webClient.post().uri(url + EMAIL_PATH)
                 .body(BodyInserters.fromValue(listOfSubs))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, List<Subscription>>>() {})
                 .block();
-        } catch (WebClientException | URISyntaxException ex) {
-            log.error("request failed", ex.getMessage());
+        } catch (WebClientException ex) {
+            log.error(String.format("Request with body: %s failed. With error message: %s",
+                                    listOfSubs, ex.getMessage()));
             return Collections.emptyMap();
         }
     }

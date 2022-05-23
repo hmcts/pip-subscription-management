@@ -21,7 +21,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRe
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -134,19 +133,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriptionsToContact = subscriptionList;
         }
 
-        List<Subscription> subscriptionsForEmail = sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL);
-
-        Map<String, List<Subscription>> returnedMappings =
-            channelManagementService.getMappedEmails(subscriptionsForEmail);
-
-        returnedMappings.forEach((email, listOfSubscriptions) -> {
-            String summaryToSend = formatSubscriptionsSummary(
-                artefact.getArtefactId(), email, listOfSubscriptions).toString();
-
-            log.info("Summary being sent to publication services: " + summaryToSend);
-
-            publicationServicesService.postSubscriptionSummaries(summaryToSend);
-        });
+        handleSubscriptionSending(artefact.getArtefactId(),
+                                  sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL));
     }
 
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {
@@ -178,6 +166,23 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             log.warn("No value found in {} for case number or urn. Method threw: {}", caseObject, ex.getMessage());
         }
         return subscriptionList;
+    }
+
+    /**
+     * Handle forming and sending of subscriptions to publication services.
+     *
+     * @param artefactId The id of the artefact being sent
+     * @param subscriptionsList The list of subscriptions being sent
+     */
+    private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
+        channelManagementService.getMappedEmails(subscriptionsList).forEach((email, listOfSubscriptions) -> {
+            String summaryToSend =
+                formatSubscriptionsSummary(artefactId, email, listOfSubscriptions).toString();
+
+            log.info("Summary being sent to publication services: " + summaryToSend);
+
+            publicationServicesService.postSubscriptionSummaries(summaryToSend);
+        });
     }
 
     /**

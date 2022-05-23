@@ -8,9 +8,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 @Slf4j
 @Component
 public class PublicationServicesService {
@@ -24,11 +21,12 @@ public class PublicationServicesService {
 
     public void postSubscriptionSummaries(String subscriptionSummary) {
         try {
-            webClient.post().uri(new URI(url + NOTIFY_SUBSCRIPTION_PATH))
-                .body(BodyInserters.fromValue(subscriptionSummary)).retrieve().bodyToMono(String.class).block();
+            webClient.post().uri(url + NOTIFY_SUBSCRIPTION_PATH)
+                .body(BodyInserters.fromValue(subscriptionSummary)).retrieve().bodyToMono(Void.class).block();
 
-        } catch (WebClientException | URISyntaxException ex) {
-            log.error("request failed", ex.getMessage());
+        } catch (WebClientException ex) {
+            log.error(String.format("Request with body: %s failed. With error message: %s",
+                                    subscriptionSummary, ex.getMessage()));
         }
     }
 }
