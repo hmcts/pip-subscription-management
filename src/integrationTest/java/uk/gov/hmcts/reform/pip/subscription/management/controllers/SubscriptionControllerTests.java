@@ -67,7 +67,8 @@ class SubscriptionControllerTests {
     private static final String VALIDATION_CASE_NAME = "Returned case name does not match expected case name";
     private static final String VALIDATION_CASE_NUMBER = "Returned case number does not match expected case number";
     private static final String VALIDATION_CASE_URN = "Returned URN does not match expected URN";
-    private static final String VALIDATION_LOCATION_NAME = "Returned location name does not match expected location name";
+    private static final String VALIDATION_LOCATION_NAME =
+        "Returned location name does not match expected location name";
     public static final String VALIDATION_BAD_REQUEST = "Incorrect response - should be 400.";
     private static final String VALIDATION_CASE_ID = "Case ID does not match expected case";
     private static final String VALIDATION_LOCATION_LIST = "Location subscription list contains unknown locations";
@@ -395,7 +396,8 @@ class SubscriptionControllerTests {
                 OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
         assertEquals(3,
-                     userSubscriptions.getLocationSubscriptions().size() + userSubscriptions.getCaseSubscriptions().size(),
+                     userSubscriptions.getLocationSubscriptions().size() + userSubscriptions
+                         .getCaseSubscriptions().size(),
                      VALIDATION_SUBSCRIPTION_LIST);
 
         LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
