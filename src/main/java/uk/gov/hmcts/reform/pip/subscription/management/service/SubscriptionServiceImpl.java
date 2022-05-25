@@ -8,7 +8,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
@@ -116,7 +115,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         List<Subscription> subscriptionsToEmail;
         if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED)) {
-            subscriptionsToEmail = validateSubscriptionPermissions(subscriptionList, artefact.getListType());
+            subscriptionsToEmail = validateSubscriptionPermissions(subscriptionList, artefact);
         } else {
             subscriptionsToEmail = subscriptionList;
         }
@@ -124,10 +123,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         log.info("Subscriber list created. Notifying {} subscribers.", subscriptionsToEmail.size());
     }
 
-    private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {
+    private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, Artefact artefact) {
         List<Subscription> filteredList = new ArrayList<>();
         subscriptions.forEach(subscription -> {
-            if (accountManagementService.isUserAuthenticated(subscription.getUserId(), listType)) {
+            if (accountManagementService.isUserAuthorised(subscription.getUserId(),
+                                                          artefact.getListType(), artefact.getSensitivity())) {
                 filteredList.add(subscription);
             }
         });

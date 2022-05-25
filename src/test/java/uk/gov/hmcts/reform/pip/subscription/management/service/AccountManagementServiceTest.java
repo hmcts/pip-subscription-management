@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 
 import java.io.IOException;
 
@@ -48,7 +49,8 @@ class AccountManagementServiceTest {
                                   .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                                   .setBody(String.valueOf(true)));
 
-        assertEquals(true, accountManagementService.isUserAuthenticated("1", ListType.SJP_PRESS_LIST),
+        assertEquals(true, accountManagementService.isUserAuthorised(
+            "1", ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC),
                      "should be true"
         );
     }
@@ -60,7 +62,7 @@ class AccountManagementServiceTest {
         mockWebServer.enqueue(new MockResponse()
                                   .setResponseCode(HttpStatus.FORBIDDEN.value()));
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountManagementService.class)) {
-            accountManagementService.isUserAuthenticated(INVALID_ID, ListType.SJP_PRESS_LIST);
+            accountManagementService.isUserAuthorised(INVALID_ID, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC);
             assertEquals(1, logCaptor.getInfoLogs().size(), LOG_MESSAGE_MATCH);
             assertTrue(logCaptor.getInfoLogs().get(0).contains("User failed list type auth check with response"),
                        LOG_MESSAGE_MATCH);
@@ -76,7 +78,8 @@ class AccountManagementServiceTest {
         mockWebServer.enqueue(new MockResponse()
                                   .setResponseCode(HttpStatus.BAD_REQUEST.value()));
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountManagementService.class)) {
-            boolean response = accountManagementService.isUserAuthenticated(INVALID_ID, ListType.SJP_PRESS_LIST);
+            boolean response = accountManagementService.isUserAuthorised(
+                INVALID_ID, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC);
             assertEquals(1, logCaptor.getErrorLogs().size(), LOG_MESSAGE_MATCH);
             assertTrue(logCaptor.getErrorLogs().get(0)
                            .contains("Request to Account Management isAuthenticated failed due to"), LOG_MESSAGE_MATCH);
@@ -93,7 +96,8 @@ class AccountManagementServiceTest {
         mockWebServer.enqueue(new MockResponse()
                                   .setResponseCode(HttpStatus.INTERNAL_SERVER_ERROR.value()));
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountManagementService.class)) {
-            boolean response = accountManagementService.isUserAuthenticated(INVALID_ID, ListType.SJP_PRESS_LIST);
+            boolean response = accountManagementService.isUserAuthorised(
+                INVALID_ID, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC);
             assertEquals(1, logCaptor.getErrorLogs().size(), LOG_MESSAGE_MATCH);
             assertTrue(logCaptor.getErrorLogs().get(0)
                            .contains("Request to Account Management isAuthenticated failed due to"), LOG_MESSAGE_MATCH);

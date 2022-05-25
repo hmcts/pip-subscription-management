@@ -101,6 +101,7 @@ class SubscriptionServiceTest {
         classifiedArtefactMatches.setSensitivity(Sensitivity.CLASSIFIED);
         classifiedArtefactMatches.setSearch(searchTerms);
         classifiedArtefactMatches.setCourtId(COURT_MATCH);
+        classifiedArtefactMatches.setArtefactId(UUID.randomUUID());
         classifiedArtefactMatches.setListType(ListType.SJP_PRESS_LIST);
 
         publicArtefactMatches.setSensitivity(Sensitivity.PUBLIC);
@@ -335,8 +336,10 @@ class SubscriptionServiceTest {
     void testCollectSubscribersRestrictsClassified() throws IOException {
         lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_MATCH))
             .thenReturn(List.of(returnedSubscription, restrictedSubscription));
-        when(accountManagementService.isUserAuthenticated(ACCEPTED_USER_ID, ListType.SJP_PRESS_LIST)).thenReturn(true);
-        when(accountManagementService.isUserAuthenticated(FORBIDDEN_USER_ID, ListType.SJP_PRESS_LIST))
+        when(accountManagementService.isUserAuthorised(
+            ACCEPTED_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED)).thenReturn(true);
+        when(accountManagementService.isUserAuthorised(
+            FORBIDDEN_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED))
             .thenReturn(false);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {

@@ -21,7 +21,6 @@ public class DataManagementService {
     @Value("${service-to-service.data-management}")
     private String url;
 
-
     public String getCourtName(String courtId) {
         try {
             Court court = webClient.get().uri(new URI(String.format("%s/courts/%s", url, courtId)))
@@ -37,4 +36,5 @@ public class DataManagementService {
             return null;
         }
     }
+
 }
