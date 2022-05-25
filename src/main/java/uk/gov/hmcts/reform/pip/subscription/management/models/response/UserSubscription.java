@@ -19,6 +19,6 @@ public class UserSubscription {
     /**
      * Court object built from Data Management service containing Court info on subscribed courts.
      */
-    private List<CourtSubscription> courtSubscriptions = new ArrayList<>();
+    private List<LocationSubscription> locationSubscriptions = new ArrayList<>();
 
 }

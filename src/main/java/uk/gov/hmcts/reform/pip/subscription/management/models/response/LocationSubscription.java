@@ -6,9 +6,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-public class CourtSubscription {
+public class LocationSubscription {
 
     private UUID subscriptionId;
-    private String courtName;
+    private String locationName;
     private LocalDateTime dateAdded;
 }

@@ -16,16 +16,16 @@ public final class SubscriptionUtils {
     private SubscriptionUtils() {
     }
 
-    public static Subscription createMockSubscription(String userId, String courtId, Channel channel,
+    public static Subscription createMockSubscription(String userId, String locationId, Channel channel,
                                                       LocalDateTime createdDate) {
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID());
         subscription.setUserId(userId);
-        subscription.setSearchValue(courtId);
+        subscription.setSearchValue(locationId);
         subscription.setChannel(channel);
         subscription.setId(UUID.randomUUID());
         subscription.setCreatedDate(createdDate);
-        subscription.setSearchType(SearchType.COURT_ID);
+        subscription.setSearchType(SearchType.LOCATION_ID);
         return subscription;
     }
 
@@ -56,11 +56,11 @@ public final class SubscriptionUtils {
             } else if (i < caseUrnInterval) {
                 subscription.setSearchType(SearchType.CASE_URN);
             } else {
-                subscription.setSearchType(SearchType.COURT_ID);
+                subscription.setSearchType(SearchType.LOCATION_ID);
                 subscription.setCaseName(null);
                 subscription.setUrn(null);
                 subscription.setCaseNumber(null);
-                subscription.setCourtName("test court name");
+                subscription.setLocationName("test court name");
             }
             subs.add(subscription);
         }

@@ -26,7 +26,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 
 import java.io.IOException;
@@ -54,7 +54,7 @@ class SubscriptionControllerTests {
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final String COURT_NAME_1 = "Single Justice Procedure";
+    private static final String LOCATION_NAME_1 = "Single Justice Procedure";
     private static final String UUID_STRING = "f54c9783-7f56-4a69-91bc-55b582c0206f";
     private static final String VALID_USER_ID = "60e75e34-ad8e-4ac3-8f26-7de73e5c987b";
 
@@ -67,13 +67,13 @@ class SubscriptionControllerTests {
     private static final String VALIDATION_CASE_NAME = "Returned case name does not match expected case name";
     private static final String VALIDATION_CASE_NUMBER = "Returned case number does not match expected case number";
     private static final String VALIDATION_CASE_URN = "Returned URN does not match expected URN";
-    private static final String VALIDATION_COURT_NAME = "Returned court name does not match expected court name";
+    private static final String VALIDATION_LOCATION_NAME = "Returned location name does not match expected location name";
     public static final String VALIDATION_BAD_REQUEST = "Incorrect response - should be 400.";
     private static final String VALIDATION_CASE_ID = "Case ID does not match expected case";
-    private static final String VALIDATION_COURT_LIST = "Court subscription list contains unknown courts";
+    private static final String VALIDATION_LOCATION_LIST = "Location subscription list contains unknown locations";
     private static final String VALIDATION_SUBSCRIPTION_LIST = "The expected subscription is not displayed";
     private static final String VALIDATION_NO_SUBSCRIPTIONS = "User has unknown subscriptions";
-    public static final String VALIDATION_ONE_CASE_COURT = "Court subscription list does not contain 1 case";
+    public static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
 
@@ -84,7 +84,7 @@ class SubscriptionControllerTests {
     private static final String RAW_JSON_MISSING_CHANNEL =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
 
-    private static final String COURT_ID = "0";
+    private static final String LOCATION_ID = "4";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
@@ -104,7 +104,7 @@ class SubscriptionControllerTests {
     static void setup() throws IOException {
         OBJECT_MAPPER.findAndRegisterModules();
         SUBSCRIPTION.setChannel(Channel.API);
-        SUBSCRIPTION.setSearchType(SearchType.COURT_ID);
+        SUBSCRIPTION.setSearchType(SearchType.LOCATION_ID);
         SUBSCRIPTION.setUserId(UUID_STRING);
 
         rawArtefact = new String(IOUtils.toByteArray(
@@ -115,7 +115,7 @@ class SubscriptionControllerTests {
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
 
         SUBSCRIPTION.setSearchValue(searchValue);
-        SUBSCRIPTION.setCourtName(COURT_NAME_1);
+        SUBSCRIPTION.setLocationName(LOCATION_NAME_1);
         SUBSCRIPTION.setCaseName(CASE_NAME);
         SUBSCRIPTION.setCaseNumber(CASE_ID);
         SUBSCRIPTION.setUrn(CASE_URN);
@@ -147,7 +147,7 @@ class SubscriptionControllerTests {
     @DisplayName("Post a new subscription and then get it from db.")
     @Test
     void postEndpoint() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -191,14 +191,15 @@ class SubscriptionControllerTests {
                      VALIDATION_CASE_NUMBER);
         assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
                      VALIDATION_CASE_URN);
-        assertEquals(COURT_NAME_1, returnedSubscription.getCourtName(),
-                     VALIDATION_COURT_NAME);
+        assertEquals(LOCATION_NAME_1, returnedSubscription.getLocationName(),
+                     VALIDATION_LOCATION_NAME
+        );
     }
 
     @DisplayName("Ensure post endpoint actually posts a subscription to db")
     @Test
     void checkPostToDb() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -251,8 +252,9 @@ class SubscriptionControllerTests {
                      VALIDATION_CASE_NUMBER);
         assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
                      VALIDATION_CASE_URN);
-        assertEquals(COURT_NAME_1, returnedSubscription.getCourtName(),
-                     VALIDATION_COURT_NAME);
+        assertEquals(LOCATION_NAME_1, returnedSubscription.getLocationName(),
+                     VALIDATION_LOCATION_NAME
+        );
 
     }
 
@@ -313,7 +315,7 @@ class SubscriptionControllerTests {
     @DisplayName("Delete an individual subscription")
     @Test
     void deleteEndpoint() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -379,7 +381,7 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetUsersSubscriptionsByUserIdSuccessful() throws Exception {
-        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID, UUID_STRING));
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, UUID_STRING));
         mvc.perform(setupMockSubscription(CASE_URN, SearchType.CASE_URN, UUID_STRING));
 
@@ -393,12 +395,12 @@ class SubscriptionControllerTests {
                 OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
         assertEquals(3,
-                     userSubscriptions.getCourtSubscriptions().size() + userSubscriptions.getCaseSubscriptions().size(),
+                     userSubscriptions.getLocationSubscriptions().size() + userSubscriptions.getCaseSubscriptions().size(),
                      VALIDATION_SUBSCRIPTION_LIST);
 
-        CourtSubscription court = userSubscriptions.getCourtSubscriptions().get(0);
-        assertEquals(COURT_NAME_1, court.getCourtName(), VALIDATION_COURT_NAME);
-        assertEquals(DATE_ADDED, court.getDateAdded(), VALIDATION_DATE_ADDED);
+        LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
+        assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
+        assertEquals(DATE_ADDED, location.getDateAdded(), VALIDATION_DATE_ADDED);
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
@@ -407,8 +409,8 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testGetUsersSubscriptionsByUserIdSingleCourt() throws Exception {
-        mvc.perform(setupMockSubscription(COURT_ID, SearchType.COURT_ID, UUID_STRING));
+    void testGetUsersSubscriptionsByUserIdSingleLocation() throws Exception {
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
 
         MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
             .andExpect(status().isOk())
@@ -419,15 +421,15 @@ class SubscriptionControllerTests {
         UserSubscription userSubscriptions =
                 OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(1, userSubscriptions.getCourtSubscriptions().size(),
+        assertEquals(1, userSubscriptions.getLocationSubscriptions().size(),
                      "Court subscription list does not contain 1 court");
 
         assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
                      "Court subscription list contains unknown cases");
 
-        CourtSubscription court = userSubscriptions.getCourtSubscriptions().get(0);
-        assertEquals(COURT_NAME_1, court.getCourtName(), VALIDATION_COURT_NAME);
-        assertEquals(DATE_ADDED, court.getDateAdded(), VALIDATION_DATE_ADDED);
+        LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
+        assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
+        assertEquals(DATE_ADDED, location.getDateAdded(), VALIDATION_DATE_ADDED);
     }
 
     @Test
@@ -443,11 +445,12 @@ class SubscriptionControllerTests {
         UserSubscription userSubscriptions =
                 OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(0, userSubscriptions.getCourtSubscriptions().size(),
-                     VALIDATION_COURT_LIST);
+        assertEquals(0, userSubscriptions.getLocationSubscriptions().size(),
+                     VALIDATION_LOCATION_LIST
+        );
 
         assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
-                     VALIDATION_ONE_CASE_COURT
+                     VALIDATION_ONE_CASE_LOCATION
         );
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
@@ -470,11 +473,13 @@ class SubscriptionControllerTests {
         UserSubscription userSubscriptions =
                 OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(0, userSubscriptions.getCourtSubscriptions().size(),
-                     VALIDATION_COURT_LIST);
+        assertEquals(0, userSubscriptions.getLocationSubscriptions().size(),
+                     VALIDATION_LOCATION_LIST
+        );
 
         assertEquals(1, userSubscriptions.getCaseSubscriptions().size(),
-                     VALIDATION_ONE_CASE_COURT);
+                     VALIDATION_ONE_CASE_LOCATION
+        );
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
@@ -514,7 +519,7 @@ class SubscriptionControllerTests {
     @Test
     @WithMockUser(username = "unauthorized_create", authorities = { "APPROLE_unknown.create" })
     void testUnauthorizedCreateSubscription() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(COURT_ID);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
         MvcResult mvcResult =
             mvc.perform(mappedSubscription).andExpect(status().isForbidden()).andReturn();
