@@ -176,8 +176,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      */
     private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
         channelManagementService.getMappedEmails(subscriptionsList).forEach((email, listOfSubscriptions) -> {
-            String summaryToSend =
-                formatSubscriptionsSummary(artefactId, email, listOfSubscriptions).toString();
+            SubscriptionsSummary summaryToSend =
+                formatSubscriptionsSummary(artefactId, email, listOfSubscriptions);
 
             log.info("Summary being sent to publication services: " + summaryToSend);
 

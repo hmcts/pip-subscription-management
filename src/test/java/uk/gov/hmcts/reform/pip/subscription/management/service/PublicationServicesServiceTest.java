@@ -57,7 +57,7 @@ class PublicationServicesServiceTest {
 
 
 
-        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.toString());
+        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary);
 
         RecordedRequest request = mockPublicationServicesEndpoint.takeRequest();
 
@@ -72,7 +72,7 @@ class PublicationServicesServiceTest {
         mockPublicationServicesEndpoint.start(8081);
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
-        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.toString());
+        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary);
 
         RecordedRequest request = mockPublicationServicesEndpoint.takeRequest();
 

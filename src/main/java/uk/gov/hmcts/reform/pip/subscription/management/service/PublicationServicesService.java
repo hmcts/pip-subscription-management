@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 
 @Slf4j
 @Component
@@ -19,7 +20,7 @@ public class PublicationServicesService {
     @Value("${service-to-service.publication-services}")
     private String url;
 
-    public void postSubscriptionSummaries(String subscriptionSummary) {
+    public void postSubscriptionSummaries(SubscriptionsSummary subscriptionSummary) {
         try {
             webClient.post().uri(url + NOTIFY_SUBSCRIPTION_PATH)
                 .body(BodyInserters.fromValue(subscriptionSummary)).retrieve().bodyToMono(Void.class).block();

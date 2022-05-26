@@ -303,7 +303,7 @@ class SubscriptionServiceTest {
 
         when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary.toString());
+        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
@@ -328,7 +328,7 @@ class SubscriptionServiceTest {
 
         when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary.toString());
+        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
@@ -353,7 +353,7 @@ class SubscriptionServiceTest {
 
         when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary.toString());
+        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
