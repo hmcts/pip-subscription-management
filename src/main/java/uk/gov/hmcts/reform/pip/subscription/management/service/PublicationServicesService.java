@@ -26,7 +26,7 @@ public class PublicationServicesService {
                 .body(BodyInserters.fromValue(subscriptionSummary)).retrieve().bodyToMono(Void.class).block();
 
         } catch (WebClientException ex) {
-            log.error(String.format("Request with body: %s failed. With error message: %s",
+            log.error(String.format("Request with body: %s failed. With error message: %s.",
                                     subscriptionSummary, ex.getMessage()));
         }
     }
