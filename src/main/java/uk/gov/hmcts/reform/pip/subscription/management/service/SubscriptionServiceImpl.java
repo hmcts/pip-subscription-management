@@ -114,8 +114,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
 
         List<Subscription> subscriptionsToEmail;
-        if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED) ||
-            artefact.getSensitivity().equals(Sensitivity.PRIVATE)) {
+        if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED)
+            || artefact.getSensitivity().equals(Sensitivity.PRIVATE)) {
             subscriptionsToEmail = validateSubscriptionPermissions(subscriptionList, artefact);
         } else {
             subscriptionsToEmail = subscriptionList;
