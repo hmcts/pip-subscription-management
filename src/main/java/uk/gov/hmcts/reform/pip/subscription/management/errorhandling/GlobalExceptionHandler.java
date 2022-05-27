@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
 
     /**
      * This will create a message of the following style:
-     * "Bad Request: SearchType {search} should be one of the following types: [ COURT_ID CASE_ID CASE_URN ]"
+     * "Bad Request: SearchType {search} should be one of the following types: [ LOCATION_ID CASE_ID CASE_URN ]"
      * Note: this exception also covers the "channel" enum in the same way.
      *
      * @param ex - an invalidformatexception, created when e.g. a value that does not adhere to an enum restriction
