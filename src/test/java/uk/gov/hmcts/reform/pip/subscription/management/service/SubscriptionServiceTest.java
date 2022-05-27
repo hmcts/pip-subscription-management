@@ -62,6 +62,7 @@ class SubscriptionServiceTest {
     private static final String CASE_URN_KEY = "caseUrn";
     private static final UUID TEST_UUID = UUID.randomUUID();
     private static final String TEST_USER_EMAIL = "a@b.com";
+    private static final String SUCCESS = "Success";
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
@@ -119,6 +120,7 @@ class SubscriptionServiceTest {
         publicArtefactMatches.setSensitivity(Sensitivity.PUBLIC);
         publicArtefactMatches.setCourtId(COURT_MATCH);
         publicArtefactMatches.setSearch(searchTerms);
+        publicArtefactMatches.setListType(ListType.MAGS_PUBLIC_LIST);
 
         returnedSubscription.setUserId(ACCEPTED_USER_ID);
         restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
@@ -303,12 +305,14 @@ class SubscriptionServiceTest {
 
         when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary.toString());
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                               TEST_USER_EMAIL,
+                                                                  List.of(mockSubscription))).thenReturn(SUCCESS);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals("Summary being sent to publication services: Success",
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
@@ -328,12 +332,14 @@ class SubscriptionServiceTest {
 
         when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary.toString());
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                               TEST_USER_EMAIL,
+                                                                  List.of(mockSubscription))).thenReturn(SUCCESS);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals("Summary being sent to publication services: Success",
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
@@ -353,12 +359,14 @@ class SubscriptionServiceTest {
 
         when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary.toString());
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                               TEST_USER_EMAIL,
+                                                                  List.of(mockSubscription))).thenReturn(SUCCESS);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals("Summary being sent to publication services: Success",
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }

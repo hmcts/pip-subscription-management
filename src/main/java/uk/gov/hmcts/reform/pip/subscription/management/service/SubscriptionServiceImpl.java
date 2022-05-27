@@ -121,7 +121,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void collectSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
             SearchType.COURT_ID.name(), artefact.getCourtId()));
-
+        subscriptionList.addAll(querySubscriptionValue(SearchType.LIST_TYPE.name(), artefact.getListType().name()));
         if (artefact.getSearch().get("cases") != null) {
             artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
         }
@@ -133,8 +133,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriptionsToContact = subscriptionList;
         }
 
-        handleSubscriptionSending(artefact.getArtefactId(),
-                                  sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL));
+        handleSubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
     }
 
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {
@@ -175,14 +174,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * @param subscriptionsList The list of subscriptions being sent
      */
     private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
-        channelManagementService.getMappedEmails(subscriptionsList).forEach((email, listOfSubscriptions) -> {
-            String summaryToSend =
-                formatSubscriptionsSummary(artefactId, email, listOfSubscriptions).toString();
+        List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL);
+        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList, Channel.API);
 
-            log.info("Summary being sent to publication services: " + summaryToSend);
-
-            publicationServicesService.postSubscriptionSummaries(summaryToSend);
-        });
+        channelManagementService.getMappedEmails(emailList).forEach((email, listOfSubscriptions) ->
+            log.info("Summary being sent to publication services: " + publicationServicesService
+                .postSubscriptionSummaries(artefactId, email, listOfSubscriptions))
+        );
     }
 
     /**
@@ -202,42 +200,5 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         });
 
         return sortedSubscriptionsList;
-    }
-
-    /**
-     * Process data to form a subscriptions summary model which can be sent to publication services.
-     *
-     * @param artefactId The artefact id associated with the list of subscriptions
-     * @param email The email of the user associated with the list of subscriptions
-     * @param listOfSubscriptions The list of subscriptions to format
-     * @return A subscriptions summary model
-     */
-    private SubscriptionsSummary formatSubscriptionsSummary(UUID artefactId, String email,
-                                                            List<Subscription> listOfSubscriptions) {
-
-        SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
-
-        listOfSubscriptions.forEach(subscription -> {
-            switch (subscription.getSearchType()) {
-                case CASE_URN:
-                    subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
-                    break;
-                case CASE_ID:
-                    subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
-                    break;
-                case COURT_ID:
-                    subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
-                    break;
-                default:
-                    break;
-            }
-        });
-
-        SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
-        subscriptionsSummary.setArtefactId(artefactId);
-        subscriptionsSummary.setEmail(email);
-        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
-
-        return subscriptionsSummary;
     }
 }
