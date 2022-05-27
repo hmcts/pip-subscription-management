@@ -84,7 +84,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ExceptionResponse> responseEntity =
             globalExceptionHandler.handle(invalidFormatException);
         assertTrue(responseEntity.getBody().getMessage().contains("Bad Request: "), "Incorrect response");
-        assertTrue(responseEntity.getBody().getMessage().contains("COURT_ID CASE_ID CASE_URN"),
-                   "Incorrect response " + "text");
+        assertTrue(responseEntity.getBody().getMessage().contains("LOCATION_ID CASE_ID CASE_URN"),
+                   "Incorrect response text");
     }
 }
