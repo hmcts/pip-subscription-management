@@ -14,7 +14,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.mana
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
@@ -49,8 +49,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public Subscription createSubscription(Subscription subscription) {
-        if (subscription.getSearchType().equals(SearchType.COURT_ID)) {
-            subscription.setCourtName(dataManagementService.getCourtName(subscription.getSearchValue()));
+        if (subscription.getSearchType().equals(SearchType.LOCATION_ID)) {
+            subscription.setLocationName(dataManagementService.getCourtName(subscription.getSearchValue()));
         }
         return repository.save(subscription);
     }
@@ -97,12 +97,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     UserSubscription collectSubscriptions(List<Subscription> subscriptions) {
         UserSubscription userSubscription = new UserSubscription();
         subscriptions.forEach(subscription -> {
-            if (subscription.getSearchType() == SearchType.COURT_ID) {
-                CourtSubscription courtSubscription = new CourtSubscription();
-                courtSubscription.setSubscriptionId(subscription.getId());
-                courtSubscription.setCourtName(subscription.getCourtName());
-                courtSubscription.setDateAdded(subscription.getCreatedDate());
-                userSubscription.getCourtSubscriptions().add(courtSubscription);
+            if (subscription.getSearchType() == SearchType.LOCATION_ID) {
+                LocationSubscription locationSubscription = new LocationSubscription();
+                locationSubscription.setSubscriptionId(subscription.getId());
+                locationSubscription.setLocationName(subscription.getLocationName());
+                locationSubscription.setDateAdded(subscription.getCreatedDate());
+                userSubscription.getLocationSubscriptions().add(locationSubscription);
             } else {
                 CaseSubscription caseSubscription = new CaseSubscription();
                 caseSubscription.setCaseName(subscription.getCaseName());
@@ -120,7 +120,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public void collectSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
-            SearchType.COURT_ID.name(), artefact.getCourtId()));
+            SearchType.LOCATION_ID.name(), artefact.getLocationId()));
+
+        
 
         if (artefact.getSearch().get("cases") != null) {
             artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));

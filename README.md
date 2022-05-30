@@ -201,7 +201,7 @@ GET - `/subscription/{subscriptionId}` - Returns a single subscription based on 
 on success or a 404 if the subscription ID was not found.
 
 GET - `/subscription/user/{userId}` - Returns a [User Subscription Model](#usersubscription-model) containing the
-cases and courts a user is subscribed to. Returns a 200 on success.
+cases and locations a user is subscribed to. Returns a 200 on success.
 
 
 ## Models
@@ -209,8 +209,8 @@ Various models are used to build the objects needed to send and receive data, se
 Management below.
 
 ### Subscription Model
-Subscription model representing the incoming data, please note that `ID`, `createdDate` and `courtName` are attributes
-that exist in this model but are created automatically once the object has been received.
+Subscription model representing the incoming data, please note that `ID`, `createdDate` and `locationName` are attributes
+that exist in this model but are created automatically once the object has been received
 
 ```json
 {
@@ -237,10 +237,10 @@ that exist in this model but are created automatically once the object has been 
       "dateAdded": "LocalDateTime of when the subscription was created"
     }
   ],
-  "courtSubscriptions": [
+  "locationSubscriptions": [
     {
       "subscriptionId": "UUID of the subscription",
-      "courtName": "Name of the court being subscribed to",
+      "locationName": "Name of the location being subscribed to",
       "dateAdded": "LocalDateTime of when the subscription was created"
     }
   ]
