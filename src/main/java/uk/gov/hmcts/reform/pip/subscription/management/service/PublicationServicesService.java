@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClientException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -60,7 +61,7 @@ public class PublicationServicesService {
                 case CASE_ID:
                     subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
                     break;
-                case COURT_ID:
+                case LOCATION_ID:
                     subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
                     break;
                 default:

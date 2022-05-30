@@ -3,10 +3,11 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 import com.azure.core.http.ContentType;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,8 +23,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {Application.class})
 @ActiveProfiles({"test", "non-async"})
@@ -42,16 +41,14 @@ class PublicationServicesServiceTest {
 
     private final SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
     private final Subscription subscription = new Subscription();
+    private SubscriptionsSummaryDetails subscriptionsSummaryDetails;
 
     @BeforeEach
     void setup() {
         subscriptionsSummary.setEmail("a@b.com");
         subscriptionsSummary.setArtefactId(UUID.randomUUID());
 
-        SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
-        subscriptionsSummaryDetails.addToCaseNumber(TEST_ID);
-
-        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
+        subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
 
         subscription.setSearchType(SearchType.CASE_ID);
         subscription.setSearchValue(TEST_ID);
@@ -62,8 +59,25 @@ class PublicationServicesServiceTest {
         mockPublicationServicesEndpoint.shutdown();
     }
 
-    @Test
-    void testPostSubscriptionSummaries() throws IOException {
+    @ParameterizedTest
+    @EnumSource(value = SearchType.class, names = {"LOCATION_ID", "CASE_URN", "CASE_ID"})
+    void testPostSubscriptionSummaries(SearchType searchType) throws IOException {
+        switch (searchType) {
+            case LOCATION_ID:
+                subscriptionsSummaryDetails.addToLocationId(TEST_ID);
+                break;
+            case CASE_URN:
+                subscriptionsSummaryDetails.addToCaseUrn(TEST_ID);
+                break;
+            case CASE_ID:
+                subscriptionsSummaryDetails.addToCaseNumber(TEST_ID);
+                break;
+            default:
+                break;
+        }
+        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
+
+        subscription.setSearchType(searchType);
         mockPublicationServicesEndpoint = new MockWebServer();
         mockPublicationServicesEndpoint.start(8081);
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
@@ -89,6 +103,4 @@ class PublicationServicesServiceTest {
 
         assertEquals("Request failed", result, RESULT_MATCH);
     }
-
-    //TODO: add my tests for the method i moved and the tiny extra bit on list types
 }
