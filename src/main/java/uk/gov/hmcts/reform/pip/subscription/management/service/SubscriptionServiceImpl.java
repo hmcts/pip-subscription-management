@@ -227,7 +227,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 case CASE_ID:
                     subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
                     break;
-                case COURT_ID:
+                case LOCATION_ID:
                     subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
                     break;
                 default:

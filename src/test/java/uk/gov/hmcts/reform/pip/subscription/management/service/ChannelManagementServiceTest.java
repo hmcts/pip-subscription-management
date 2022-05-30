@@ -46,7 +46,7 @@ class ChannelManagementServiceTest {
     void setup() throws JsonProcessingException {
         Subscription mockSubscription = new Subscription();
         mockSubscription.setUserId(UUID.randomUUID().toString());
-        mockSubscription.setSearchType(SearchType.COURT_ID);
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
         mockSubscription.setSearchValue("1");
         mockSubscription.setChannel(Channel.EMAIL);
         mockSubscription.setCaseNumber("1");
