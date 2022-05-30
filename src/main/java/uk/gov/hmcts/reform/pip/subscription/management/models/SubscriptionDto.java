@@ -57,7 +57,7 @@ public class SubscriptionDto {
     private String urn;
 
     @Valid
-    private String courtName;
+    private String locationName;
 
     public Subscription toEntity() {
         Subscription entity = new Subscription();
@@ -70,7 +70,7 @@ public class SubscriptionDto {
         entity.setCaseName(this.caseName);
         entity.setCaseNumber(this.caseNumber);
         entity.setUrn(this.urn);
-        entity.setCourtName(this.courtName);
+        entity.setLocationName(this.locationName);
         return entity;
     }
 }

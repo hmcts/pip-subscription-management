@@ -17,7 +17,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.mana
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.response.CourtSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
@@ -100,12 +100,12 @@ class SubscriptionServiceTest {
         searchTerms.put("cases", cases);
         classifiedArtefactMatches.setSensitivity(Sensitivity.CLASSIFIED);
         classifiedArtefactMatches.setSearch(searchTerms);
-        classifiedArtefactMatches.setCourtId(COURT_MATCH);
+        classifiedArtefactMatches.setLocationId(COURT_MATCH);
         classifiedArtefactMatches.setArtefactId(UUID.randomUUID());
         classifiedArtefactMatches.setListType(ListType.SJP_PRESS_LIST);
 
         publicArtefactMatches.setSensitivity(Sensitivity.PUBLIC);
-        publicArtefactMatches.setCourtId(COURT_MATCH);
+        publicArtefactMatches.setLocationId(COURT_MATCH);
         publicArtefactMatches.setSearch(searchTerms);
 
         returnedSubscription.setUserId(ACCEPTED_USER_ID);
@@ -138,7 +138,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testCreateSubscriptionWithCourtName() {
-        mockSubscription.setSearchType(SearchType.COURT_ID);
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn("test court name");
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
@@ -190,17 +190,17 @@ class SubscriptionServiceTest {
 
     @Test
     void testFindByUserIdOnlyCourt() {
-        mockSubscription.setSearchType(SearchType.COURT_ID);
-        mockSubscription.setCourtName("Test court");
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
+        mockSubscription.setLocationName("Test court");
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
-        CourtSubscription expected = new CourtSubscription();
+        LocationSubscription expected = new LocationSubscription();
         expected.setSubscriptionId(mockSubscription.getId());
-        expected.setCourtName("Test court");
+        expected.setLocationName("Test court");
         expected.setDateAdded(dateAdded);
 
         UserSubscription result = subscriptionService.findByUserId(USER_ID);
 
-        assertEquals(List.of(expected), result.getCourtSubscriptions(),
+        assertEquals(List.of(expected), result.getLocationSubscriptions(),
                      "Should return court name");
         assertEquals(0, result.getCaseSubscriptions().size(), "Cases should be empty");
     }
@@ -229,7 +229,7 @@ class SubscriptionServiceTest {
         UserSubscription result = subscriptionService.findByUserId(USER_ID);
         assertEquals(6, result.getCaseSubscriptions().size(),
                      "Should add all CaseSubscriptions to UserSubscriptions");
-        assertEquals(2, result.getCourtSubscriptions().size(), "Should add all court names");
+        assertEquals(2, result.getLocationSubscriptions().size(), "Should add all court names");
     }
 
     @Test
@@ -239,7 +239,7 @@ class SubscriptionServiceTest {
             assertEquals(CASE_ID + i, result.getCaseSubscriptions().get(i).getCaseNumber(),
                          "Should contain correct caseNumber");
         }
-        assertEquals("test court name", result.getCourtSubscriptions().get(0).getCourtName(),
+        assertEquals("test court name", result.getLocationSubscriptions().get(0).getLocationName(),
                      "Should match court name");
     }
 
@@ -250,16 +250,16 @@ class SubscriptionServiceTest {
             assertEquals(dateAdded, result.getCaseSubscriptions().get(i).getDateAdded(),
                          "Should match dateAdded");
         }
-        assertEquals(dateAdded, result.getCourtSubscriptions().get(0).getDateAdded(), "Should match dateAdded");
+        assertEquals(dateAdded, result.getLocationSubscriptions().get(0).getDateAdded(), "Should match dateAdded");
     }
 
     @Test
     void testFindByUserIdAssignsIdForCourt() {
-        mockSubscription.setSearchType(SearchType.COURT_ID);
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
 
         assertEquals(mockSubscription.getId(),
-                     subscriptionService.findByUserId(USER_ID).getCourtSubscriptions().get(0).getSubscriptionId(),
+                     subscriptionService.findByUserId(USER_ID).getLocationSubscriptions().get(0).getSubscriptionId(),
                      "Should match subscriptionId");
     }
 
@@ -275,7 +275,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testCollectSubscribersCourtSubscriptionNotClassified() throws IOException {
-        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.COURT_ID.toString(), COURT_MATCH))
+        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LOCATION_ID.toString(), COURT_MATCH))
             .thenReturn(List.of(returnedSubscription));
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
