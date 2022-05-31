@@ -4,7 +4,7 @@ public enum SearchType {
     /**
      * This determines the type of search or addition we are using.
      */
-    COURT_ID,
+    LOCATION_ID,
     CASE_ID,
     CASE_URN
 }

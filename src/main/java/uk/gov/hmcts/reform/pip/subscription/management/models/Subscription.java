@@ -70,7 +70,7 @@ public class Subscription {
     private String urn;
 
     @Valid
-    private String courtName;
+    private String locationName;
 
     public SubscriptionDto toDto() {
         SubscriptionDto dto = new SubscriptionDto();
@@ -83,7 +83,7 @@ public class Subscription {
         dto.setCaseNumber(this.caseNumber);
         dto.setCaseName(this.caseName);
         dto.setUrn(this.urn);
-        dto.setCourtName(this.courtName);
+        dto.setLocationName(this.locationName);
         return dto;
     }
 }
