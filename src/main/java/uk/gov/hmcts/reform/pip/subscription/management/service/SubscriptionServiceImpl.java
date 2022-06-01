@@ -5,8 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
@@ -26,7 +29,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingNPE"})
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingNPE", "PMD.TooManyMethods"})
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Autowired
@@ -36,7 +39,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     DataManagementService dataManagementService;
 
     @Autowired
+    ChannelManagementService channelManagementService;
+
+    @Autowired
     AccountManagementService accountManagementService;
+
+    @Autowired
+    PublicationServicesService publicationServicesService;
 
     @Override
     public Subscription createSubscription(Subscription subscription) {
@@ -112,16 +121,22 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void collectSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
             SearchType.LOCATION_ID.name(), artefact.getLocationId()));
-        artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
 
-        List<Subscription> subscriptionsToEmail;
-        if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED)) {
-            subscriptionsToEmail = validateSubscriptionPermissions(subscriptionList, artefact.getListType());
-        } else {
-            subscriptionsToEmail = subscriptionList;
+        
+
+        if (artefact.getSearch().get("cases") != null) {
+            artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
         }
 
-        log.info("Subscriber list created. Notifying {} subscribers.", subscriptionsToEmail.size());
+        List<Subscription> subscriptionsToContact;
+        if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED)) {
+            subscriptionsToContact = validateSubscriptionPermissions(subscriptionList, artefact.getListType());
+        } else {
+            subscriptionsToContact = subscriptionList;
+        }
+
+        handleSubscriptionSending(artefact.getArtefactId(),
+                                  sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL));
     }
 
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {
@@ -141,13 +156,90 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private List<Subscription> extractSearchValue(Object caseObject) {
         List<Subscription> subscriptionList = new ArrayList<>();
         try {
-            subscriptionList.addAll(querySubscriptionValue(SearchType.CASE_ID.name(),
-                                                           ((LinkedHashMap) caseObject).get("caseNumber").toString()));
-            subscriptionList.addAll(querySubscriptionValue(SearchType.CASE_URN.name(),
-                                                           ((LinkedHashMap) caseObject).get("caseUrn").toString()));
+            subscriptionList.addAll(querySubscriptionValue(
+                SearchType.CASE_ID.name(),
+                ((LinkedHashMap) caseObject).get("caseNumber").toString()
+            ));
+            subscriptionList.addAll(querySubscriptionValue(
+                SearchType.CASE_URN.name(),
+                ((LinkedHashMap) caseObject).get("caseUrn").toString()
+            ));
         } catch (NullPointerException ex) {
             log.warn("No value found in {} for case number or urn. Method threw: {}", caseObject, ex.getMessage());
         }
         return subscriptionList;
+    }
+
+    /**
+     * Handle forming and sending of subscriptions to publication services.
+     *
+     * @param artefactId The id of the artefact being sent
+     * @param subscriptionsList The list of subscriptions being sent
+     */
+    private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
+        channelManagementService.getMappedEmails(subscriptionsList).forEach((email, listOfSubscriptions) -> {
+            SubscriptionsSummary summaryToSend =
+                formatSubscriptionsSummary(artefactId, email, listOfSubscriptions);
+
+            log.info("Summary being sent to publication services: " + summaryToSend);
+
+            publicationServicesService.postSubscriptionSummaries(summaryToSend);
+        });
+    }
+
+    /**
+     * Create a list of subscriptions for the correct channel.
+     *
+     * @param subscriptionsList The list of subscriptions to sort through
+     * @param channel The channel we want the subscriptions of
+     * @return A list of subscriptions
+     */
+    private List<Subscription> sortSubscriptionByChannel(List<Subscription> subscriptionsList, Channel channel) {
+        List<Subscription> sortedSubscriptionsList = new ArrayList<>();
+
+        subscriptionsList.forEach((Subscription subscription) -> {
+            if (channel.equals(subscription.getChannel())) {
+                sortedSubscriptionsList.add(subscription);
+            }
+        });
+
+        return sortedSubscriptionsList;
+    }
+
+    /**
+     * Process data to form a subscriptions summary model which can be sent to publication services.
+     *
+     * @param artefactId The artefact id associated with the list of subscriptions
+     * @param email The email of the user associated with the list of subscriptions
+     * @param listOfSubscriptions The list of subscriptions to format
+     * @return A subscriptions summary model
+     */
+    private SubscriptionsSummary formatSubscriptionsSummary(UUID artefactId, String email,
+                                                            List<Subscription> listOfSubscriptions) {
+
+        SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
+
+        listOfSubscriptions.forEach(subscription -> {
+            switch (subscription.getSearchType()) {
+                case CASE_URN:
+                    subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
+                    break;
+                case CASE_ID:
+                    subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
+                    break;
+                case LOCATION_ID:
+                    subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
+        subscriptionsSummary.setArtefactId(artefactId);
+        subscriptionsSummary.setEmail(email);
+        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
+
+        return subscriptionsSummary;
     }
 }
