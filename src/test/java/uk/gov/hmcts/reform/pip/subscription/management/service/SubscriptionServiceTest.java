@@ -78,6 +78,8 @@ class SubscriptionServiceTest {
     private final Map<String, List<Object>> searchTerms = new ConcurrentHashMap<>();
     private final Map<String, List<Subscription>> returnedMappedEmails = new ConcurrentHashMap<>();
 
+    private static final String SUMMARY_TEXT = "Summary being sent to publication services: %s";
+
     @Mock
     DataManagementService dataManagementService;
 
@@ -306,7 +308,7 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
@@ -331,7 +333,7 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
@@ -369,7 +371,7 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(classifiedArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
@@ -394,7 +396,7 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
