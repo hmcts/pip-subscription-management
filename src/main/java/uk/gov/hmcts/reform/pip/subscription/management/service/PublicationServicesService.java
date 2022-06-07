@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 
+import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
+
 @Slf4j
 @Component
 public class PublicationServicesService {
@@ -23,6 +25,7 @@ public class PublicationServicesService {
     public void postSubscriptionSummaries(SubscriptionsSummary subscriptionSummary) {
         try {
             webClient.post().uri(url + NOTIFY_SUBSCRIPTION_PATH)
+                .attributes(clientRegistrationId("publicationServicesApi"))
                 .body(BodyInserters.fromValue(subscriptionSummary)).retrieve().bodyToMono(Void.class).block();
 
         } catch (WebClientException ex) {
