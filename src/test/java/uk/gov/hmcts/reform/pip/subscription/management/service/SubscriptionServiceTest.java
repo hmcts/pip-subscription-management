@@ -415,7 +415,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testCollectApiSubscribers() throws IOException {
-        mockSubscription.setChannel(Channel.API);
+        mockSubscription.setChannel(Channel.API_COURTEL);
         when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LOCATION_ID.toString(), COURT_MATCH))
             .thenReturn(List.of(mockSubscription));
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {

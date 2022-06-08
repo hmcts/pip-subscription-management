@@ -172,8 +172,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * @param subscriptionsList The list of subscriptions being sent
      */
     private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
-        List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL);
-        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList, Channel.API);
+        List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
+        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList, "API");
 
         channelManagementService.getMappedEmails(emailList).forEach((email, listOfSubscriptions) ->
             log.info("Summary being sent to publication services: " + publicationServicesService
@@ -190,11 +190,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * @param channel The channel we want the subscriptions of
      * @return A list of subscriptions
      */
-    private List<Subscription> sortSubscriptionByChannel(List<Subscription> subscriptionsList, Channel channel) {
+    private List<Subscription> sortSubscriptionByChannel(List<Subscription> subscriptionsList, String channel) {
         List<Subscription> sortedSubscriptionsList = new ArrayList<>();
 
         subscriptionsList.forEach((Subscription subscription) -> {
-            if (channel.equals(subscription.getChannel())) {
+            if (channel.equals(subscription.getChannel().notificationRoute)) {
                 sortedSubscriptionsList.add(subscription);
             }
         });
