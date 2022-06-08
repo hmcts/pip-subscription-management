@@ -46,7 +46,8 @@ public final class SubscriptionUtils {
         mockData.put(8, "Jonathan");
         for (int i = 0; i < 8; i++) {
             Subscription subscription = createMockSubscription(mockData.get(i), String.format("court-%s", i),
-                                                               i < 3 ? Channel.API_COURTEL : Channel.EMAIL, createdDate);
+                                                               i < 3 ? Channel.API_COURTEL : Channel.EMAIL,
+                                                               createdDate);
             subscription.setChannel(i < 3 ? Channel.API_COURTEL : Channel.EMAIL);
             subscription.setCaseName("test name");
             subscription.setUrn("321" + i);

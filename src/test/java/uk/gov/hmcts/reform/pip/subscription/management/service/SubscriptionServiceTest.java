@@ -67,7 +67,6 @@ class SubscriptionServiceTest {
     private static final UUID TEST_UUID = UUID.randomUUID();
     private static final String TEST_USER_EMAIL = "a@b.com";
     private static final String SUCCESS = "Success";
-    private static final String SUMMARY_TEXT = "Summary being sent to publication services: %s";
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;

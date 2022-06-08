@@ -2,7 +2,6 @@ package uk.gov.hmcts.reform.pip.subscription.management.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
