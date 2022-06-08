@@ -11,7 +11,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
@@ -124,15 +123,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
             SearchType.LOCATION_ID.name(), artefact.getLocationId()));
 
-        
-
         if (artefact.getSearch().get("cases") != null) {
             artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
         }
 
         List<Subscription> subscriptionsToContact;
         if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED)) {
-            subscriptionsToContact = validateSubscriptionPermissions(subscriptionList, artefact.getListType());
+            subscriptionsToContact = validateSubscriptionPermissions(subscriptionList, artefact);
         } else {
             subscriptionsToContact = subscriptionList;
         }
@@ -141,10 +138,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                   sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL));
     }
 
-    private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {
+    private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, Artefact artefact) {
         List<Subscription> filteredList = new ArrayList<>();
         subscriptions.forEach(subscription -> {
-            if (accountManagementService.isUserAuthenticated(subscription.getUserId(), listType)) {
+            if (accountManagementService.isUserAuthorised(subscription.getUserId(),
+                                                          artefact.getListType(), artefact.getSensitivity())) {
                 filteredList.add(subscription);
             }
         });

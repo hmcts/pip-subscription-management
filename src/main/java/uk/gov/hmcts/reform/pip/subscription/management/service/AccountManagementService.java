@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
 
@@ -27,12 +28,14 @@ public class AccountManagementService {
      * REST call to account management to check if user is authorised to see classified publication.
      *
      * @param userId user id to check is authorised
-     * @param listType the list type to check against
+     * @param listType the artefact ID to check if the user is authorized for
+     * @param sensitivity the artefact ID to check if the user is authorized for
      * @return bool of true if user can see, false if they are forbidden or if request errored
      */
-    public Boolean isUserAuthenticated(String userId, ListType listType) {
+    public Boolean isUserAuthorised(String userId, ListType listType, Sensitivity sensitivity) {
         try {
-            return webClient.get().uri(String.format("%s/%s/%s/%s", url, IS_AUTHORISED, userId, listType))
+            return webClient.get().uri(
+                String.format("%s/%s/%s/%s/%s", url, IS_AUTHORISED, userId, listType, sensitivity))
                 .attributes(clientRegistrationId("accountManagementApi"))
                 .retrieve().bodyToMono(Boolean.class).block();
         } catch (WebClientResponseException ex) {
