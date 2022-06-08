@@ -67,6 +67,7 @@ class SubscriptionServiceTest {
     private static final UUID TEST_UUID = UUID.randomUUID();
     private static final String TEST_USER_EMAIL = "a@b.com";
     private static final String SUCCESS = "Success";
+    private static final String SUMMARY_TEXT = "Summary being sent to publication services: %s";
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
@@ -424,6 +425,46 @@ class SubscriptionServiceTest {
                          LOG_MESSAGE_MATCH);
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());
+        }
+    }
+
+    @Test
+    void testCollectSubscribersRestrictsClassified() {
+        returnedSubscription.setChannel(Channel.EMAIL);
+        returnedSubscription.setUserId(ACCEPTED_USER_ID);
+        returnedSubscription.setSearchType(SearchType.CASE_ID);
+        returnedSubscription.setSearchValue(CASE_ID);
+        restrictedSubscription.setChannel(Channel.EMAIL);
+        restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
+        returnedSubscription.setSearchType(SearchType.CASE_ID);
+        returnedSubscription.setSearchValue(CASE_ID);
+
+        mockSubscriptionsSummary.setArtefactId(classifiedArtefactMatches.getArtefactId());
+        mockSubscriptionsSummaryDetails.addToCaseNumber(CASE_ID);
+        mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
+
+        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_MATCH))
+            .thenReturn(List.of(returnedSubscription, restrictedSubscription));
+
+        when(accountManagementService.isUserAuthorised(
+            ACCEPTED_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED)).thenReturn(true);
+        when(accountManagementService.isUserAuthorised(
+            FORBIDDEN_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED))
+            .thenReturn(false);
+
+        returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
+        when(channelManagementService.getMappedEmails(List.of(returnedSubscription)))
+            .thenReturn(returnedMappedEmails);
+
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                  TEST_USER_EMAIL,
+                                                                  List.of(returnedSubscription))).thenReturn(SUCCESS);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(classifiedArtefactMatches);
+
+            assertEquals(SUBSCRIBER_NOTIFICATION_LOG,
+                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
 }
