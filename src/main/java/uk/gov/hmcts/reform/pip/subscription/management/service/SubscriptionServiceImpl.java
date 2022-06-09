@@ -46,6 +46,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public Subscription createSubscription(Subscription subscription) {
+        duplicateSubscriptionHandler(subscription);
+
         if (subscription.getSearchType().equals(SearchType.LOCATION_ID)) {
             subscription.setLocationName(dataManagementService.getCourtName(subscription.getSearchValue()));
         }
@@ -164,6 +166,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             log.warn("No value found in {} for case number or urn. Method threw: {}", caseObject, ex.getMessage());
         }
         return subscriptionList;
+    }
+
+    /**
+     * Take in a new user subscription and check if any with the same criteria already exist.
+     * If it does then delete the original subscription as the new one will supersede it.
+     *
+     * @param subscription The new subscription that will be created
+     */
+    private void duplicateSubscriptionHandler(Subscription subscription) {
+        repository.findByUserId(subscription.getUserId()).forEach(existingSub -> {
+            if (existingSub.getSearchType().equals(subscription.getSearchType())
+                && existingSub.getSearchValue().equals(subscription.getSearchValue())) {
+                repository.delete(existingSub);
+            }
+        });
     }
 
     /**

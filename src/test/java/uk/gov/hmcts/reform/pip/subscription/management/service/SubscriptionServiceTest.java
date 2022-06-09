@@ -38,6 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscription;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
@@ -166,6 +168,22 @@ class SubscriptionServiceTest {
         assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
                      "The returned subscription does not match the expected subscription"
         );
+    }
+
+    @Test
+    void testCreateDuplicateSubscription() {
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
+        mockSubscription.setSearchValue(SEARCH_VALUE);
+        when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn("test court name");
+        when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        Subscription returnedSubscription =
+            subscriptionService.createSubscription(mockSubscription);
+
+        verify(subscriptionRepository, times(1)).delete(mockSubscription);
+        assertEquals(returnedSubscription, mockSubscription,
+                     "The Returned subscription does match the expected subscription");
     }
 
     @Test
