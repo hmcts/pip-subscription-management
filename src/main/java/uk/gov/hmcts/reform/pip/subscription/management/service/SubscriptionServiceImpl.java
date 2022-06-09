@@ -14,6 +14,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubsc
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -199,7 +200,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         );
 
         channelManagementService.getMappedApis(apiList).forEach((api, subscriptions) ->
-                                                                    log.info(publicationServicesService.sendThirdPartyList(
+                                                                    log.info(publicationServicesService
+                                                                                 .sendThirdPartyList(
                                                                         Map.of(api, subscriptions))));
     }
 
