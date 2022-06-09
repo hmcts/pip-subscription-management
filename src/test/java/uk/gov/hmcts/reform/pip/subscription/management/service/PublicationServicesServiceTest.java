@@ -20,6 +20,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSumma
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PublicationServicesServiceTest {
 
     private static MockWebServer mockPublicationServicesEndpoint;
+    private static final String CONTENT_TYPE = "Content-Type";
 
     @Autowired
     WebClient webClient;
@@ -44,7 +46,7 @@ class PublicationServicesServiceTest {
     private SubscriptionsSummaryDetails subscriptionsSummaryDetails;
 
     @BeforeEach
-    void setup() {
+    void setup() throws IOException {
         subscriptionsSummary.setEmail("a@b.com");
         subscriptionsSummary.setArtefactId(UUID.randomUUID());
 
@@ -52,6 +54,9 @@ class PublicationServicesServiceTest {
 
         subscription.setSearchType(SearchType.CASE_ID);
         subscription.setSearchValue(TEST_ID);
+
+        mockPublicationServicesEndpoint = new MockWebServer();
+        mockPublicationServicesEndpoint.start(8081);
     }
 
     @AfterEach
@@ -61,7 +66,7 @@ class PublicationServicesServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = SearchType.class, names = {"LOCATION_ID", "CASE_URN", "CASE_ID"})
-    void testPostSubscriptionSummaries(SearchType searchType) throws IOException {
+    void testPostSubscriptionSummaries(SearchType searchType) {
         switch (searchType) {
             case LOCATION_ID:
                 subscriptionsSummaryDetails.addToLocationId(TEST_ID);
@@ -78,10 +83,8 @@ class PublicationServicesServiceTest {
         subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
 
         subscription.setSearchType(searchType);
-        mockPublicationServicesEndpoint = new MockWebServer();
-        mockPublicationServicesEndpoint.start(8081);
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
-                                                        .addHeader("Content-Type",
+                                                        .addHeader(CONTENT_TYPE,
                                                                    ContentType.APPLICATION_JSON)
                                                         .setResponseCode(200));
 
@@ -93,14 +96,30 @@ class PublicationServicesServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesThrows() throws IOException {
-        mockPublicationServicesEndpoint = new MockWebServer();
-        mockPublicationServicesEndpoint.start(8081);
+    void testPostSubscriptionSummariesThrows() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
         String result = publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
                                                              subscriptionsSummary.getEmail(), List.of(subscription));
 
         assertEquals("Request failed", result, RESULT_MATCH);
+    }
+
+    @Test
+    void testSendThirdPartyList() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+        assertEquals("Successfully sent", publicationServicesService.sendThirdPartyList(Map.of("test",
+                                                                                               List.of(subscription))),
+                     "Messages match");
+    }
+
+    @Test
+    void testSendThirdPartyListReturnsFailed() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
+        assertEquals("Request Failed", publicationServicesService.sendThirdPartyList(Map.of("test",
+                                                                                               List.of(subscription))),
+                     "Messages match");
     }
 }

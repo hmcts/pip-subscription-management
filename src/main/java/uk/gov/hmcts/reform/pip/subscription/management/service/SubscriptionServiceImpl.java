@@ -14,10 +14,10 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubsc
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -198,7 +198,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .postSubscriptionSummaries(artefactId, email, listOfSubscriptions))
         );
 
-        log.info("Collected {} api subscribers", apiList.size());
+        channelManagementService.getMappedApis(apiList).forEach((api, subscriptions) ->
+                                                                    log.info(publicationServicesService.sendThirdPartyList(
+                                                                        Map.of(api, subscriptions))));
     }
 
     /**

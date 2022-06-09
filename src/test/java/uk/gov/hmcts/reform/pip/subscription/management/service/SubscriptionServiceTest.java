@@ -62,7 +62,6 @@ class SubscriptionServiceTest {
     private static final String ACCEPTED_USER_ID = "2";
     private static final String FORBIDDEN_USER_ID = "3";
     private static final String SUBSCRIBER_NOTIFICATION_LOG = "Summary being sent to publication services: Success";
-    private static final String API_SUBSCRIPTION_LOG = "Collected 1 api subscribers";
     private static final String LOG_MESSAGE_MATCH = "Log messages should match.";
     private static final String CASE_NUMBER_KEY = "caseNumber";
     private static final String CASE_URN_KEY = "caseUrn";
@@ -434,11 +433,15 @@ class SubscriptionServiceTest {
     @Test
     void testCollectApiSubscribers() throws IOException {
         mockSubscription.setChannel(Channel.API_COURTEL);
+        Map<String, List<Subscription>> returnedMap = new ConcurrentHashMap<>();
+        returnedMap.put("test", List.of(mockSubscription));
         when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LOCATION_ID.toString(), COURT_MATCH))
             .thenReturn(List.of(mockSubscription));
+        when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
+        when(publicationServicesService.sendThirdPartyList(returnedMap)).thenReturn(SUCCESS);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
-            assertEquals(API_SUBSCRIPTION_LOG, logCaptor.getInfoLogs().get(0),
+            assertEquals(SUCCESS, logCaptor.getInfoLogs().get(0),
                          LOG_MESSAGE_MATCH);
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());
