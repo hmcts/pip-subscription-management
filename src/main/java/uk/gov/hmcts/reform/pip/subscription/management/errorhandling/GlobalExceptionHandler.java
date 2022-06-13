@@ -12,7 +12,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.
 
 import java.time.LocalDateTime;
 
-import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeGenericLog;
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 /**
  * Global exception handler, that captures exceptions thrown by the controllers, and encapsulates
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponse> handleSubscriptionNotFound(
         SubscriptionNotFoundException ex, WebRequest request) {
 
-        log.warn(writeGenericLog(
+        log.warn(writeLog(
             "404, Subscription has not been found. Cause: " + ex.getMessage()));
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
@@ -66,7 +66,7 @@ public class GlobalExceptionHandler {
         exceptionResponse.setMessage(responseText.substring(0, responseText.length() - 2));
         exceptionResponse.setTimestamp(LocalDateTime.now());
 
-        log.info(writeGenericLog(
+        log.info(writeLog(
             "400, Invalid argument provided when creating subscriptions. Cause: " +
                 exceptionResponse.getMessage()));
 
@@ -95,7 +95,7 @@ public class GlobalExceptionHandler {
         exceptionResponse.setMessage(responseText.toString());
         exceptionResponse.setTimestamp(LocalDateTime.now());
 
-        log.info(writeGenericLog(
+        log.info(writeLog(
             "400, Invalid argument provided when creating subscriptions. Cause: " + ex.getMessage()));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);

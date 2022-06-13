@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeGenericLog;
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 /**
@@ -208,7 +208,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             SubscriptionsSummary summaryToSend =
                 formatSubscriptionsSummary(artefactId, email, listOfSubscriptions);
 
-            log.info(writeGenericLog(
+            log.info(writeLog(
                 String.format("Summary being sent to publication services: %s", summaryToSend)));
 
             publicationServicesService.postSubscriptionSummaries(summaryToSend);
