@@ -67,8 +67,8 @@ public class GlobalExceptionHandler {
         exceptionResponse.setTimestamp(LocalDateTime.now());
 
         log.info(writeLog(
-            "400, Invalid argument provided when creating subscriptions. Cause: " +
-                exceptionResponse.getMessage()));
+            "400, Invalid argument provided when creating subscriptions. Cause: "
+                + exceptionResponse.getMessage()));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }

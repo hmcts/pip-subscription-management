@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
@@ -326,8 +327,8 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
-                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(String.format(SUMMARY_TEXT, mockSubscriptionsSummary)),
+                       LOG_MESSAGE_MATCH);
         }
     }
 
@@ -351,8 +352,8 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
-                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(String.format(SUMMARY_TEXT, mockSubscriptionsSummary)),
+                       LOG_MESSAGE_MATCH);
         }
     }
 
@@ -389,8 +390,9 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(classifiedArtefactMatches);
 
-            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
-                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0)
+                           .contains(String.format(SUMMARY_TEXT, mockSubscriptionsSummary)),
+                       LOG_MESSAGE_MATCH);
         }
     }
 
@@ -414,8 +416,8 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
-                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(String.format(SUMMARY_TEXT, mockSubscriptionsSummary)),
+                       LOG_MESSAGE_MATCH);
         }
     }
 }
