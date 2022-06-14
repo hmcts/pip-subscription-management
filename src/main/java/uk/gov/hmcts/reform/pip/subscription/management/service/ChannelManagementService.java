@@ -20,7 +20,7 @@ import java.util.Map;
 public class ChannelManagementService {
 
     private static final String EMAIL_PATH = "/channel/emails";
-    private static final String API_PATH = "/channel/emails";
+    private static final String API_PATH = "/channel/api";
 
     @Autowired
     private WebClient webClient;

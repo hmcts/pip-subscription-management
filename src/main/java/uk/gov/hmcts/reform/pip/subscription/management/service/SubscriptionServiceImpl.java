@@ -192,7 +192,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      */
     private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
-        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList, "API");
+        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
+                                                               Channel.API_COURTEL.notificationRoute);
 
         channelManagementService.getMappedEmails(emailList).forEach((email, listOfSubscriptions) ->
             log.info("Summary being sent to publication services: " + publicationServicesService
