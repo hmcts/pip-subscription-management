@@ -11,7 +11,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
@@ -49,6 +48,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public Subscription createSubscription(Subscription subscription) {
+        duplicateSubscriptionHandler(subscription);
+
         if (subscription.getSearchType().equals(SearchType.LOCATION_ID)) {
             subscription.setLocationName(dataManagementService.getCourtName(subscription.getSearchValue()));
         }
@@ -122,15 +123,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
             SearchType.LOCATION_ID.name(), artefact.getLocationId()));
 
-        
-
         if (artefact.getSearch().get("cases") != null) {
             artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
         }
 
         List<Subscription> subscriptionsToContact;
         if (artefact.getSensitivity().equals(Sensitivity.CLASSIFIED)) {
-            subscriptionsToContact = validateSubscriptionPermissions(subscriptionList, artefact.getListType());
+            subscriptionsToContact = validateSubscriptionPermissions(subscriptionList, artefact);
         } else {
             subscriptionsToContact = subscriptionList;
         }
@@ -139,10 +138,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                   sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL));
     }
 
-    private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, ListType listType) {
+    private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, Artefact artefact) {
         List<Subscription> filteredList = new ArrayList<>();
         subscriptions.forEach(subscription -> {
-            if (accountManagementService.isUserAuthenticated(subscription.getUserId(), listType)) {
+            if (accountManagementService.isUserAuthorised(subscription.getUserId(),
+                                                          artefact.getListType(), artefact.getSensitivity())) {
                 filteredList.add(subscription);
             }
         });
@@ -168,6 +168,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             log.warn("No value found in {} for case number or urn. Method threw: {}", caseObject, ex.getMessage());
         }
         return subscriptionList;
+    }
+
+    /**
+     * Take in a new user subscription and check if any with the same criteria already exist.
+     * If it does then delete the original subscription as the new one will supersede it.
+     *
+     * @param subscription The new subscription that will be created
+     */
+    private void duplicateSubscriptionHandler(Subscription subscription) {
+        repository.findByUserId(subscription.getUserId()).forEach(existingSub -> {
+            if (existingSub.getSearchType().equals(subscription.getSearchType())
+                && existingSub.getSearchValue().equals(subscription.getSearchValue())) {
+                repository.delete(existingSub);
+            }
+        });
     }
 
     /**

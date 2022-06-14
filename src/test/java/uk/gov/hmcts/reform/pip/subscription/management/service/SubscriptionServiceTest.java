@@ -36,6 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscription;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
@@ -78,6 +80,8 @@ class SubscriptionServiceTest {
     private final Map<String, List<Object>> searchTerms = new ConcurrentHashMap<>();
     private final Map<String, List<Subscription>> returnedMappedEmails = new ConcurrentHashMap<>();
 
+    private static final String SUMMARY_TEXT = "Summary being sent to publication services: %s";
+
     @Mock
     DataManagementService dataManagementService;
 
@@ -113,15 +117,13 @@ class SubscriptionServiceTest {
         classifiedArtefactMatches.setSensitivity(Sensitivity.CLASSIFIED);
         classifiedArtefactMatches.setSearch(searchTerms);
         classifiedArtefactMatches.setLocationId(COURT_MATCH);
+        classifiedArtefactMatches.setArtefactId(UUID.randomUUID());
         classifiedArtefactMatches.setListType(ListType.SJP_PRESS_LIST);
 
         publicArtefactMatches.setArtefactId(TEST_UUID);
         publicArtefactMatches.setSensitivity(Sensitivity.PUBLIC);
         publicArtefactMatches.setLocationId(COURT_MATCH);
         publicArtefactMatches.setSearch(searchTerms);
-
-        returnedSubscription.setUserId(ACCEPTED_USER_ID);
-        restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
 
         dateAdded = LocalDateTime.now();
         mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, dateAdded);
@@ -159,6 +161,22 @@ class SubscriptionServiceTest {
         assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
                      "The returned subscription does not match the expected subscription"
         );
+    }
+
+    @Test
+    void testCreateDuplicateSubscription() {
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
+        mockSubscription.setSearchValue(SEARCH_VALUE);
+        when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn("test court name");
+        when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        Subscription returnedSubscription =
+            subscriptionService.createSubscription(mockSubscription);
+
+        verify(subscriptionRepository, times(1)).delete(mockSubscription);
+        assertEquals(returnedSubscription, mockSubscription,
+                     "The Returned subscription does match the expected subscription");
     }
 
     @Test
@@ -308,7 +326,7 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
@@ -333,7 +351,45 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
+                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+        }
+    }
+
+    @Test
+    void testCollectSubscribersRestrictsClassified() {
+        returnedSubscription.setChannel(Channel.EMAIL);
+        returnedSubscription.setUserId(ACCEPTED_USER_ID);
+        returnedSubscription.setSearchType(SearchType.CASE_ID);
+        returnedSubscription.setSearchValue(CASE_ID);
+        restrictedSubscription.setChannel(Channel.EMAIL);
+        restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
+        returnedSubscription.setSearchType(SearchType.CASE_ID);
+        returnedSubscription.setSearchValue(CASE_ID);
+
+        mockSubscriptionsSummary.setArtefactId(classifiedArtefactMatches.getArtefactId());
+        mockSubscriptionsSummaryDetails.addToCaseNumber(CASE_ID);
+        mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
+
+        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.CASE_ID.name(), CASE_MATCH))
+            .thenReturn(List.of(returnedSubscription, restrictedSubscription));
+
+        when(accountManagementService.isUserAuthorised(
+            ACCEPTED_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED)).thenReturn(true);
+        when(accountManagementService.isUserAuthorised(
+            FORBIDDEN_USER_ID, ListType.SJP_PRESS_LIST, Sensitivity.CLASSIFIED))
+            .thenReturn(false);
+
+        returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
+        when(channelManagementService.getMappedEmails(List.of(returnedSubscription)))
+            .thenReturn(returnedMappedEmails);
+
+        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(classifiedArtefactMatches);
+
+            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
@@ -358,7 +414,7 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(String.format("Summary being sent to publication services: %s", mockSubscriptionsSummary),
+            assertEquals(String.format(SUMMARY_TEXT, mockSubscriptionsSummary),
                          logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
         }
     }
