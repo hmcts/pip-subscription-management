@@ -85,7 +85,7 @@ class SubscriptionControllerTests {
     private static final String RAW_JSON_MISSING_CHANNEL =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
 
-    private static final String LOCATION_ID = "4";
+    private static final String LOCATION_ID = "9";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
