@@ -558,5 +558,7 @@ class SubscriptionControllerTests {
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE);
     }
+
+
 }
 
