@@ -18,6 +18,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSumma
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -68,6 +69,7 @@ class SubscriptionServiceTest {
     private static final UUID TEST_UUID = UUID.randomUUID();
     private static final String TEST_USER_EMAIL = "a@b.com";
     private static final String SUCCESS = "Success";
+    private static final String TEST = "test";
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
@@ -107,8 +109,8 @@ class SubscriptionServiceTest {
         LinkedHashMap<String, String> map = new LinkedHashMap<>();
         LinkedHashMap<String, String> map2 = new LinkedHashMap<>();
         map.put(CASE_NUMBER_KEY, CASE_MATCH);
-        map.put(CASE_URN_KEY, "test");
-        map2.put(CASE_NUMBER_KEY, "test");
+        map.put(CASE_URN_KEY, TEST);
+        map2.put(CASE_NUMBER_KEY, TEST);
         map2.put(CASE_URN_KEY, CASE_MATCH);
 
         cases.add(map);
@@ -434,11 +436,12 @@ class SubscriptionServiceTest {
     void testCollectApiSubscribers() throws IOException {
         mockSubscription.setChannel(Channel.API_COURTEL);
         Map<String, List<Subscription>> returnedMap = new ConcurrentHashMap<>();
-        returnedMap.put("test", List.of(mockSubscription));
+        returnedMap.put(TEST, List.of(mockSubscription));
+        ThirdPartySubscription thirdPartySubscription = new ThirdPartySubscription(TEST, TEST_UUID);
         when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LOCATION_ID.toString(), COURT_MATCH))
             .thenReturn(List.of(mockSubscription));
         when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
-        when(publicationServicesService.sendThirdPartyList(returnedMap)).thenReturn(SUCCESS);
+        when(publicationServicesService.sendThirdPartyList(thirdPartySubscription)).thenReturn(SUCCESS);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
             assertEquals(SUCCESS, logCaptor.getInfoLogs().get(0),

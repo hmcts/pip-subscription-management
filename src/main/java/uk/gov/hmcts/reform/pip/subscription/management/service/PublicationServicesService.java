@@ -11,9 +11,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -43,7 +43,7 @@ public class PublicationServicesService {
         return "Request failed";
     }
 
-    public String sendThirdPartyList(Map<String, List<Subscription>> subscriptions) {
+    public String sendThirdPartyList(ThirdPartySubscription subscriptions) {
         try {
             webClient.post().uri(url + NOTIFY_API_PATH)
                 .bodyValue(subscriptions).retrieve()

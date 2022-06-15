@@ -10,6 +10,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -18,7 +19,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRe
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -200,10 +200,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .postSubscriptionSummaries(artefactId, email, listOfSubscriptions))
         );
 
-        channelManagementService.getMappedApis(apiList).forEach((api, subscriptions) ->
-                                                                    log.info(publicationServicesService
-                                                                                 .sendThirdPartyList(
-                                                                        Map.of(api, subscriptions))));
+        channelManagementService.getMappedApis(apiList)
+            .forEach((api, subscriptions) -> log.info(publicationServicesService
+                                                          .sendThirdPartyList(new ThirdPartySubscription(
+                                                                                     api,
+                                                                                     artefactId))));
     }
 
     /**

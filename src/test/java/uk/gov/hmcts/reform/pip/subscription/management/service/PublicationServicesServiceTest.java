@@ -17,10 +17,10 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -110,16 +110,16 @@ class PublicationServicesServiceTest {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
-        assertEquals("Successfully sent", publicationServicesService.sendThirdPartyList(Map.of("test",
-                                                                                               List.of(subscription))),
+        assertEquals("Successfully sent", publicationServicesService
+            .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
                      "Messages match");
     }
 
     @Test
     void testSendThirdPartyListReturnsFailed() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
-        assertEquals("Request Failed", publicationServicesService.sendThirdPartyList(Map.of("test",
-                                                                                               List.of(subscription))),
+        assertEquals("Request Failed", publicationServicesService
+                         .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
                      "Messages match");
     }
 }
