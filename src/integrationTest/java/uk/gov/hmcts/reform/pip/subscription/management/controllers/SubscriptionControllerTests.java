@@ -106,7 +106,7 @@ class SubscriptionControllerTests {
     @BeforeAll
     static void setup() throws IOException {
         OBJECT_MAPPER.findAndRegisterModules();
-        SUBSCRIPTION.setChannel(Channel.API);
+        SUBSCRIPTION.setChannel(Channel.API_COURTEL);
         SUBSCRIPTION.setSearchType(SearchType.LOCATION_ID);
         SUBSCRIPTION.setUserId(UUID_STRING);
 

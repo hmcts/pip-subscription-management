@@ -10,10 +10,8 @@ import java.util.List;
 public class SubscriptionsSummaryDetails {
     @JsonProperty("CASE_URN")
     private List<String> caseUrn = new ArrayList<>();
-
     @JsonProperty("CASE_NUMBER")
     private List<String> caseNumber = new ArrayList<>();
-
     @JsonProperty("LOCATION_ID")
     private List<String> locationId = new ArrayList<>();
 
