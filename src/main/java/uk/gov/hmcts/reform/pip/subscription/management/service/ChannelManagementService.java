@@ -15,6 +15,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
+
 @Slf4j
 @Component
 public class ChannelManagementService {
@@ -31,6 +33,7 @@ public class ChannelManagementService {
     public Map<String, List<Subscription>> getMappedEmails(List<Subscription> listOfSubs) {
         try {
             return webClient.post().uri(url + EMAIL_PATH)
+                .attributes(clientRegistrationId("channelManagementApi"))
                 .body(BodyInserters.fromValue(listOfSubs))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, List<Subscription>>>() {})

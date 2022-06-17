@@ -205,6 +205,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                                           .sendThirdPartyList(new ThirdPartySubscription(
                                                                                      api,
                                                                                      artefactId))));
+        log.info("Collected {} api subscribers", apiList.size());
     }
 
     /**

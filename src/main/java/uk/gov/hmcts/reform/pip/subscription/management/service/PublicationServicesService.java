@@ -16,6 +16,8 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.publicati
 import java.util.List;
 import java.util.UUID;
 
+import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
+
 @Slf4j
 @Component
 public class PublicationServicesService {
@@ -32,6 +34,7 @@ public class PublicationServicesService {
         SubscriptionsSummary payload = formatSubscriptionsSummary(artefactId, email, listOfSubscriptions);
         try {
             webClient.post().uri(url + NOTIFY_SUBSCRIPTION_PATH)
+                .attributes(clientRegistrationId("publicationServicesApi"))
                 .body(BodyInserters.fromValue(payload)).retrieve()
                 .bodyToMono(Void.class).block();
             return payload.toString();
@@ -51,7 +54,8 @@ public class PublicationServicesService {
             return "Successfully sent";
         } catch (WebClientResponseException ex) {
             log.error("Request to Publication Services {} failed due to: {}", NOTIFY_API_PATH,
-                      ex.getResponseBodyAsString());
+                      ex.getResponseBodyAsString()
+            );
             return "Request Failed";
         }
     }

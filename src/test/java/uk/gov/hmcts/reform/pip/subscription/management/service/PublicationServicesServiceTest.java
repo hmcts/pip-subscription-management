@@ -54,10 +54,10 @@ class PublicationServicesServiceTest {
 
         subscription.setSearchType(SearchType.CASE_ID);
         subscription.setSearchValue(TEST_ID);
-
         mockPublicationServicesEndpoint = new MockWebServer();
         mockPublicationServicesEndpoint.start(8081);
     }
+
 
     @AfterEach
     void tearDown() throws IOException {
@@ -96,7 +96,7 @@ class PublicationServicesServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesThrows() {
+    void testPostSubscriptionSummariesThrows() throws IOException {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
         String result = publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
@@ -121,5 +121,6 @@ class PublicationServicesServiceTest {
         assertEquals("Request Failed", publicationServicesService
                          .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
                      "Messages match");
+
     }
 }
