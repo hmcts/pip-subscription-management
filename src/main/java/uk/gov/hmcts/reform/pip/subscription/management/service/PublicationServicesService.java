@@ -7,9 +7,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +22,7 @@ import static org.springframework.security.oauth2.client.web.reactive.function.c
 @Component
 public class PublicationServicesService {
     private static final String NOTIFY_SUBSCRIPTION_PATH = "/notify/subscription";
+    private static final String NOTIFY_API_PATH = "/notify/api";
 
     @Autowired
     private WebClient webClient;
@@ -41,6 +44,21 @@ public class PublicationServicesService {
                                     payload, ex.getMessage()));
         }
         return "Request failed";
+    }
+
+    public String sendThirdPartyList(ThirdPartySubscription subscriptions) {
+        try {
+            webClient.post().uri(url + NOTIFY_API_PATH)
+                .attributes(clientRegistrationId("publicationServicesApi"))
+                .bodyValue(subscriptions).retrieve()
+                .bodyToMono(Void.class).block();
+            return "Successfully sent";
+        } catch (WebClientResponseException ex) {
+            log.error("Request to Publication Services {} failed due to: {}", NOTIFY_API_PATH,
+                      ex.getResponseBodyAsString()
+            );
+            return "Request Failed";
+        }
     }
 
     /**

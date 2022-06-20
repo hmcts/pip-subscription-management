@@ -1,11 +1,11 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import com.azure.core.http.ContentType;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +18,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class ChannelManagementServiceTest {
 
     private static MockWebServer mockChannelManagementEmailsEndpoint;
+    private static final String CONTENT_TYPE = "Content-Type";
 
     @Autowired
     WebClient webClient;
@@ -43,7 +45,7 @@ class ChannelManagementServiceTest {
     private String jsonResponse;
 
     @BeforeEach
-    void setup() throws JsonProcessingException {
+    void setup() throws IOException {
         Subscription mockSubscription = new Subscription();
         mockSubscription.setUserId(UUID.randomUUID().toString());
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
@@ -56,15 +58,20 @@ class ChannelManagementServiceTest {
 
         ObjectWriter ow = new ObjectMapper().findAndRegisterModules().writer().withDefaultPrettyPrinter();
         jsonResponse = ow.writeValueAsString(expectedMap);
+
+        mockChannelManagementEmailsEndpoint = new MockWebServer();
+        mockChannelManagementEmailsEndpoint.start(8181);
+    }
+
+    @AfterEach
+    void teardown() throws IOException {
+        mockChannelManagementEmailsEndpoint.shutdown();
     }
 
     @Test
-    void testGetMappedEmails() throws IOException {
-        mockChannelManagementEmailsEndpoint = new MockWebServer();
-        mockChannelManagementEmailsEndpoint.start(8181);
-
+    void testGetMappedEmails() {
         mockChannelManagementEmailsEndpoint.enqueue(new MockResponse()
-                                                .addHeader("Content-Type",
+                                                .addHeader(CONTENT_TYPE,
                                                            ContentType.APPLICATION_JSON)
                                                 .setBody(jsonResponse));
 
@@ -72,19 +79,33 @@ class ChannelManagementServiceTest {
             channelManagementService.getMappedEmails(subscriptionList);
 
         assertEquals(expectedMap, returnedMap, "Returned map does not equal expected map");
-        mockChannelManagementEmailsEndpoint.shutdown();
     }
 
     @Test
-    void testGetMappedEmailsThrows() throws IOException {
-        mockChannelManagementEmailsEndpoint = new MockWebServer();
-        mockChannelManagementEmailsEndpoint.start(8181);
+    void testGetMappedEmailsThrows() {
         mockChannelManagementEmailsEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
         Map<String, List<Subscription>> returnedMap =
             channelManagementService.getMappedEmails(subscriptionList);
 
         assertNotNull(returnedMap, "List was null when error occurred");
-        mockChannelManagementEmailsEndpoint.shutdown();
+    }
+
+    @Test
+    void testGetMappedApis() {
+        mockChannelManagementEmailsEndpoint.enqueue(new MockResponse()
+                                                        .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                                                        .setBody(jsonResponse));
+
+        Map<String, List<Subscription>> returnedMap = channelManagementService.getMappedApis(subscriptionList);
+        assertEquals(expectedMap, returnedMap, "Maps should match");
+    }
+
+    @Test
+    void testGetMappedApisReturnsEmptyMapOnFail() {
+        mockChannelManagementEmailsEndpoint.enqueue(new MockResponse().setResponseCode(404));
+
+        assertEquals(Collections.emptyMap(), channelManagementService.getMappedApis(subscriptionList),
+                     "Should return empty map on fail");
     }
 }

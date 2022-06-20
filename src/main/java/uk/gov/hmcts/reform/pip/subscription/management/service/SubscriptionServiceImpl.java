@@ -10,6 +10,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -191,13 +192,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      */
     private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
         List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
-        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList, "API");
+        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
+                                                               Channel.API_COURTEL.notificationRoute);
 
         channelManagementService.getMappedEmails(emailList).forEach((email, listOfSubscriptions) ->
             log.info("Summary being sent to publication services: " + publicationServicesService
                 .postSubscriptionSummaries(artefactId, email, listOfSubscriptions))
         );
 
+        channelManagementService.getMappedApis(apiList)
+            .forEach((api, subscriptions) -> log.info(publicationServicesService
+                                                          .sendThirdPartyList(new ThirdPartySubscription(
+                                                                                     api,
+                                                                                     artefactId))));
         log.info("Collected {} api subscribers", apiList.size());
     }
 
