@@ -49,6 +49,7 @@ public class PublicationServicesService {
     public String sendThirdPartyList(ThirdPartySubscription subscriptions) {
         try {
             webClient.post().uri(url + NOTIFY_API_PATH)
+                .attributes(clientRegistrationId("publicationServicesApi"))
                 .bodyValue(subscriptions).retrieve()
                 .bodyToMono(Void.class).block();
             return "Successfully sent";

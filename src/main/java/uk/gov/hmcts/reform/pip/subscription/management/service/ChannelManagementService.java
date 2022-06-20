@@ -48,6 +48,7 @@ public class ChannelManagementService {
     public Map<String, List<Subscription>> getMappedApis(List<Subscription> subscriptions) {
         try {
             return webClient.post().uri(url + API_PATH)
+                .attributes(clientRegistrationId("channelManagementApi"))
                 .bodyValue(subscriptions)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, List<Subscription>>>() {}).block();
