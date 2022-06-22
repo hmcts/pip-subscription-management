@@ -29,9 +29,9 @@ sourceSets {
     java {
       compileClasspath += main.output
       runtimeClasspath += main.output
-      srcDir file('src/functionalTest/java')
+      srcDir file('src/integrationTest/java')
     }
-    resources.srcDir file('src/functionalTest/resources')
+    resources.srcDir file('src/integrationTest/resources')
   }
 
   integrationTest {
@@ -174,11 +174,11 @@ dependencies {
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
-  implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.5.5'
-  implementation 'com.azure.spring:spring-cloud-azure-starter-active-directory:4.0.0'
-  implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-  implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-  implementation 'org.springframework.boot:spring-boot-starter-validation:2.6.0'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
+  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '4.0.0'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-resource-server'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-client'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: '2.6.0'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.3'
   implementation group: 'uk.gov.hmcts.reform', name: 'pip-data-models', version: '1.1', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
@@ -202,6 +202,7 @@ dependencies {
   integrationTestImplementation sourceSets.test.runtimeClasspath
 
   functionalTestImplementation sourceSets.main.runtimeClasspath
+  functionalTestImplementation sourceSets.test.runtimeClasspath
 
   smokeTestImplementation sourceSets.main.runtimeClasspath
   smokeTestImplementation sourceSets.test.runtimeClasspath

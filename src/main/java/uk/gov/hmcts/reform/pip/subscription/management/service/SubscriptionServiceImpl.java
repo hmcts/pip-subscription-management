@@ -9,10 +9,9 @@ import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
-import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -133,6 +132,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void collectSubscribers(Artefact artefact) {
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
             SearchType.LOCATION_ID.name(), artefact.getLocationId()));
+        subscriptionList.addAll(querySubscriptionValue(SearchType.LIST_TYPE.name(), artefact.getListType().name()));
 
         if (artefact.getSearch().get("cases") != null) {
             artefact.getSearch().get("cases").forEach(object -> subscriptionList.addAll(extractSearchValue(object)));
@@ -145,8 +145,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriptionsToContact = subscriptionList;
         }
 
-        handleSubscriptionSending(artefact.getArtefactId(),
-                                  sortSubscriptionByChannel(subscriptionsToContact, Channel.EMAIL));
+        handleSubscriptionSending(artefact.getArtefactId(), subscriptionsToContact);
     }
 
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, Artefact artefact) {
@@ -203,15 +202,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * @param subscriptionsList The list of subscriptions being sent
      */
     private void handleSubscriptionSending(UUID artefactId, List<Subscription> subscriptionsList) {
-        channelManagementService.getMappedEmails(subscriptionsList).forEach((email, listOfSubscriptions) -> {
-            SubscriptionsSummary summaryToSend =
-                formatSubscriptionsSummary(artefactId, email, listOfSubscriptions);
+        List<Subscription> emailList = sortSubscriptionByChannel(subscriptionsList, Channel.EMAIL.notificationRoute);
+        List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
+                                                               Channel.API_COURTEL.notificationRoute);
 
-            log.info(writeLog(
-                String.format("Summary being sent to publication services: %s", summaryToSend)));
+        channelManagementService.getMappedEmails(emailList).forEach((email, listOfSubscriptions) ->
+            log.info(writeLog("Summary being sent to publication services: " + publicationServicesService
+                .postSubscriptionSummaries(artefactId, email, listOfSubscriptions)))
+        );
 
-            publicationServicesService.postSubscriptionSummaries(summaryToSend);
-        });
+        channelManagementService.getMappedApis(apiList)
+            .forEach((api, subscriptions) -> log.info(writeLog(publicationServicesService
+                                                          .sendThirdPartyList(new ThirdPartySubscription(
+                                                                                     api,
+                                                                                     artefactId)))));
+        log.info(writeLog(String.format("Collected %s api subscribers", apiList.size())));
     }
 
     /**
@@ -221,52 +226,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * @param channel The channel we want the subscriptions of
      * @return A list of subscriptions
      */
-    private List<Subscription> sortSubscriptionByChannel(List<Subscription> subscriptionsList, Channel channel) {
+    private List<Subscription> sortSubscriptionByChannel(List<Subscription> subscriptionsList, String channel) {
         List<Subscription> sortedSubscriptionsList = new ArrayList<>();
 
         subscriptionsList.forEach((Subscription subscription) -> {
-            if (channel.equals(subscription.getChannel())) {
+            if (channel.equals(subscription.getChannel().notificationRoute)) {
                 sortedSubscriptionsList.add(subscription);
             }
         });
 
         return sortedSubscriptionsList;
-    }
-
-    /**
-     * Process data to form a subscriptions summary model which can be sent to publication services.
-     *
-     * @param artefactId The artefact id associated with the list of subscriptions
-     * @param email The email of the user associated with the list of subscriptions
-     * @param listOfSubscriptions The list of subscriptions to format
-     * @return A subscriptions summary model
-     */
-    private SubscriptionsSummary formatSubscriptionsSummary(UUID artefactId, String email,
-                                                            List<Subscription> listOfSubscriptions) {
-
-        SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
-
-        listOfSubscriptions.forEach(subscription -> {
-            switch (subscription.getSearchType()) {
-                case CASE_URN:
-                    subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
-                    break;
-                case CASE_ID:
-                    subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
-                    break;
-                case LOCATION_ID:
-                    subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
-                    break;
-                default:
-                    break;
-            }
-        });
-
-        SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
-        subscriptionsSummary.setArtefactId(artefactId);
-        subscriptionsSummary.setEmail(email);
-        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
-
-        return subscriptionsSummary;
     }
 }

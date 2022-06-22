@@ -18,11 +18,13 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSumma
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
@@ -60,11 +63,14 @@ class SubscriptionServiceTest {
     private static final String CASE_MATCH = "case match";
     private static final String ACCEPTED_USER_ID = "2";
     private static final String FORBIDDEN_USER_ID = "3";
+    private static final String SUBSCRIBER_NOTIFICATION_LOG = "Summary being sent to publication services: Success";
     private static final String LOG_MESSAGE_MATCH = "Log messages should match.";
     private static final String CASE_NUMBER_KEY = "caseNumber";
     private static final String CASE_URN_KEY = "caseUrn";
     private static final UUID TEST_UUID = UUID.randomUUID();
     private static final String TEST_USER_EMAIL = "a@b.com";
+    private static final String SUCCESS = "Success";
+    private static final String TEST = "test";
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
@@ -80,8 +86,6 @@ class SubscriptionServiceTest {
     private final List<Object> cases = new ArrayList<>();
     private final Map<String, List<Object>> searchTerms = new ConcurrentHashMap<>();
     private final Map<String, List<Subscription>> returnedMappedEmails = new ConcurrentHashMap<>();
-
-    private static final String SUMMARY_TEXT = "Summary being sent to publication services: %s";
 
     @Mock
     DataManagementService dataManagementService;
@@ -106,8 +110,8 @@ class SubscriptionServiceTest {
         LinkedHashMap<String, String> map = new LinkedHashMap<>();
         LinkedHashMap<String, String> map2 = new LinkedHashMap<>();
         map.put(CASE_NUMBER_KEY, CASE_MATCH);
-        map.put(CASE_URN_KEY, "test");
-        map2.put(CASE_NUMBER_KEY, "test");
+        map.put(CASE_URN_KEY, TEST);
+        map2.put(CASE_NUMBER_KEY, TEST);
         map2.put(CASE_URN_KEY, CASE_MATCH);
 
         cases.add(map);
@@ -118,13 +122,16 @@ class SubscriptionServiceTest {
         classifiedArtefactMatches.setSensitivity(Sensitivity.CLASSIFIED);
         classifiedArtefactMatches.setSearch(searchTerms);
         classifiedArtefactMatches.setLocationId(COURT_MATCH);
-        classifiedArtefactMatches.setArtefactId(UUID.randomUUID());
         classifiedArtefactMatches.setListType(ListType.SJP_PRESS_LIST);
 
         publicArtefactMatches.setArtefactId(TEST_UUID);
         publicArtefactMatches.setSensitivity(Sensitivity.PUBLIC);
         publicArtefactMatches.setLocationId(COURT_MATCH);
         publicArtefactMatches.setSearch(searchTerms);
+        publicArtefactMatches.setListType(ListType.MAGS_PUBLIC_LIST);
+
+        returnedSubscription.setUserId(ACCEPTED_USER_ID);
+        restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
 
         dateAdded = LocalDateTime.now();
         mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, dateAdded);
@@ -133,6 +140,7 @@ class SubscriptionServiceTest {
 
         mockSubscriptionsSummary.setEmail(TEST_USER_EMAIL);
         mockSubscriptionsSummary.setArtefactId(TEST_UUID);
+        mockSubscription.setChannel(Channel.EMAIL);
 
         lenient().when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         lenient().when(subscriptionRepository.findByUserId(USER_ID_NO_SUBS)).thenReturn(new ArrayList<>());
@@ -308,6 +316,23 @@ class SubscriptionServiceTest {
     }
 
     @Test
+    void testCollectSubscribersCourtSubscriptionNotClassified() throws IOException {
+        returnedSubscription.setChannel(Channel.EMAIL);
+        returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
+        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LOCATION_ID.toString(), COURT_MATCH))
+            .thenReturn(List.of(returnedSubscription));
+        when(channelManagementService.getMappedEmails(any())).thenReturn(returnedMappedEmails);
+        when(publicationServicesService.postSubscriptionSummaries(any(), any(), any())).thenReturn(SUCCESS);
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(publicArtefactMatches);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
+        } catch (Exception ex) {
+            throw new IOException(ex.getMessage());
+        }
+    }
+
+    @Test
     void testCollectSubscribersCaseUrn() {
         mockSubscription.setSearchType(SearchType.CASE_URN);
         mockSubscription.setSearchValue(CASE_URN_KEY);
@@ -322,12 +347,14 @@ class SubscriptionServiceTest {
 
         when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary);
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                               TEST_USER_EMAIL,
+                                                                  List.of(mockSubscription))).thenReturn(SUCCESS);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertTrue(logCaptor.getInfoLogs().get(0).contains(String.format(SUMMARY_TEXT, mockSubscriptionsSummary)),
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
         }
     }
@@ -347,13 +374,81 @@ class SubscriptionServiceTest {
 
         when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary);
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                               TEST_USER_EMAIL,
+                                                                  List.of(mockSubscription))).thenReturn(SUCCESS);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertTrue(logCaptor.getInfoLogs().get(0).contains(String.format(SUMMARY_TEXT, mockSubscriptionsSummary)),
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
+        }
+    }
+
+    @Test
+    void testCollectSubscribersLocationId() {
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
+        mockSubscription.setSearchValue(COURT_MATCH);
+
+        mockSubscriptionsSummaryDetails.addToLocationId(COURT_MATCH);
+        mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
+
+        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LOCATION_ID.toString(), COURT_MATCH))
+            .thenReturn(List.of(mockSubscription));
+
+        returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
+
+        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                               TEST_USER_EMAIL,
+                                                                  List.of(mockSubscription))).thenReturn(SUCCESS);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(publicArtefactMatches);
+
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
+        }
+    }
+
+    @Test
+    void testCollectListTypeSubscription() throws IOException {
+        mockSubscription.setSearchType(SearchType.LIST_TYPE);
+        mockSubscription.setSearchValue(ListType.MAGS_PUBLIC_LIST.toString());
+        returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
+        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LIST_TYPE.toString(),
+                                                                   ListType.MAGS_PUBLIC_LIST.toString()))
+            .thenReturn(List.of(mockSubscription));
+        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+        lenient().when(publicationServicesService.postSubscriptionSummaries(any(), any(), any())).thenReturn(SUCCESS);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(publicArtefactMatches);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
+        } catch (Exception ex) {
+            throw new IOException(ex.getMessage());
+        }
+    }
+
+    @Test
+    void testCollectApiSubscribers() throws IOException {
+        mockSubscription.setChannel(Channel.API_COURTEL);
+        Map<String, List<Subscription>> returnedMap = new ConcurrentHashMap<>();
+        returnedMap.put(TEST, List.of(mockSubscription));
+        ThirdPartySubscription thirdPartySubscription = new ThirdPartySubscription(TEST, TEST_UUID);
+        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LOCATION_ID.toString(), COURT_MATCH))
+            .thenReturn(List.of(mockSubscription));
+        when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
+        when(publicationServicesService.sendThirdPartyList(thirdPartySubscription)).thenReturn(SUCCESS);
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectSubscribers(publicArtefactMatches);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUCCESS),
+                       LOG_MESSAGE_MATCH);
+        } catch (Exception ex) {
+            throw new IOException(ex.getMessage());
         }
     }
 
@@ -385,38 +480,14 @@ class SubscriptionServiceTest {
         when(channelManagementService.getMappedEmails(List.of(returnedSubscription)))
             .thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary);
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                  TEST_USER_EMAIL,
+                                                                  List.of(returnedSubscription))).thenReturn(SUCCESS);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(classifiedArtefactMatches);
 
-            assertTrue(logCaptor.getInfoLogs().get(0)
-                           .contains(String.format(SUMMARY_TEXT, mockSubscriptionsSummary)),
-                       LOG_MESSAGE_MATCH);
-        }
-    }
-
-    @Test
-    void testCollectSubscribersCourtId() {
-        mockSubscription.setSearchType(SearchType.LOCATION_ID);
-        mockSubscription.setSearchValue(COURT_MATCH);
-
-        mockSubscriptionsSummaryDetails.addToLocationId(COURT_MATCH);
-        mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
-
-        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LOCATION_ID.toString(), COURT_MATCH))
-            .thenReturn(List.of(mockSubscription));
-
-        returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
-
-        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
-
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(mockSubscriptionsSummary);
-
-        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
-            subscriptionService.collectSubscribers(publicArtefactMatches);
-
-            assertTrue(logCaptor.getInfoLogs().get(0).contains(String.format(SUMMARY_TEXT, mockSubscriptionsSummary)),
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
         }
     }

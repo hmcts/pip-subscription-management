@@ -3,29 +3,34 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 import com.azure.core.http.ContentType;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {Application.class})
 @ActiveProfiles({"test", "non-async"})
 class PublicationServicesServiceTest {
 
     private static MockWebServer mockPublicationServicesEndpoint;
+    private static final String CONTENT_TYPE = "Content-Type";
 
     @Autowired
     WebClient webClient;
@@ -33,50 +38,89 @@ class PublicationServicesServiceTest {
     @Autowired
     PublicationServicesService publicationServicesService;
 
+    private static final String TEST_ID = "123";
+    private static final String RESULT_MATCH = "Returned strings should match";
+
     private final SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
+    private final Subscription subscription = new Subscription();
+    private SubscriptionsSummaryDetails subscriptionsSummaryDetails;
 
     @BeforeEach
-    void setup() {
+    void setup() throws IOException {
         subscriptionsSummary.setEmail("a@b.com");
         subscriptionsSummary.setArtefactId(UUID.randomUUID());
 
-        SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
-        subscriptionsSummaryDetails.addToCaseNumber("1");
+        subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
 
-        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
-    }
-
-    @Test
-    void testPostSubscriptionSummaries() throws IOException, InterruptedException {
+        subscription.setSearchType(SearchType.CASE_ID);
+        subscription.setSearchValue(TEST_ID);
         mockPublicationServicesEndpoint = new MockWebServer();
         mockPublicationServicesEndpoint.start(8081);
+    }
+
+
+    @AfterEach
+    void tearDown() throws IOException {
+        mockPublicationServicesEndpoint.shutdown();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SearchType.class, names = {"LOCATION_ID", "CASE_URN", "CASE_ID"})
+    void testPostSubscriptionSummaries(SearchType searchType) {
+        switch (searchType) {
+            case LOCATION_ID:
+                subscriptionsSummaryDetails.addToLocationId(TEST_ID);
+                break;
+            case CASE_URN:
+                subscriptionsSummaryDetails.addToCaseUrn(TEST_ID);
+                break;
+            case CASE_ID:
+                subscriptionsSummaryDetails.addToCaseNumber(TEST_ID);
+                break;
+            default:
+                break;
+        }
+        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
+
+        subscription.setSearchType(searchType);
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
-                                                        .addHeader("Content-Type",
+                                                        .addHeader(CONTENT_TYPE,
                                                                    ContentType.APPLICATION_JSON)
                                                         .setResponseCode(200));
 
 
 
-        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary);
-
-        RecordedRequest request = mockPublicationServicesEndpoint.takeRequest();
-
-        assertEquals("POST", request.getMethod(), "Request method was not correct");
-        assertTrue(request.getBody().toString().contains("a@b.com"), "Body does not contain email");
-        mockPublicationServicesEndpoint.shutdown();
+        String result = publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
+                                                             subscriptionsSummary.getEmail(), List.of(subscription));
+        assertEquals(subscriptionsSummary.toString(), result, RESULT_MATCH);
     }
 
     @Test
-    void testPostSubscriptionSummariesThrows() throws IOException, InterruptedException {
-        mockPublicationServicesEndpoint = new MockWebServer();
-        mockPublicationServicesEndpoint.start(8081);
+    void testPostSubscriptionSummariesThrows() throws IOException {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
-        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary);
+        String result = publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
+                                                             subscriptionsSummary.getEmail(), List.of(subscription));
 
-        RecordedRequest request = mockPublicationServicesEndpoint.takeRequest();
+        assertEquals("Request failed", result, RESULT_MATCH);
+    }
 
-        assertNotNull(request.getBody(), "Request body was null");
-        mockPublicationServicesEndpoint.shutdown();
+    @Test
+    void testSendThirdPartyList() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+        assertEquals("Successfully sent", publicationServicesService
+            .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
+                     "Messages match");
+    }
+
+    @Test
+    void testSendThirdPartyListReturnsFailed() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
+        assertEquals("Request Failed", publicationServicesService
+                         .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
+                     "Messages match");
+
     }
 }
