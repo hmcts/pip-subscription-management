@@ -38,4 +38,5 @@ java:
         - name: app-pip-publication-services-scope
           alias: PUBLICATION_SERVICES_AZ_API
   environment:
+    SPRING_PROFILES_ACTIVE: dev
 
