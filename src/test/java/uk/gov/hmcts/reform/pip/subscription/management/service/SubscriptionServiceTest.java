@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
@@ -324,8 +325,8 @@ class SubscriptionServiceTest {
         when(publicationServicesService.postSubscriptionSummaries(any(), any(), any())).thenReturn(SUCCESS);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
-            assertEquals(SUBSCRIBER_NOTIFICATION_LOG, logCaptor.getInfoLogs().get(0),
-                         LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());
         }
@@ -353,8 +354,8 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(SUBSCRIBER_NOTIFICATION_LOG,
-                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
         }
     }
 
@@ -380,8 +381,8 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(SUBSCRIBER_NOTIFICATION_LOG,
-                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
         }
     }
 
@@ -407,8 +408,8 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
 
-            assertEquals(SUBSCRIBER_NOTIFICATION_LOG,
-                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
         }
     }
 
@@ -425,8 +426,8 @@ class SubscriptionServiceTest {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
-            assertEquals(SUBSCRIBER_NOTIFICATION_LOG, logCaptor.getInfoLogs().get(0),
-                         LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());
         }
@@ -444,8 +445,8 @@ class SubscriptionServiceTest {
         when(publicationServicesService.sendThirdPartyList(thirdPartySubscription)).thenReturn(SUCCESS);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(publicArtefactMatches);
-            assertEquals(SUCCESS, logCaptor.getInfoLogs().get(0),
-                         LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUCCESS),
+                       LOG_MESSAGE_MATCH);
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());
         }
@@ -486,8 +487,8 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(classifiedArtefactMatches);
 
-            assertEquals(SUBSCRIBER_NOTIFICATION_LOG,
-                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
         }
     }
 }

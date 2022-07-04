@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
@@ -21,6 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 /**
  * Service layer for dealing with subscriptions.
@@ -47,6 +50,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public Subscription createSubscription(Subscription subscription) {
+        log.info(writeLog(subscription.getUserId(), UserActions.CREATE_SUBSCRIPTION,
+                          subscription.getSearchType().toString()));
+
         duplicateSubscriptionHandler(subscription);
 
         if (subscription.getSearchType().equals(SearchType.LOCATION_ID)) {
@@ -65,6 +71,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 id
             ));
         }
+
+        Subscription returnedSubscription = subscription.get();
+        log.info(writeLog(returnedSubscription.getUserId(), UserActions.DELETE_SUBSCRIPTION,
+                          id.toString()));
+
         repository.deleteById(id);
     }
 
@@ -196,16 +207,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                                                Channel.API_COURTEL.notificationRoute);
 
         channelManagementService.getMappedEmails(emailList).forEach((email, listOfSubscriptions) ->
-            log.info("Summary being sent to publication services: " + publicationServicesService
-                .postSubscriptionSummaries(artefactId, email, listOfSubscriptions))
+            log.info(writeLog("Summary being sent to publication services: " + publicationServicesService
+                .postSubscriptionSummaries(artefactId, email, listOfSubscriptions)))
         );
 
         channelManagementService.getMappedApis(apiList)
-            .forEach((api, subscriptions) -> log.info(publicationServicesService
+            .forEach((api, subscriptions) -> log.info(writeLog(publicationServicesService
                                                           .sendThirdPartyList(new ThirdPartySubscription(
                                                                                      api,
-                                                                                     artefactId))));
-        log.info("Collected {} api subscribers", apiList.size());
+                                                                                     artefactId)))));
+        log.info(writeLog(String.format("Collected %s api subscribers", apiList.size())));
     }
 
     /**
