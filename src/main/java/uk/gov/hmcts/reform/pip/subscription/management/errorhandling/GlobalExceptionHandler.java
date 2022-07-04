@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.errorhandling;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,11 +12,14 @@ import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.
 
 import java.time.LocalDateTime;
 
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
+
 /**
  * Global exception handler, that captures exceptions thrown by the controllers, and encapsulates
  * the logic to handle them and return a standardised response to the user.
  */
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     /**
@@ -29,6 +33,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SubscriptionNotFoundException.class)
     public ResponseEntity<ExceptionResponse> handleSubscriptionNotFound(
         SubscriptionNotFoundException ex, WebRequest request) {
+
+        log.error(writeLog(
+            "404, Subscription has not been found. Cause: " + ex.getMessage()));
 
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(ex.getMessage());
@@ -47,6 +54,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponse> handle(MethodArgumentNotValidException ex) {
+
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         StringBuilder responseText = new StringBuilder("Bad Request: ");
         for (int i = 0; i < ex.getBindingResult().getErrorCount(); i++) {
@@ -57,6 +65,10 @@ public class GlobalExceptionHandler {
         }
         exceptionResponse.setMessage(responseText.substring(0, responseText.length() - 2));
         exceptionResponse.setTimestamp(LocalDateTime.now());
+
+        log.error(writeLog(
+            "400, Invalid argument provided when creating subscriptions. Cause: "
+                + exceptionResponse.getMessage()));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }
@@ -82,6 +94,9 @@ public class GlobalExceptionHandler {
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setMessage(responseText.toString());
         exceptionResponse.setTimestamp(LocalDateTime.now());
+
+        log.error(writeLog(
+            "400, Invalid argument provided when creating subscriptions. Cause: " + ex.getMessage()));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }

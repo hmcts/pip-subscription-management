@@ -18,7 +18,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 
 import java.io.IOException;
@@ -120,15 +119,6 @@ class PublicationServicesServiceTest {
     }
 
     @Test
-    void testSendThirdPartyListReturnsFailed() {
-        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
-        assertEquals(REQUEST_FAILED, publicationServicesService
-                         .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
-                     RESULT_MATCH);
-
-    }
-
-    @Test
     void testSendEmptyArtefact() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
@@ -141,9 +131,23 @@ class PublicationServicesServiceTest {
     void testSendEmptyArtefactReturnsFailed() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
-        try(LogCaptor logCaptor = LogCaptor.forClass(PublicationServicesService.class)) {
+        try (LogCaptor logCaptor = LogCaptor.forClass(PublicationServicesService.class)) {
             assertEquals(REQUEST_FAILED, publicationServicesService.sendEmptyArtefact(TEST_ID), RESULT_MATCH);
-            assertTrue(logCaptor.getErrorLogs().get(0).contains("Request to Publication Services /notify/api failed"));
+            assertTrue(logCaptor.getErrorLogs().get(0).contains("Request to Publication Services /notify/api failed"),
+                       "Log message does not contain expected message");
         }
+        String result = publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
+                                                             subscriptionsSummary.getEmail(), List.of(subscription));
+
+        assertEquals("Request failed", result, RESULT_MATCH);
+    }
+
+    @Test
+    void testSendThirdPartyListReturnsFailed() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
+        assertEquals("Request Failed", publicationServicesService
+                         .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
+                     "Messages match");
+
     }
 }
