@@ -93,6 +93,7 @@ class SubscriptionControllerTests {
     private static final String CASE_NAME = "Tom Clancy";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
+    private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
     private static String rawArtefact;
@@ -561,6 +562,19 @@ class SubscriptionControllerTests {
                      FORBIDDEN_STATUS_CODE);
     }
 
+    @Test
+    void testBuildDeletedArtefactSubscribersReturnsAccepted() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(DELETED_ARTEFACT_RECIPIENT_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(rawArtefact);
+        MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
+
+        assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
+                     "Response should match"
+        );
+    }
 
 }
 

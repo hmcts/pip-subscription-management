@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import com.azure.core.http.ContentType;
+import nl.altindag.log.LogCaptor;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -17,6 +18,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 
 import java.io.IOException;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {Application.class})
 @ActiveProfiles({"test", "non-async"})
@@ -40,6 +43,7 @@ class PublicationServicesServiceTest {
 
     private static final String TEST_ID = "123";
     private static final String RESULT_MATCH = "Returned strings should match";
+    private static final String REQUEST_FAILED = "Request Failed";
 
     private final SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
     private final Subscription subscription = new Subscription();
@@ -96,13 +100,13 @@ class PublicationServicesServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesThrows() throws IOException {
+    void testPostSubscriptionSummariesThrows() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
         String result = publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
                                                              subscriptionsSummary.getEmail(), List.of(subscription));
 
-        assertEquals("Request failed", result, RESULT_MATCH);
+        assertEquals(REQUEST_FAILED, result, RESULT_MATCH);
     }
 
     @Test
@@ -112,15 +116,34 @@ class PublicationServicesServiceTest {
                                                     .setResponseCode(200));
         assertEquals("Successfully sent", publicationServicesService
             .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
-                     "Messages match");
+                     RESULT_MATCH);
     }
 
     @Test
     void testSendThirdPartyListReturnsFailed() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
-        assertEquals("Request Failed", publicationServicesService
+        assertEquals(REQUEST_FAILED, publicationServicesService
                          .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
-                     "Messages match");
+                     RESULT_MATCH);
 
+    }
+
+    @Test
+    void testSendEmptyArtefact() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                                                    .setResponseCode(200));
+
+        assertEquals("Successfully sent", publicationServicesService.sendEmptyArtefact(TEST_ID), RESULT_MATCH);
+    }
+
+    @Test
+    void testSendEmptyArtefactReturnsFailed() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
+
+        try(LogCaptor logCaptor = LogCaptor.forClass(PublicationServicesService.class)) {
+            assertEquals(REQUEST_FAILED, publicationServicesService.sendEmptyArtefact(TEST_ID), RESULT_MATCH);
+            assertTrue(logCaptor.getErrorLogs().get(0).contains("Request to Publication Services /notify/api failed"));
+        }
     }
 }
