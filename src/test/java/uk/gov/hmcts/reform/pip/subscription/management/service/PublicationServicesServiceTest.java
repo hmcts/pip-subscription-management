@@ -129,17 +129,14 @@ class PublicationServicesServiceTest {
 
     @Test
     void testSendEmptyArtefactReturnsFailed() {
-        mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .setResponseCode(404));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(PublicationServicesService.class)) {
             assertEquals(REQUEST_FAILED, publicationServicesService.sendEmptyArtefact(TEST_ID), RESULT_MATCH);
             assertTrue(logCaptor.getErrorLogs().get(0).contains("Request to Publication Services /notify/api failed"),
                        "Log message does not contain expected message");
         }
-        String result = publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
-                                                             subscriptionsSummary.getEmail(), List.of(subscription));
-
-        assertEquals("Request failed", result, RESULT_MATCH);
     }
 
     @Test
