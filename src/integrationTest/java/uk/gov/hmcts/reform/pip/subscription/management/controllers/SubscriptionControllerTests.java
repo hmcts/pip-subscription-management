@@ -571,8 +571,8 @@ class SubscriptionControllerTests {
             .content(rawArtefact);
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
-        assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
-                     "Response should match"
+        assertEquals("Deleted artefact third party subscriber notification request has been accepted",
+                     result.getResponse().getContentAsString(), "Response should match"
         );
     }
 
