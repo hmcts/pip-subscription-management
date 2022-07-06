@@ -42,7 +42,7 @@ class PublicationServicesServiceTest {
 
     private static final String TEST_ID = "123";
     private static final String RESULT_MATCH = "Returned strings should match";
-    private static final String REQUEST_FAILED = "Request Failed";
+    private static final String REQUEST_FAILED = "Request failed";
 
     private final SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
     private final Subscription subscription = new Subscription();
@@ -145,7 +145,7 @@ class PublicationServicesServiceTest {
     @Test
     void testSendThirdPartyListReturnsFailed() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
-        assertEquals("Request Failed", publicationServicesService
+        assertEquals("Request failed", publicationServicesService
                          .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
                      "Messages match");
 

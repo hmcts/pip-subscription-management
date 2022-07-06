@@ -57,7 +57,7 @@ public class PublicationServicesService {
             log.error("Request to Publication Services {} failed due to: {}", NOTIFY_API_PATH,
                       ex.getResponseBodyAsString()
             );
-            return "Request Failed";
+            return "Request failed";
         }
     }
 
@@ -72,7 +72,7 @@ public class PublicationServicesService {
             log.error("Request to Publication Services {} failed due to: {}", NOTIFY_API_PATH,
                       ex.getResponseBodyAsString()
             );
-            return "Request Failed";
+            return "Request failed";
         }
     }
 
