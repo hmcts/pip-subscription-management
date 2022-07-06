@@ -259,6 +259,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                                                Channel.API_COURTEL.notificationRoute);
 
         channelManagementService.getMappedApis(apiList).forEach((api, subscription) ->
-            log.info(publicationServicesService.sendEmptyArtefact(api)));
+            log.info(writeLog(publicationServicesService.sendEmptyArtefact(api))));
     }
 }

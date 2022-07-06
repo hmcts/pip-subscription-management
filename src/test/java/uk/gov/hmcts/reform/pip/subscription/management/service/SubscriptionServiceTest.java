@@ -488,8 +488,7 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(classifiedArtefactMatches);
 
-            assertEquals(SUBSCRIBER_NOTIFICATION_LOG,
-                         logCaptor.getInfoLogs().get(0), LOG_MESSAGE_MATCH);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG), LOG_MESSAGE_MATCH);
         }
     }
 
@@ -502,7 +501,7 @@ class SubscriptionServiceTest {
                                                                    publicArtefactMatches.getListType().name()))
             .thenReturn(List.of(mockSubscription));
         when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
-        when(publicationServicesService.sendEmptyArtefact(TEST)).thenReturn(SUCCESS);
+        when(publicationServicesService.sendEmptyArtefact(TEST)).thenReturn(SUBSCRIBER_NOTIFICATION_LOG);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectThirdPartyForDeletion(publicArtefactMatches);
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
