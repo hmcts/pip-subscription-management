@@ -109,4 +109,11 @@ class SubscriptionControllerTest {
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildSubscriberList(new Artefact()).getStatusCode(),
                      STATUS_CODE_MATCH);
     }
+
+    @Test
+    void testBuildDeletedArtefactSubscribers() {
+        doNothing().when(subscriptionService).collectThirdPartyForDeletion(any());
+        assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildDeletedArtefactSubscribers(new Artefact())
+                         .getStatusCode(), STATUS_CODE_MATCH);
+    }
 }

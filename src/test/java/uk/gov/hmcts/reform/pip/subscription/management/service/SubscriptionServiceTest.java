@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -487,9 +488,41 @@ class SubscriptionServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectSubscribers(classifiedArtefactMatches);
 
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG), LOG_MESSAGE_MATCH);
+        }
+    }
+
+    @Test
+    void testCollectThirdPartyForDeletion() {
+        mockSubscription.setChannel(Channel.API_COURTEL);
+        Map<String, List<Subscription>> returnedMap = new ConcurrentHashMap<>();
+        returnedMap.put(TEST, List.of(mockSubscription));
+        when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LIST_TYPE.toString(),
+                                                                   publicArtefactMatches.getListType().name()))
+            .thenReturn(List.of(mockSubscription));
+        when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
+        when(publicationServicesService.sendEmptyArtefact(TEST)).thenReturn(SUBSCRIBER_NOTIFICATION_LOG);
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
+            subscriptionService.collectThirdPartyForDeletion(publicArtefactMatches);
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
                        LOG_MESSAGE_MATCH);
         }
+    }
+
+    @Test
+    void testCollectThirdPartyForDeletionClassifiedExcluded() {
+        mockSubscription.setChannel(Channel.API_COURTEL);
+        Map<String, List<Subscription>> returnedMap = new ConcurrentHashMap<>();
+        returnedMap.put(TEST, List.of(mockSubscription));
+        lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LIST_TYPE.toString(),
+                                                                   classifiedArtefactMatches.getListType().name()))
+            .thenReturn(List.of(mockSubscription));
+        lenient().when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
+        lenient().when(publicationServicesService.sendEmptyArtefact(TEST)).thenReturn(SUCCESS);
+        lenient().when(accountManagementService.isUserAuthorised(mockSubscription.getUserId(),
+                                                       classifiedArtefactMatches.getListType(),
+                                                       classifiedArtefactMatches.getSensitivity())).thenReturn(false);
+        verify(publicationServicesService, never()).sendEmptyArtefact(TEST);
     }
 }
 

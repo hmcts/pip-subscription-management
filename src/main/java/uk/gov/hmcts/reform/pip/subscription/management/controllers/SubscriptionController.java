@@ -105,4 +105,15 @@ public class SubscriptionController {
         subscriptionService.collectSubscribers(artefact);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("Subscriber request has been accepted");
     }
+
+    @ApiResponses({
+        @ApiResponse(code = 202, message = "Third Parties list deletion accepted"),
+    })
+    @ApiOperation("Takes in a deleted artefact to notify subscribed third parties")
+    @PostMapping("/deleted-artefact")
+    public ResponseEntity<String> buildDeletedArtefactSubscribers(@RequestBody Artefact artefact) {
+        subscriptionService.collectThirdPartyForDeletion(artefact);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(
+            "Deleted artefact third party subscriber notification request has been accepted");
+    }
 }

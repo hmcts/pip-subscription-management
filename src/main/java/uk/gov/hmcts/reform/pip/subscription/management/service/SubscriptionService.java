@@ -42,4 +42,6 @@ public interface SubscriptionService {
     UserSubscription findByUserId(String userId);
 
     void collectSubscribers(Artefact artefact);
+
+    void collectThirdPartyForDeletion(Artefact artefact);
 }

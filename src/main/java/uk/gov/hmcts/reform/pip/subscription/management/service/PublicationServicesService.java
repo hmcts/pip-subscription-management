@@ -57,7 +57,22 @@ public class PublicationServicesService {
             log.error("Request to Publication Services {} failed due to: {}", NOTIFY_API_PATH,
                       ex.getResponseBodyAsString()
             );
-            return "Request Failed";
+            return "Request failed";
+        }
+    }
+
+    public String sendEmptyArtefact(String apiDestination) {
+        try {
+            webClient.put().uri(url + NOTIFY_API_PATH)
+                .attributes(clientRegistrationId("publicationServicesApi"))
+                .bodyValue(apiDestination).retrieve()
+                .bodyToMono(Void.class).block();
+            return "Successfully sent";
+        } catch (WebClientResponseException ex) {
+            log.error("Request to Publication Services {} failed due to: {}", NOTIFY_API_PATH,
+                      ex.getResponseBodyAsString()
+            );
+            return "Request failed";
         }
     }
 

@@ -237,4 +237,28 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         return sortedSubscriptionsList;
     }
+
+    @Async
+    @Override
+    public void collectThirdPartyForDeletion(Artefact artefactBeingDeleted) {
+        List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
+            SearchType.LIST_TYPE.name(), artefactBeingDeleted.getListType().name()));
+
+        List<Subscription> subscriptionsToContact;
+        if (artefactBeingDeleted.getSensitivity().equals(Sensitivity.CLASSIFIED)) {
+            subscriptionsToContact = validateSubscriptionPermissions(subscriptionList, artefactBeingDeleted);
+        } else {
+            subscriptionsToContact = subscriptionList;
+        }
+
+        handleDeletedArtefactSending(subscriptionsToContact);
+    }
+
+    private void handleDeletedArtefactSending(List<Subscription> subscriptions) {
+        List<Subscription> apiList = sortSubscriptionByChannel(subscriptions,
+                                                               Channel.API_COURTEL.notificationRoute);
+
+        channelManagementService.getMappedApis(apiList).forEach((api, subscription) ->
+            log.info(writeLog(publicationServicesService.sendEmptyArtefact(api))));
+    }
 }
