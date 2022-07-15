@@ -15,7 +15,10 @@ public enum ListType {
     MAGS_PUBLIC_LIST,
     MAGS_STANDARD_LIST,
     CIVIL_DAILY_CAUSE_LIST,
-    FAMILY_DAILY_CAUSE_LIST;
+    FAMILY_DAILY_CAUSE_LIST,
+    CIVIL_AND_FAMILY_DAILY_CAUSE_LIST,
+    COP_DAILY_CAUSE_LIST,
+    SSCS_DAILY_LIST;
 
     /**
      * Flag that represents whether the list type is SJP.
