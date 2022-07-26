@@ -64,7 +64,7 @@ class SubscriptionServiceTest {
     private static final String CASE_MATCH = "case match";
     private static final String ACCEPTED_USER_ID = "2";
     private static final String FORBIDDEN_USER_ID = "3";
-    private static final String SUBSCRIBER_NOTIFICATION_LOG = "Summary being sent to publication services: Success";
+    private static final String SUBSCRIBER_NOTIFICATION_LOG = "Summary being sent to publication services for id";
     private static final String LOG_MESSAGE_MATCH = "Log messages should match.";
     private static final String CASE_NUMBER_KEY = "caseNumber";
     private static final String CASE_URN_KEY = "caseUrn";
