@@ -40,8 +40,7 @@ public class PublicationServicesService {
             return payload.toString();
 
         } catch (WebClientException ex) {
-            log.error(String.format("Request with body: %s failed. With error message: %s",
-                                    payload, ex.getMessage()));
+            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
         }
         return "Request failed";
     }

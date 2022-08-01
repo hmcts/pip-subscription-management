@@ -39,8 +39,7 @@ public class ChannelManagementService {
                 .bodyToMono(new ParameterizedTypeReference<Map<String, List<Subscription>>>() {})
                 .block();
         } catch (WebClientException ex) {
-            log.error(String.format("Request with body: %s failed. With error message: %s",
-                                    listOfSubs, ex.getMessage()));
+            log.error(String.format("Request with body failed. With error message: %s", ex.getMessage()));
             return Collections.emptyMap();
         }
     }
