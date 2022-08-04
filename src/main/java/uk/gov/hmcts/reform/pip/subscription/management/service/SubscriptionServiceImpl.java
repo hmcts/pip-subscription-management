@@ -261,4 +261,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         channelManagementService.getMappedApis(apiList).forEach((api, subscription) ->
             log.info(writeLog(publicationServicesService.sendEmptyArtefact(api))));
     }
+
+    @Override
+    public String deleteAllByUserId(String userId) {
+        repository.deleteAllByUserId(userId);
+        return String.format("All subscriptions deleted for user id %s", userId);
+    }
 }

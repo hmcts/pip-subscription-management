@@ -31,5 +31,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findSubscriptionsBySearchValue(@Param("search_type") String searchType,
                                                       @Param("search_value") String searchValue);
 
+    void deleteAllByUserId(String userId);
 }
 

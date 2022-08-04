@@ -116,4 +116,16 @@ public class SubscriptionController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(
             "Deleted artefact third party subscriber notification request has been accepted");
     }
+
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Deleted all subscriptions for user id {userId}"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+    })
+    @ApiOperation("Deletes all subscriptions for the supplied user id")
+    @Transactional
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<String> deleteAllSubscriptionsForUser(@ApiParam(value = "The specific user id to delete "
+        + "the subscriptions for", required = true) @PathVariable String userId) {
+        return ResponseEntity.ok(subscriptionService.deleteAllByUserId(userId));
+    }
 }

@@ -44,4 +44,11 @@ public interface SubscriptionService {
     void collectSubscribers(Artefact artefact);
 
     void collectThirdPartyForDeletion(Artefact artefact);
+
+    /**
+     * Delete all subscriptions by the user id.
+     * @param userId The user id to delete the subscriptions from.
+     * @return A confirmation message.
+     */
+    String deleteAllByUserId(String userId);
 }
