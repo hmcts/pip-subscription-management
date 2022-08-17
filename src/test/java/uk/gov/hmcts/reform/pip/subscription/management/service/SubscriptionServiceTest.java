@@ -579,7 +579,7 @@ class SubscriptionServiceTest {
         returnedMap.put(TEST, List.of(mockSubscription));
         lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LIST_TYPE.toString(),
                                                                    classifiedArtefactMatches.getListType().name(),
-                                                                             null))
+                                                                             ""))
             .thenReturn(List.of(mockSubscription));
         when(accountManagementService.isUserAuthorised(mockSubscription.getUserId(),
                                                        classifiedArtefactMatches.getListType(),

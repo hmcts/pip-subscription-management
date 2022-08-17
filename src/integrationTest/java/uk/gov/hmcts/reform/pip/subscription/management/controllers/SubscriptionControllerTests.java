@@ -3,11 +3,11 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.io.IOUtils;
+import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -52,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.LawOfDemeter"})
 class SubscriptionControllerTests {
 
