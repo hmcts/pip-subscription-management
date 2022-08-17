@@ -113,6 +113,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 LocationSubscription locationSubscription = new LocationSubscription();
                 locationSubscription.setSubscriptionId(subscription.getId());
                 locationSubscription.setLocationName(subscription.getLocationName());
+                locationSubscription.setLocationId(subscription.getSearchValue());
+                locationSubscription.setListType(subscription.getListType());
                 locationSubscription.setDateAdded(subscription.getCreatedDate());
                 userSubscription.getLocationSubscriptions().add(locationSubscription);
             } else {

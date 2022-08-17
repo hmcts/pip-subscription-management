@@ -269,6 +269,8 @@ class SubscriptionServiceTest {
         LocationSubscription expected = new LocationSubscription();
         expected.setSubscriptionId(mockSubscription.getId());
         expected.setLocationName("Test court");
+        expected.setLocationId("193254");
+        expected.setListType(List.of(ListType.CIVIL_DAILY_CAUSE_LIST.name()));
         expected.setDateAdded(dateAdded);
 
         UserSubscription result = subscriptionService.findByUserId(USER_ID);
