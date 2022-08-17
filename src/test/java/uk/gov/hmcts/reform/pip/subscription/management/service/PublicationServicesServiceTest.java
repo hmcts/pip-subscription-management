@@ -18,7 +18,9 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,6 +45,8 @@ class PublicationServicesServiceTest {
     private static final String TEST_ID = "123";
     private static final String RESULT_MATCH = "Returned strings should match";
     private static final String REQUEST_FAILED = "Request failed";
+    private static final String TEST_API_DESTINATION = "http://www.abc.com";
+    private static final Artefact TEST_ARTEFACT = new Artefact();
 
     private final SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
     private final Subscription subscription = new Subscription();
@@ -114,7 +118,7 @@ class PublicationServicesServiceTest {
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
         assertEquals("Successfully sent", publicationServicesService
-            .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
+            .sendThirdPartyList(new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())),
                      RESULT_MATCH);
     }
 
@@ -124,7 +128,8 @@ class PublicationServicesServiceTest {
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        assertEquals("Successfully sent", publicationServicesService.sendEmptyArtefact(TEST_ID), RESULT_MATCH);
+        assertEquals("Successfully sent", publicationServicesService.sendEmptyArtefact(
+            new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)), RESULT_MATCH);
     }
 
     @Test
@@ -133,7 +138,8 @@ class PublicationServicesServiceTest {
                                                     .setResponseCode(404));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(PublicationServicesService.class)) {
-            assertEquals(REQUEST_FAILED, publicationServicesService.sendEmptyArtefact(TEST_ID), RESULT_MATCH);
+            assertEquals(REQUEST_FAILED, publicationServicesService.sendEmptyArtefact(
+                new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)), RESULT_MATCH);
             assertTrue(logCaptor.getErrorLogs().get(0).contains("Request to Publication Services /notify/api failed"),
                        "Log message does not contain expected message");
         }
@@ -143,7 +149,7 @@ class PublicationServicesServiceTest {
     void testSendThirdPartyListReturnsFailed() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
         assertEquals("Request failed", publicationServicesService
-                         .sendThirdPartyList(new ThirdPartySubscription("test", UUID.randomUUID())),
+                         .sendThirdPartyList(new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())),
                      "Messages match");
 
     }

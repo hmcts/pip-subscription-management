@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 
 import java.util.List;
 import java.util.UUID;
@@ -60,11 +61,11 @@ public class PublicationServicesService {
         }
     }
 
-    public String sendEmptyArtefact(String apiDestination) {
+    public String sendEmptyArtefact(ThirdPartySubscriptionArtefact subscriptionArtefact) {
         try {
             webClient.put().uri(url + NOTIFY_API_PATH)
                 .attributes(clientRegistrationId("publicationServicesApi"))
-                .bodyValue(apiDestination).retrieve()
+                .bodyValue(subscriptionArtefact).retrieve()
                 .bodyToMono(Void.class).block();
             return "Successfully sent";
         } catch (WebClientResponseException ex) {

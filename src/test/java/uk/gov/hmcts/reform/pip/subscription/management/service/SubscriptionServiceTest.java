@@ -19,6 +19,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.mana
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -27,6 +28,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRe
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -553,14 +555,16 @@ class SubscriptionServiceTest {
     @Test
     void testCollectThirdPartyForDeletion() {
         mockSubscription.setChannel(Channel.API_COURTEL);
-        Map<String, List<Subscription>> returnedMap = new ConcurrentHashMap<>();
-        returnedMap.put(TEST, List.of(mockSubscription));
+        Map<String, List<Subscription>> returnedMap = Collections.singletonMap(TEST, List.of(mockSubscription));
         when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LIST_TYPE.toString(),
                                                                    publicArtefactMatches.getListType().name(),
                                                                    ""))
             .thenReturn(List.of(mockSubscription));
         when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
-        when(publicationServicesService.sendEmptyArtefact(TEST)).thenReturn(SUBSCRIBER_NOTIFICATION_LOG);
+        ThirdPartySubscriptionArtefact subscriptionArtefact = new ThirdPartySubscriptionArtefact(
+            TEST, publicArtefactMatches);
+        when(publicationServicesService.sendEmptyArtefact(subscriptionArtefact))
+            .thenReturn(SUBSCRIBER_NOTIFICATION_LOG);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
             subscriptionService.collectThirdPartyForDeletion(publicArtefactMatches);
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
@@ -577,12 +581,13 @@ class SubscriptionServiceTest {
                                                                    classifiedArtefactMatches.getListType().name(),
                                                                              null))
             .thenReturn(List.of(mockSubscription));
-        lenient().when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
-        lenient().when(publicationServicesService.sendEmptyArtefact(TEST)).thenReturn(SUCCESS);
-        lenient().when(accountManagementService.isUserAuthorised(mockSubscription.getUserId(),
+        when(accountManagementService.isUserAuthorised(mockSubscription.getUserId(),
                                                        classifiedArtefactMatches.getListType(),
                                                        classifiedArtefactMatches.getSensitivity())).thenReturn(false);
-        verify(publicationServicesService, never()).sendEmptyArtefact(TEST);
+        subscriptionService.collectThirdPartyForDeletion(classifiedArtefactMatches);
+        ThirdPartySubscriptionArtefact subscriptionArtefact = new ThirdPartySubscriptionArtefact(
+            TEST, classifiedArtefactMatches);
+        verify(publicationServicesService, never()).sendEmptyArtefact(subscriptionArtefact);
     }
 }
 
