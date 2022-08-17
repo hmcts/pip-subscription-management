@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -59,6 +60,9 @@ public class SubscriptionDto {
     @Valid
     private String locationName;
 
+    @Valid
+    private List<String> listType;
+
     public Subscription toEntity() {
         Subscription entity = new Subscription();
         entity.setSearchValue(this.searchValue);
@@ -71,6 +75,7 @@ public class SubscriptionDto {
         entity.setCaseNumber(this.caseNumber);
         entity.setUrn(this.urn);
         entity.setLocationName(this.locationName);
+        entity.setListType(this.listType);
         return entity;
     }
 }

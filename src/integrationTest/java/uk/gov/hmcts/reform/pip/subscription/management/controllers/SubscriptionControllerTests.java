@@ -26,6 +26,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -135,6 +137,16 @@ class SubscriptionControllerTests {
 
         SUBSCRIPTION.setUserId(userId);
         SUBSCRIPTION.setSearchType(searchType);
+        return setupMockSubscription(searchValue);
+    }
+
+    protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
+                SearchType searchType, String userId, ListType listType)
+        throws JsonProcessingException {
+
+        SUBSCRIPTION.setUserId(userId);
+        SUBSCRIPTION.setSearchType(searchType);
+        SUBSCRIPTION.setListType(List.of(listType.name()));
         return setupMockSubscription(searchValue);
     }
 
@@ -510,6 +522,21 @@ class SubscriptionControllerTests {
     @Test
     void testBuildSubscribersListReturnsAccepted() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ARTEFACT_RECIPIENT_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(rawArtefact);
+        MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
+
+        assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
+                     "Response should match"
+        );
+    }
+
+    @Test
+    void testBuildCourtSubscribersListReturnsAccepted() throws Exception {
+        mvc.perform(setupMockSubscriptionWithListType(LOCATION_ID, SearchType.LOCATION_ID,
+                                                      VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
