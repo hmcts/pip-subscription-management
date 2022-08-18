@@ -134,7 +134,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public void collectSubscribers(Artefact artefact) {
 
-        List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
+        List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValueForLocation(
             SearchType.LOCATION_ID.name(), artefact.getLocationId(), artefact.getListType().toString()));
 
 
@@ -166,11 +166,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     private List<Subscription> querySubscriptionValue(String term, String value) {
-        return repository.findSubscriptionsBySearchValue(term, value, "");
+        return repository.findSubscriptionsBySearchValue(term, value);
     }
 
-    private List<Subscription> querySubscriptionValue(String term, String value, String listType) {
-        return repository.findSubscriptionsBySearchValue(term, value, listType);
+    private List<Subscription> querySubscriptionValueForLocation(String term, String value, String listType) {
+        return repository.findSubscriptionsByLocationSearchValue(term, value, listType);
     }
 
     private List<Subscription> extractSearchValue(Object caseObject) {

@@ -27,12 +27,21 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     void deleteById(UUID id);
 
     @Query(value = "SELECT * FROM Subscription "
-        + "WHERE (:search_type <> 'LOCATION_ID' AND search_type = :search_type) "
+        + "WHERE search_type = :search_type "
         + "AND search_value = :search_value "
-        + "OR (:search_type = 'LOCATION_ID' AND search_type = :search_type "
-            + "AND (ARRAY_LENGTH(list_type, 1) IS NULL OR (list_type && string_to_array(:list_type, ','))))",
+        + "AND :search_type <> 'LOCATION_ID'",
         nativeQuery = true)
     List<Subscription> findSubscriptionsBySearchValue(@Param("search_type") String searchType,
+                                                      @Param("search_value") String searchValue);
+
+
+    @Query(value = "SELECT * FROM Subscription "
+        + "WHERE search_type = :search_type "
+        + "AND search_value = :search_value "
+        + "AND :search_type = 'LOCATION_ID' "
+        + "AND (ARRAY_LENGTH(list_type, 1) IS NULL OR (list_type && string_to_array(:list_type, ',')))",
+        nativeQuery = true)
+    List<Subscription> findSubscriptionsByLocationSearchValue(@Param("search_type") String searchType,
                                                       @Param("search_value") String searchValue,
                                                       @Param("list_type") String listType);
 
