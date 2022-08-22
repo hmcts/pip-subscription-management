@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -251,15 +252,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriptionsToContact = subscriptionList;
         }
 
-        handleDeletedArtefactSending(subscriptionsToContact);
+        handleDeletedArtefactSending(subscriptionsToContact, artefactBeingDeleted);
     }
 
-    private void handleDeletedArtefactSending(List<Subscription> subscriptions) {
+    private void handleDeletedArtefactSending(List<Subscription> subscriptions, Artefact artefactBeingDeleted) {
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptions,
                                                                Channel.API_COURTEL.notificationRoute);
 
         channelManagementService.getMappedApis(apiList).forEach((api, subscription) ->
-            log.info(writeLog(publicationServicesService.sendEmptyArtefact(api))));
+            log.info(writeLog(publicationServicesService.sendEmptyArtefact(
+                new ThirdPartySubscriptionArtefact(api, artefactBeingDeleted)
+            ))));
     }
 
     @Override
