@@ -126,6 +126,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 LocationSubscription locationSubscription = new LocationSubscription();
                 locationSubscription.setSubscriptionId(subscription.getId());
                 locationSubscription.setLocationName(subscription.getLocationName());
+                locationSubscription.setLocationId(subscription.getSearchValue());
+                locationSubscription.setListType(subscription.getListType());
                 locationSubscription.setDateAdded(subscription.getCreatedDate());
                 userSubscription.getLocationSubscriptions().add(locationSubscription);
             } else {
@@ -144,8 +146,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Async
     @Override
     public void collectSubscribers(Artefact artefact) {
-        List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValue(
-            SearchType.LOCATION_ID.name(), artefact.getLocationId()));
+
+        List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValueForLocation(
+            SearchType.LOCATION_ID.name(), artefact.getLocationId(), artefact.getListType().toString()));
+
+
         subscriptionList.addAll(querySubscriptionValue(SearchType.LIST_TYPE.name(), artefact.getListType().name()));
 
         if (artefact.getSearch().get("cases") != null) {
@@ -175,6 +180,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     private List<Subscription> querySubscriptionValue(String term, String value) {
         return repository.findSubscriptionsBySearchValue(term, value);
+    }
+
+    private List<Subscription> querySubscriptionValueForLocation(String term, String value, String listType) {
+        return repository.findSubscriptionsByLocationSearchValue(term, value, listType);
     }
 
     private List<Subscription> extractSearchValue(Object caseObject) {

@@ -187,6 +187,7 @@ dependencies {
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
   implementation group: 'com.vladmihalcea', name: 'hibernate-types-52', version: '2.14.0'
   implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+
   testImplementation(platform('org.junit:junit-bom:5.8.1'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', {
     exclude group: 'junit', module: 'junit'
