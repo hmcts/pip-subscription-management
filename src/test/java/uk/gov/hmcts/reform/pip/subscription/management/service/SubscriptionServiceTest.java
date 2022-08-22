@@ -228,7 +228,7 @@ class SubscriptionServiceTest {
         doNothing().when(subscriptionRepository).updateLocationSubscriptions(mockSubscription.getUserId(), listType);
 
         assertEquals(subscriptionService.configureListTypesForSubscription(mockSubscription),
-                     mockSubscription.getUserId(), SUBSCRIPTION_TEST_RESULT);
+                     mockSubscription.getUserId(), SUBSCRIPTION_CREATED_ERROR);
     }
 
     @Test
@@ -240,7 +240,7 @@ class SubscriptionServiceTest {
         doNothing().when(subscriptionRepository).updateLocationSubscriptions(mockSubscription.getUserId(), listType);
 
         assertEquals(subscriptionService.configureListTypesForSubscription(mockSubscription),
-                     mockSubscription.getUserId(), SUBSCRIPTION_TEST_RESULT);
+                     mockSubscription.getUserId(), SUBSCRIPTION_CREATED_ERROR);
     }
 
     @Test
