@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -60,6 +61,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setLocationName(dataManagementService.getCourtName(subscription.getSearchValue()));
         }
         return repository.save(subscription);
+    }
+
+    @Override
+    public String configureListTypesForSubscription(Subscription subscription) {
+        log.info(writeLog(subscription.getUserId(), UserActions.CREATE_SUBSCRIPTION,
+                          subscription.getSearchType().toString()));
+
+        repository.updateLocationSubscriptions(subscription.getUserId(),
+            subscription.getListType() == null ? "" :
+            StringUtils.join(subscription.getListType(), ','));
+
+        return subscription.getUserId();
     }
 
     @Override

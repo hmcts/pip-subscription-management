@@ -44,4 +44,11 @@ public interface SubscriptionService {
     void collectSubscribers(Artefact artefact);
 
     void collectThirdPartyForDeletion(Artefact artefact);
+
+    /**
+     * Method to update an existing subscription.
+     * @param subscription The subscription to create.
+     * @return The created subscription.
+     */
+    String configureListTypesForSubscription(Subscription subscription);
 }

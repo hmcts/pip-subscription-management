@@ -74,6 +74,8 @@ class SubscriptionServiceTest {
     private static final String TEST_USER_EMAIL = "a@b.com";
     private static final String SUCCESS = "Success";
     private static final String TEST = "test";
+    private static final String SUBSCRIPTION_TEST_RESULT = "The returned subscription "
+        + "does not match the expected subscription";
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
@@ -161,7 +163,7 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchType(SearchType.CASE_ID);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
-                     "The returned subscription does not match the expected subscription"
+                     SUBSCRIPTION_TEST_RESULT
         );
     }
 
@@ -171,7 +173,7 @@ class SubscriptionServiceTest {
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn("test court name");
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
-                     "The returned subscription does not match the expected subscription"
+                     SUBSCRIPTION_TEST_RESULT
         );
     }
 
@@ -189,6 +191,30 @@ class SubscriptionServiceTest {
         verify(subscriptionRepository, times(1)).delete(mockSubscription);
         assertEquals(returnedSubscription, mockSubscription,
                      "The Returned subscription does match the expected subscription");
+    }
+
+    @Test
+    void testConfigureListTypesForLocationSubscription() {
+        String listType = ListType.CIVIL_DAILY_CAUSE_LIST.name();
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
+        mockSubscription.setListType(List.of(listType));
+
+        doNothing().when(subscriptionRepository).updateLocationSubscriptions(mockSubscription.getUserId(), listType);
+
+        assertEquals(subscriptionService.configureListTypesForSubscription(mockSubscription),
+                     mockSubscription.getUserId(), SUBSCRIPTION_TEST_RESULT);
+    }
+
+    @Test
+    void testConfigureEmptyListTypesForLocationSubscription() {
+        String listType = "";
+        mockSubscription.setSearchType(SearchType.LOCATION_ID);
+        mockSubscription.setListType(List.of(listType));
+
+        doNothing().when(subscriptionRepository).updateLocationSubscriptions(mockSubscription.getUserId(), listType);
+
+        assertEquals(subscriptionService.configureListTypesForSubscription(mockSubscription),
+                     mockSubscription.getUserId(), SUBSCRIPTION_TEST_RESULT);
     }
 
     @Test
@@ -224,7 +250,7 @@ class SubscriptionServiceTest {
         UUID testUuid = UUID.randomUUID();
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
         assertEquals(subscriptionService.findById(testUuid), findableSubscription,
-                     "The returned subscription does not match the expected subscription");
+                     SUBSCRIPTION_TEST_RESULT);
     }
 
     @Test
