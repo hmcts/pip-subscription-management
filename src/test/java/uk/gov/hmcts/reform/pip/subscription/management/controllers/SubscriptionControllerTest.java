@@ -116,4 +116,13 @@ class SubscriptionControllerTest {
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildDeletedArtefactSubscribers(new Artefact())
                          .getStatusCode(), STATUS_CODE_MATCH);
     }
+
+    @Test
+    void testDeleteSubscriptionsByUserId() {
+        when(subscriptionService.deleteAllByUserId("test string")).thenReturn(
+            "All subscriptions deleted for user id");
+        assertEquals("All subscriptions deleted for user id",
+                     subscriptionController.deleteAllSubscriptionsForUser("test string").getBody(),
+                     "Subscription for user should be deleted");
+    }
 }
