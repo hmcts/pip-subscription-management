@@ -564,5 +564,14 @@ class SubscriptionServiceTest {
                 e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
     }
 
+    @Test
+    void testDeleteAllByUserId() {
+        String testString = "testId";
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        doNothing().when(subscriptionRepository).deleteAllByUserId(captor.capture());
+        subscriptionService.deleteAllByUserId(testString);
+        assertEquals(testString, captor.getValue(),
+                     "The service layer failed to delete the correct user id subscriptions");
+    }
 }
 

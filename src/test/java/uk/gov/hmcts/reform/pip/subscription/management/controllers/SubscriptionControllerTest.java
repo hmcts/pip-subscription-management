@@ -119,11 +119,24 @@ class SubscriptionControllerTest {
 
     @Test
     void testMiDataReturnsOk() {
-        assertEquals(HttpStatus.ACCEPTED,
-                     subscriptionController.getSubscriptionDataForMiReportingLocal().getStatusCode(),
-                     STATUS_CODE_MATCH);
-        assertEquals(HttpStatus.ACCEPTED,
-                     subscriptionController.getSubscriptionDataForMiReportingAll().getStatusCode(),
-                     STATUS_CODE_MATCH);
+        assertEquals(
+            HttpStatus.ACCEPTED,
+            subscriptionController.getSubscriptionDataForMiReportingLocal().getStatusCode(),
+            STATUS_CODE_MATCH
+        );
+        assertEquals(
+            HttpStatus.ACCEPTED,
+            subscriptionController.getSubscriptionDataForMiReportingAll().getStatusCode(),
+            STATUS_CODE_MATCH
+        );
+    }
+
+        @Test
+    void testDeleteSubscriptionsByUserId() {
+        when(subscriptionService.deleteAllByUserId("test string")).thenReturn(
+            "All subscriptions deleted for user id");
+        assertEquals("All subscriptions deleted for user id",
+                     subscriptionController.deleteAllSubscriptionsForUser("test string").getBody(),
+                     "Subscription for user should be deleted");
     }
 }
