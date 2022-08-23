@@ -116,4 +116,28 @@ public class SubscriptionController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(
             "Deleted artefact third party subscriber notification request has been accepted");
     }
+
+
+    @ApiResponses({
+        @ApiResponse(code = 202, message = "Subscription Management - MI Data request (all) accepted.")
+    })
+    @ApiOperation("Returns a list of subscription data for MI reporting.")
+    @GetMapping("/mi-data-all")
+    public ResponseEntity<String> getSubscriptionDataForMiReportingAll() {
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+            .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
+    }
+
+    @ApiResponses({
+        @ApiResponse(code = 202, message = "Subscription Management - MI Data request (local) accepted.")
+    })
+    @ApiOperation("Returns a list of subscription data for MI reporting.")
+    @GetMapping("/mi-data-local")
+    public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+            .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
+    }
+
+
+
 }

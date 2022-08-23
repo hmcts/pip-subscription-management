@@ -258,10 +258,32 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private void handleDeletedArtefactSending(List<Subscription> subscriptions, Artefact artefactBeingDeleted) {
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptions,
                                                                Channel.API_COURTEL.notificationRoute);
-
         channelManagementService.getMappedApis(apiList).forEach((api, subscription) ->
             log.info(writeLog(publicationServicesService.sendEmptyArtefact(
                 new ThirdPartySubscriptionArtefact(api, artefactBeingDeleted)
             ))));
     }
+
+    @Override
+    public String getAllSubscriptionsDataForMiReporting() {
+        List<String> data = repository.getAllSubsDataForMi();
+        StringBuilder builder = new StringBuilder(48);
+        builder.append("uuid, channel, search_type, user_id, location\n");
+        for (String s : data) {
+            builder.append(s).append('\n');
+        }
+        return builder.toString();
+    }
+
+    @Override
+    public String getLocalSubscriptionsDataForMiReporting() {
+        List<String> data = repository.getLocalSubsDataForMi();
+        StringBuilder builder = new StringBuilder(49);
+        builder.append("uuid, search_value, channel, user_id, location\n");
+        for (String s : data) {
+            builder.append(s).append('\n');
+        }
+        return builder.toString();
+    }
+
 }

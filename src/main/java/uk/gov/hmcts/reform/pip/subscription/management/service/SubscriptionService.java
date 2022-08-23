@@ -44,4 +44,8 @@ public interface SubscriptionService {
     void collectSubscribers(Artefact artefact);
 
     void collectThirdPartyForDeletion(Artefact artefact);
+
+    String getAllSubscriptionsDataForMiReporting();
+
+    String getLocalSubscriptionsDataForMiReporting();
 }
