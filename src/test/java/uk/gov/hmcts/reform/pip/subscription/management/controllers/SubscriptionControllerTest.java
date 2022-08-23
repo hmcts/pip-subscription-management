@@ -131,7 +131,7 @@ class SubscriptionControllerTest {
         );
     }
 
-        @Test
+    @Test
     void testDeleteSubscriptionsByUserId() {
         when(subscriptionService.deleteAllByUserId("test string")).thenReturn(
             "All subscriptions deleted for user id");
