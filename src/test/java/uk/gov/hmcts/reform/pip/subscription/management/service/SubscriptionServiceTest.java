@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -527,5 +528,41 @@ class SubscriptionServiceTest {
             TEST, classifiedArtefactMatches);
         verify(publicationServicesService, never()).sendEmptyArtefact(subscriptionArtefact);
     }
+
+    @Test
+    void testMiEndpointLocal() {
+        String testString = subscriptionService.getLocalSubscriptionsDataForMiReporting();
+        String[] splitLineString = testString.split("\r\n|\r|\n");
+        long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
+        assertThat(testString)
+            .as("Header row missing")
+            .contains("user_id");
+        assertThat(splitLineString)
+            .as("Only one line exists - data must be missing, as only headers are printing")
+            .hasSizeGreaterThanOrEqualTo(1);
+        assertThat(splitLineString)
+            .as("Wrong comma count compared to header row!")
+            .allSatisfy(
+                e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
+
+    }
+
+    @Test
+    void testMiEndpointAll() {
+        String testString = subscriptionService.getAllSubscriptionsDataForMiReporting();
+        String[] splitLineString = testString.split("\r\n|\r|\n");
+        long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
+        assertThat(testString)
+            .as("Header row missing")
+            .contains("user_id");
+        assertThat(splitLineString)
+            .as("Only one line exists - data must be missing, as only headers are printing")
+            .hasSizeGreaterThanOrEqualTo(1);
+        assertThat(splitLineString)
+            .as("Wrong comma count compared to header row!")
+            .allSatisfy(
+                e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
+    }
+
 }
 

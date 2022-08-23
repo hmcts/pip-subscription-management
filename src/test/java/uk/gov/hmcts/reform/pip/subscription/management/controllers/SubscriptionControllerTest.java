@@ -116,4 +116,14 @@ class SubscriptionControllerTest {
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildDeletedArtefactSubscribers(new Artefact())
                          .getStatusCode(), STATUS_CODE_MATCH);
     }
+
+    @Test
+    void testMiDataReturnsOk() {
+        assertEquals(HttpStatus.ACCEPTED,
+                     subscriptionController.getSubscriptionDataForMiReportingLocal().getStatusCode(),
+                     STATUS_CODE_MATCH);
+        assertEquals(HttpStatus.ACCEPTED,
+                     subscriptionController.getSubscriptionDataForMiReportingAll().getStatusCode(),
+                     STATUS_CODE_MATCH);
+    }
 }
