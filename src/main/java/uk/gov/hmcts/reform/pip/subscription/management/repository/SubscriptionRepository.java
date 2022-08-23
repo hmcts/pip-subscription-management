@@ -31,7 +31,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findSubscriptionsBySearchValue(@Param("search_type") String searchType,
                                                       @Param("search_value") String searchValue);
 
-
     @Query(value = "SELECT cast(id as text), channel, search_type, user_id, court_name FROM subscription",
         nativeQuery = true)
     List<String> getAllSubsDataForMi();
@@ -40,5 +39,5 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         + "WHERE SEARCH_TYPE='LOCATION_ID'", nativeQuery = true)
     List<String> getLocalSubsDataForMi();
 
+    void deleteAllByUserId(String userId);
 }
-

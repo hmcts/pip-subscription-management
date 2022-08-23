@@ -48,4 +48,11 @@ public interface SubscriptionService {
     String getAllSubscriptionsDataForMiReporting();
 
     String getLocalSubscriptionsDataForMiReporting();
+
+    /**
+     * Delete all subscriptions by the user id.
+     * @param userId The user id to delete the subscriptions from.
+     * @return A confirmation message.
+     */
+    String deleteAllByUserId(String userId);
 }
