@@ -120,7 +120,7 @@ public class SubscriptionController {
     @ApiResponses({
         @ApiResponse(code = 202, message = "Subscription Management - MI Data request (all) accepted.")
     })
-    @ApiOperation("Returns a list of subscription data for MI reporting.")
+    @ApiOperation("Returns a list of metadata for all existing subscriptions for MI reporting.")
     @GetMapping("/mi-data-all")
     public ResponseEntity<String> getSubscriptionDataForMiReportingAll() {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
@@ -130,7 +130,7 @@ public class SubscriptionController {
     @ApiResponses({
         @ApiResponse(code = 202, message = "Subscription Management - MI Data request (local) accepted.")
     })
-    @ApiOperation("Returns a list of subscription data for MI reporting.")
+    @ApiOperation("Returns a list of subscription data for specifically location-based subscriptions for MI reporting.")
     @GetMapping("/mi-data-local")
     public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
