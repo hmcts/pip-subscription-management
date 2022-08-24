@@ -120,12 +120,12 @@ class SubscriptionControllerTest {
     @Test
     void testMiDataReturnsOk() {
         assertEquals(
-            HttpStatus.ACCEPTED,
+            HttpStatus.OK,
             subscriptionController.getSubscriptionDataForMiReportingLocal().getStatusCode(),
             STATUS_CODE_MATCH
         );
         assertEquals(
-            HttpStatus.ACCEPTED,
+            HttpStatus.OK,
             subscriptionController.getSubscriptionDataForMiReportingAll().getStatusCode(),
             STATUS_CODE_MATCH
         );
