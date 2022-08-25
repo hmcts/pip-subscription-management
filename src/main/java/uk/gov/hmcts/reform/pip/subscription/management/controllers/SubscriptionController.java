@@ -131,4 +131,16 @@ public class SubscriptionController {
             .body(String.format("Location list Type successfully updated for user %s",
                                 userId));
     }
+
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Deleted all subscriptions for user id {userId}"),
+        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+    })
+    @ApiOperation("Deletes all subscriptions for the supplied user id")
+    @Transactional
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<String> deleteAllSubscriptionsForUser(@ApiParam(value = "The specific user id to delete "
+        + "the subscriptions for", required = true) @PathVariable String userId) {
+        return ResponseEntity.ok(subscriptionService.deleteAllByUserId(userId));
+    }
 }

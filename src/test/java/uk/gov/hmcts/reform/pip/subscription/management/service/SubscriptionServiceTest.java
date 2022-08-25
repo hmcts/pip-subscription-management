@@ -613,5 +613,15 @@ class SubscriptionServiceTest {
             TEST, classifiedArtefactMatches);
         verify(publicationServicesService, never()).sendEmptyArtefact(subscriptionArtefact);
     }
+
+    @Test
+    void testDeleteAllByUserId() {
+        String testString = "testId";
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        doNothing().when(subscriptionRepository).deleteAllByUserId(captor.capture());
+        subscriptionService.deleteAllByUserId(testString);
+        assertEquals(testString, captor.getValue(),
+                     "The service layer failed to delete the correct user id subscriptions");
+    }
 }
 

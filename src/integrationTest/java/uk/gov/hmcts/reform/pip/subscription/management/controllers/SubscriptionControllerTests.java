@@ -603,5 +603,34 @@ class SubscriptionControllerTests {
         );
     }
 
+    @DisplayName("Delete all subscriptions by user id")
+    @Test
+    void deleteSubscriptionsByUserIdEndpoint() throws Exception {
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
+        assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
+        String subscriptionResponse = response.getResponse().getContentAsString();
+        String ourUuid =
+            Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
+                .orElse(null);
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
+        Subscription returnedSubscription = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            Subscription.class
+        );
+
+        MvcResult deleteResponse = mvc.perform(delete(String.format(
+            "/subscription/user/%s",
+            returnedSubscription.getUserId()
+        ))).andExpect(status().isOk()).andReturn();
+
+        assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        assertEquals(
+            String.format("All subscriptions deleted for user id %s", returnedSubscription.getUserId()),
+            deleteResponse.getResponse().getContentAsString(),
+            "Responses are not equal"
+        );
+    }
 }
 

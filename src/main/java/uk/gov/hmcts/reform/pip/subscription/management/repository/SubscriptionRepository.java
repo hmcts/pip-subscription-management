@@ -56,5 +56,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
                                                       @Param("search_value") String searchValue,
                                                       @Param("list_type") String listType);
 
+    void deleteAllByUserId(String userId);
 }
 

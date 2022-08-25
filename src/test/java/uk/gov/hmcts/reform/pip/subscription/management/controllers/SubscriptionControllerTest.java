@@ -129,5 +129,13 @@ class SubscriptionControllerTest {
                      subscriptionController.configureListTypesForSubscription(mockSubscription.toDto()),
                      "Returned subscription does not match expected subscription"
         );
+
+    @Test
+    void testDeleteSubscriptionsByUserId() {
+        when(subscriptionService.deleteAllByUserId("test string")).thenReturn(
+            "All subscriptions deleted for user id");
+        assertEquals("All subscriptions deleted for user id",
+                     subscriptionController.deleteAllSubscriptionsForUser("test string").getBody(),
+                     "Subscription for user should be deleted");
     }
 }

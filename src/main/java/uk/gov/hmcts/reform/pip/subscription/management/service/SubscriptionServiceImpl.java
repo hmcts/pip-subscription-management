@@ -286,4 +286,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 new ThirdPartySubscriptionArtefact(api, artefactBeingDeleted)
             ))));
     }
+
+    @Override
+    public String deleteAllByUserId(String userId) {
+        repository.deleteAllByUserId(userId);
+        return String.format("All subscriptions deleted for user id %s", userId);
+    }
 }
