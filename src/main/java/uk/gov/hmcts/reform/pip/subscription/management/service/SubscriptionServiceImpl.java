@@ -64,15 +64,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public String configureListTypesForSubscription(Subscription subscription) {
-        log.info(writeLog(subscription.getUserId(), UserActions.CREATE_SUBSCRIPTION,
-                          subscription.getSearchType().toString()));
+    public void configureListTypesForSubscription(String userId, List<String> listType) {
+        log.info(writeLog(userId, UserActions.CREATE_SUBSCRIPTION,
+                          SearchType.LOCATION_ID.name()));
 
-        repository.updateLocationSubscriptions(subscription.getUserId(),
-            subscription.getListType() == null ? "" :
-            StringUtils.join(subscription.getListType(), ','));
-
-        return subscription.getUserId();
+        repository.updateLocationSubscriptions(userId,
+            listType == null ? "" : StringUtils.join(listType, ','));
     }
 
     @Override

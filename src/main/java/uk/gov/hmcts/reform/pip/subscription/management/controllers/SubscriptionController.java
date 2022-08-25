@@ -24,6 +24,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.mana
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
+import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
 
@@ -118,15 +119,16 @@ public class SubscriptionController {
             "Deleted artefact third party subscriber notification request has been accepted");
     }
 
-    @PutMapping("/configure-list-types")
+    @PutMapping("/configure-list-types/{userId}")
     @ApiOperation("Endpoint to update list type for existing subscription")
     @ApiResponses({
         @ApiResponse(code = 201, message = "Subscription successfully updated for user: {userId}"),
-        @ApiResponse(code = 400, message = "This subscription object has an invalid format. Please check again."),
+        @ApiResponse(code = 400, message = "This request object has an invalid format. Please check again."),
         @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
     })
-    public ResponseEntity<String> configureListTypesForSubscription(@RequestBody @Valid SubscriptionDto sub) {
-        String userId = subscriptionService.configureListTypesForSubscription(sub.toEntity());
+    public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
+                                                    @RequestBody List<String> listType) {
+        subscriptionService.configureListTypesForSubscription(userId, listType);
         return ResponseEntity.status(HttpStatus.OK)
             .body(String.format("Location list Type successfully updated for user %s",
                                 userId));

@@ -221,26 +221,20 @@ class SubscriptionServiceTest {
 
     @Test
     void testConfigureListTypesForLocationSubscription() {
-        String listType = ListType.CIVIL_DAILY_CAUSE_LIST.name();
-        mockSubscription.setSearchType(SearchType.LOCATION_ID);
-        mockSubscription.setListType(List.of(listType));
+        doNothing().when(subscriptionRepository).updateLocationSubscriptions(any(), any());
+        subscriptionService.configureListTypesForSubscription(USER_ID, List.of(ListType.CIVIL_DAILY_CAUSE_LIST.name()));
 
-        doNothing().when(subscriptionRepository).updateLocationSubscriptions(mockSubscription.getUserId(), listType);
-
-        assertEquals(subscriptionService.configureListTypesForSubscription(mockSubscription),
-                     mockSubscription.getUserId(), SUBSCRIPTION_CREATED_ERROR);
+        assertEquals(mockSubscription.getUserId(), USER_ID,
+                     SUBSCRIPTION_CREATED_ERROR);
     }
 
     @Test
     void testConfigureEmptyListTypesForLocationSubscription() {
-        String listType = "";
-        mockSubscription.setSearchType(SearchType.LOCATION_ID);
-        mockSubscription.setListType(List.of(listType));
+        doNothing().when(subscriptionRepository).updateLocationSubscriptions(USER_ID, "");
+        subscriptionService.configureListTypesForSubscription(USER_ID, null);
 
-        doNothing().when(subscriptionRepository).updateLocationSubscriptions(mockSubscription.getUserId(), listType);
-
-        assertEquals(subscriptionService.configureListTypesForSubscription(mockSubscription),
-                     mockSubscription.getUserId(), SUBSCRIPTION_CREATED_ERROR);
+        assertEquals(mockSubscription.getUserId(), USER_ID,
+                     SUBSCRIPTION_CREATED_ERROR);
     }
 
     @Test

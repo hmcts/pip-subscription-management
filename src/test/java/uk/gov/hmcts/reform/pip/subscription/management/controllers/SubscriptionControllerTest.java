@@ -17,6 +17,8 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubsc
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,6 +35,7 @@ class SubscriptionControllerTest {
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
     private static final Channel EMAIL = Channel.EMAIL;
+    private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
 
     @Mock
     SubscriptionService subscriptionService;
@@ -121,17 +124,17 @@ class SubscriptionControllerTest {
 
     @Test
     void testConfigureListTypesForSubscription() {
-        when(subscriptionService.configureListTypesForSubscription(mockSubscription))
-            .thenReturn(mockSubscription.getUserId());
+        doNothing().when(subscriptionService).configureListTypesForSubscription(USER_ID, LIST_TYPES);
+
         assertEquals(
             new ResponseEntity<>(
                 String.format(
                     "Location list Type successfully updated for user %s",
-                    mockSubscription.getUserId()
+                    USER_ID
                 ),
                 HttpStatus.OK
             ),
-            subscriptionController.configureListTypesForSubscription(mockSubscription.toDto()),
+            subscriptionController.configureListTypesForSubscription(USER_ID, LIST_TYPES),
             "Returned subscription does not match expected subscription"
         );
     }

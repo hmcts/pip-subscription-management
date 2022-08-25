@@ -81,6 +81,7 @@ class SubscriptionControllerTests {
     public static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String RESPONSE_MATCH = "Response should match";
 
     private static final String RAW_JSON_MISSING_SEARCH_VALUE =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
@@ -94,9 +95,11 @@ class SubscriptionControllerTests {
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
+    private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
+    private static final String UPDATED_LIST_TYPE = "[\"CIVIL_DAILY_CAUSE_LIST\"]";
 
     private static String rawArtefact;
 
@@ -529,7 +532,7 @@ class SubscriptionControllerTests {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
-                     "Response should match"
+                     RESPONSE_MATCH
         );
     }
 
@@ -544,7 +547,7 @@ class SubscriptionControllerTests {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
-                     "Response should match"
+                     RESPONSE_MATCH
         );
     }
 
@@ -590,6 +593,21 @@ class SubscriptionControllerTests {
     }
 
     @Test
+    void testBuildUpdateListTypeSubscribers() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .put(UPDATE_LIST_TYPE_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(UPDATED_LIST_TYPE);
+        MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
+
+        assertEquals(String.format("Location list Type successfully updated for user %s",
+                                   VALID_USER_ID),
+                     result.getResponse().getContentAsString(), RESPONSE_MATCH
+        );
+    }
+
+    @Test
     void testBuildDeletedArtefactSubscribersReturnsAccepted() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
@@ -599,7 +617,7 @@ class SubscriptionControllerTests {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals("Deleted artefact third party subscriber notification request has been accepted",
-                     result.getResponse().getContentAsString(), "Response should match"
+                     result.getResponse().getContentAsString(), RESPONSE_MATCH
         );
     }
 

@@ -47,10 +47,9 @@ public interface SubscriptionService {
 
     /**
      * Method to update an existing subscription.
-     * @param subscription The subscription to create.
-     * @return The created subscription.
+     * @param userId and ListType to update.
      */
-    String configureListTypesForSubscription(Subscription subscription);
+    void configureListTypesForSubscription(String userId, List<String> listType);
 
     /**
      * Delete all subscriptions by the user id.
