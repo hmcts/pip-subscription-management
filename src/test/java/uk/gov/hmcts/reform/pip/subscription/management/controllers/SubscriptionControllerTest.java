@@ -123,12 +123,18 @@ class SubscriptionControllerTest {
     void testConfigureListTypesForSubscription() {
         when(subscriptionService.configureListTypesForSubscription(mockSubscription))
             .thenReturn(mockSubscription.getUserId());
-        assertEquals(new ResponseEntity<>(String.format("Location list Type successfully updated for user %s",
-                                                        mockSubscription.getUserId()),
-                                          HttpStatus.OK),
-                     subscriptionController.configureListTypesForSubscription(mockSubscription.toDto()),
-                     "Returned subscription does not match expected subscription"
+        assertEquals(
+            new ResponseEntity<>(
+                String.format(
+                    "Location list Type successfully updated for user %s",
+                    mockSubscription.getUserId()
+                ),
+                HttpStatus.OK
+            ),
+            subscriptionController.configureListTypesForSubscription(mockSubscription.toDto()),
+            "Returned subscription does not match expected subscription"
         );
+    }
 
     @Test
     void testDeleteSubscriptionsByUserId() {
