@@ -3,11 +3,11 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.io.IOUtils;
+import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -26,6 +26,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -50,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.LawOfDemeter"})
 class SubscriptionControllerTests {
 
@@ -79,6 +81,7 @@ class SubscriptionControllerTests {
     public static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String RESPONSE_MATCH = "Response should match";
 
     private static final String RAW_JSON_MISSING_SEARCH_VALUE =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
@@ -92,9 +95,11 @@ class SubscriptionControllerTests {
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
+    private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
+    private static final String UPDATED_LIST_TYPE = "[\"CIVIL_DAILY_CAUSE_LIST\"]";
 
     private static String rawArtefact;
 
@@ -135,6 +140,16 @@ class SubscriptionControllerTests {
 
         SUBSCRIPTION.setUserId(userId);
         SUBSCRIPTION.setSearchType(searchType);
+        return setupMockSubscription(searchValue);
+    }
+
+    protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
+                SearchType searchType, String userId, ListType listType)
+        throws JsonProcessingException {
+
+        SUBSCRIPTION.setUserId(userId);
+        SUBSCRIPTION.setSearchType(searchType);
+        SUBSCRIPTION.setListType(List.of(listType.name()));
         return setupMockSubscription(searchValue);
     }
 
@@ -517,7 +532,22 @@ class SubscriptionControllerTests {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
-                     "Response should match"
+                     RESPONSE_MATCH
+        );
+    }
+
+    @Test
+    void testBuildCourtSubscribersListReturnsAccepted() throws Exception {
+        mvc.perform(setupMockSubscriptionWithListType(LOCATION_ID, SearchType.LOCATION_ID,
+                                                      VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST));
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ARTEFACT_RECIPIENT_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(rawArtefact);
+        MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
+
+        assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
+                     RESPONSE_MATCH
         );
     }
 
@@ -563,6 +593,21 @@ class SubscriptionControllerTests {
     }
 
     @Test
+    void testBuildUpdateListTypeSubscribers() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .put(UPDATE_LIST_TYPE_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(UPDATED_LIST_TYPE);
+        MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
+
+        assertEquals(String.format("Location list Type successfully updated for user %s",
+                                   VALID_USER_ID),
+                     result.getResponse().getContentAsString(), RESPONSE_MATCH
+        );
+    }
+
+    @Test
     void testBuildDeletedArtefactSubscribersReturnsAccepted() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
@@ -572,7 +617,7 @@ class SubscriptionControllerTests {
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
         assertEquals("Deleted artefact third party subscriber notification request has been accepted",
-                     result.getResponse().getContentAsString(), "Response should match"
+                     result.getResponse().getContentAsString(), RESPONSE_MATCH
         );
     }
 

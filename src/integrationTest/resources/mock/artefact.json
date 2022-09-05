@@ -41,8 +41,8 @@
   },
   "displayFrom": "2022-02-24T07:36:35",
   "displayTo": "2022-03-20T07:36:35",
-  "listType": "SJP_PRESS_LIST",
-  "locationId": "10",
+  "listType": "CIVIL_DAILY_CAUSE_LIST",
+  "locationId": "9",
   "contentDate": "2022-01-18T07:36:35",
   "isFlatFile": false,
   "payload": "https://pipsssastg.blob.core.windows.net/artefact/123445d-CFT"
