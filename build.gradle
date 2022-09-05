@@ -186,6 +186,12 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.6.4'
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
   implementation group: 'com.vladmihalcea', name: 'hibernate-types-52', version: '2.14.0'
+
+  // Force upgrade snakeyaml version for CVE-2022-25857
+  implementation( group: 'org.yaml', name: 'snakeyaml').version {
+    strictly("1.31")
+  }
+
   testImplementation(platform('org.junit:junit-bom:5.8.1'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', {
     exclude group: 'junit', module: 'junit'
