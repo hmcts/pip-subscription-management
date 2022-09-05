@@ -12,10 +12,13 @@ import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +35,7 @@ class SubscriptionControllerTest {
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
     private static final Channel EMAIL = Channel.EMAIL;
+    private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
 
     @Mock
     SubscriptionService subscriptionService;
@@ -43,7 +47,8 @@ class SubscriptionControllerTest {
 
     @BeforeEach
     void setup() {
-        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
+        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now(),
+                                                                    ListType.CIVIL_DAILY_CAUSE_LIST);
         userSubscription = new UserSubscription();
     }
 
@@ -115,6 +120,23 @@ class SubscriptionControllerTest {
         doNothing().when(subscriptionService).collectThirdPartyForDeletion(any());
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildDeletedArtefactSubscribers(new Artefact())
                          .getStatusCode(), STATUS_CODE_MATCH);
+    }
+
+    @Test
+    void testConfigureListTypesForSubscription() {
+        doNothing().when(subscriptionService).configureListTypesForSubscription(USER_ID, LIST_TYPES);
+
+        assertEquals(
+            new ResponseEntity<>(
+                String.format(
+                    "Location list Type successfully updated for user %s",
+                    USER_ID
+                ),
+                HttpStatus.OK
+            ),
+            subscriptionController.configureListTypesForSubscription(USER_ID, LIST_TYPES),
+            "Returned subscription does not match expected subscription"
+        );
     }
 
     @Test

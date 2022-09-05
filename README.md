@@ -5,7 +5,7 @@ The purpose of this service is to provide the ability to interact with and manag
 
 
 The application exposes health endpoint (http://localhost:4550/health) and metrics endpoint
-(http://localhost:4550/metrics).
+(http://localhost:4550/metrics)
 
 ## Plugins
 

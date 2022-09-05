@@ -46,6 +46,12 @@ public interface SubscriptionService {
     void collectThirdPartyForDeletion(Artefact artefact);
 
     /**
+     * Method to update an existing subscription.
+     * @param userId and ListType to update.
+     */
+    void configureListTypesForSubscription(String userId, List<String> listType);
+
+    /**
      * Delete all subscriptions by the user id.
      * @param userId The user id to delete the subscriptions from.
      * @return A confirmation message.
