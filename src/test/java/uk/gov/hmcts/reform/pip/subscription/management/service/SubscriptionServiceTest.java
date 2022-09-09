@@ -135,7 +135,7 @@ class SubscriptionServiceTest {
         publicArtefactMatches.setSensitivity(Sensitivity.PUBLIC);
         publicArtefactMatches.setLocationId(COURT_MATCH);
         publicArtefactMatches.setSearch(searchTerms);
-        publicArtefactMatches.setListType(ListType.MAGS_PUBLIC_LIST);
+        publicArtefactMatches.setListType(ListType.MAGISTRATES_PUBLIC_LIST);
 
         returnedSubscription.setUserId(ACCEPTED_USER_ID);
         restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
@@ -371,8 +371,8 @@ class SubscriptionServiceTest {
         returnedSubscription.setChannel(Channel.EMAIL);
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(SearchType.LOCATION_ID.toString(),
-                                                                   COURT_MATCH, ListType.MAGS_PUBLIC_LIST.name()))
-            .thenReturn(List.of(returnedSubscription));
+            COURT_MATCH, ListType.MAGISTRATES_PUBLIC_LIST.name()))
+                .thenReturn(List.of(returnedSubscription));
         when(channelManagementService.getMappedEmails(any())).thenReturn(returnedMappedEmails);
         when(publicationServicesService.postSubscriptionSummaries(any(), any(), any())).thenReturn(SUCCESS);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
@@ -387,12 +387,12 @@ class SubscriptionServiceTest {
     @Test
     void testCollectSubscribersCourtSubscriptionWithListTypeNotClassified() throws IOException {
         returnedSubscription.setChannel(Channel.EMAIL);
-        returnedSubscription.setListType(List.of(ListType.MAGS_PUBLIC_LIST.toString(),
+        returnedSubscription.setListType(List.of(ListType.MAGISTRATES_PUBLIC_LIST.toString(),
                                              ListType.CIVIL_DAILY_CAUSE_LIST.toString()));
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(SearchType.LOCATION_ID.toString(),
-                                                                   COURT_MATCH, ListType.MAGS_PUBLIC_LIST.name()))
-            .thenReturn(List.of(returnedSubscription));
+            COURT_MATCH, ListType.MAGISTRATES_PUBLIC_LIST.name()))
+                .thenReturn(List.of(returnedSubscription));
         when(channelManagementService.getMappedEmails(any())).thenReturn(returnedMappedEmails);
         when(publicationServicesService.postSubscriptionSummaries(any(), any(), any())).thenReturn(SUCCESS);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionServiceImpl.class)) {
@@ -414,7 +414,7 @@ class SubscriptionServiceTest {
 
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(SearchType.LOCATION_ID.toString(),
                                                                    COURT_MATCH,
-                                                                   ListType.MAGS_PUBLIC_LIST.name()))
+                                                                   ListType.MAGISTRATES_PUBLIC_LIST.name()))
             .thenReturn(List.of(mockSubscription));
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
@@ -443,7 +443,7 @@ class SubscriptionServiceTest {
 
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(SearchType.LOCATION_ID.toString(),
                                                                    COURT_MATCH,
-                                                                   ListType.MAGS_PUBLIC_LIST.name()))
+                                                                   ListType.MAGISTRATES_PUBLIC_LIST.name()))
             .thenReturn(List.of(mockSubscription));
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
@@ -472,7 +472,7 @@ class SubscriptionServiceTest {
 
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(SearchType.LOCATION_ID.toString(),
                                                                    COURT_MATCH,
-                                                                   ListType.MAGS_PUBLIC_LIST.name()))
+                                                                   ListType.MAGISTRATES_PUBLIC_LIST.name()))
             .thenReturn(List.of(mockSubscription));
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
@@ -494,10 +494,10 @@ class SubscriptionServiceTest {
     @Test
     void testCollectListTypeSubscription() throws IOException {
         mockSubscription.setSearchType(SearchType.LIST_TYPE);
-        mockSubscription.setSearchValue(ListType.MAGS_PUBLIC_LIST.toString());
+        mockSubscription.setSearchValue(ListType.MAGISTRATES_PUBLIC_LIST.toString());
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
         lenient().when(subscriptionRepository.findSubscriptionsBySearchValue(SearchType.LIST_TYPE.toString(),
-                                                                   ListType.MAGS_PUBLIC_LIST.toString()))
+                                                                   ListType.MAGISTRATES_PUBLIC_LIST.toString()))
             .thenReturn(List.of(mockSubscription));
         when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
         lenient().when(publicationServicesService.postSubscriptionSummaries(any(), any(), any())).thenReturn(SUCCESS);
@@ -519,7 +519,7 @@ class SubscriptionServiceTest {
         ThirdPartySubscription thirdPartySubscription = new ThirdPartySubscription(TEST, TEST_UUID);
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(SearchType.LOCATION_ID.toString(),
                                                                    COURT_MATCH,
-                                                                   ListType.MAGS_PUBLIC_LIST.name()))
+                                                                   ListType.MAGISTRATES_PUBLIC_LIST.name()))
             .thenReturn(List.of(mockSubscription));
         when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
         when(publicationServicesService.sendThirdPartyList(thirdPartySubscription)).thenReturn(SUCCESS);
