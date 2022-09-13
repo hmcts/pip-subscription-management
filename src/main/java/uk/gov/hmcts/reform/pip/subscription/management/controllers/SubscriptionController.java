@@ -122,6 +122,7 @@ public class SubscriptionController {
     })
     @ApiOperation("Returns a list of metadata for all existing subscriptions for MI reporting.")
     @GetMapping("/mi-data-all")
+    @IsAdmin
     public ResponseEntity<String> getSubscriptionDataForMiReportingAll() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
@@ -132,6 +133,7 @@ public class SubscriptionController {
     })
     @ApiOperation("Returns a list of subscription data for specifically location-based subscriptions for MI reporting.")
     @GetMapping("/mi-data-local")
+    @IsAdmin
     public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
