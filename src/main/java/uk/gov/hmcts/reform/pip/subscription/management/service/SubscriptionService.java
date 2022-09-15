@@ -45,6 +45,10 @@ public interface SubscriptionService {
 
     void collectThirdPartyForDeletion(Artefact artefact);
 
+    String getAllSubscriptionsDataForMiReporting();
+
+    String getLocalSubscriptionsDataForMiReporting();
+
     /**
      * Method to update an existing subscription.
      * @param userId and ListType to update.
