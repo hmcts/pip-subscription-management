@@ -12,10 +12,13 @@ import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +35,7 @@ class SubscriptionControllerTest {
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
     private static final Channel EMAIL = Channel.EMAIL;
+    private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
 
     @Mock
     SubscriptionService subscriptionService;
@@ -43,7 +47,9 @@ class SubscriptionControllerTest {
 
     @BeforeEach
     void setup() {
-        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
+        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now(),
+                                                                    ListType.CIVIL_DAILY_CAUSE_LIST
+        );
         userSubscription = new UserSubscription();
     }
 
@@ -51,11 +57,15 @@ class SubscriptionControllerTest {
     void testCreateSubscription() {
         when(subscriptionService.createSubscription(mockSubscription))
             .thenReturn(mockSubscription);
-        assertEquals(new ResponseEntity<>(String.format("Subscription created with the id %s for user %s",
-                                                          mockSubscription.getId(), mockSubscription.getUserId()),
-                                          HttpStatus.CREATED),
-                     subscriptionController.createSubscription(mockSubscription.toDto()),
-                     "Returned subscription does not match expected subscription"
+        assertEquals(
+            new ResponseEntity<>(
+                String.format("Subscription created with the id %s for user %s",
+                              mockSubscription.getId(), mockSubscription.getUserId()
+                ),
+                HttpStatus.CREATED
+            ),
+            subscriptionController.createSubscription(mockSubscription.toDto()),
+            "Returned subscription does not match expected subscription"
         );
     }
 
@@ -64,7 +74,8 @@ class SubscriptionControllerTest {
         UUID testUuid = UUID.randomUUID();
         doNothing().when(subscriptionService).deleteById(testUuid);
         assertEquals(String.format("Subscription: %s was deleted", testUuid),
-                     subscriptionController.deleteById(testUuid).getBody(), "Subscription should be deleted");
+                     subscriptionController.deleteById(testUuid).getBody(), "Subscription should be deleted"
+        );
     }
 
     @Test
@@ -72,7 +83,8 @@ class SubscriptionControllerTest {
         UUID testUuid = UUID.randomUUID();
         doNothing().when(subscriptionService).deleteById(testUuid);
         assertEquals(HttpStatus.OK, subscriptionController.deleteById(testUuid).getStatusCode(),
-                     STATUS_CODE_MATCH);
+                     STATUS_CODE_MATCH
+        );
     }
 
     @Test
@@ -86,35 +98,39 @@ class SubscriptionControllerTest {
     void testFindSubscriptionReturnsOk() {
         when(subscriptionService.findById(any())).thenReturn(mockSubscription);
         assertEquals(HttpStatus.OK, subscriptionController.findBySubId(UUID.randomUUID()).getStatusCode(),
-                     STATUS_CODE_MATCH);
+                     STATUS_CODE_MATCH
+        );
     }
 
     @Test
     void testFindByUserId() {
         when(subscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
         assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID).getBody(),
-                     "Should return users subscriptions");
+                     "Should return users subscriptions"
+        );
     }
 
     @Test
     void testFindByUserIdReturnsOk() {
         when(subscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
         assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID).getStatusCode(),
-                     STATUS_CODE_MATCH);
+                     STATUS_CODE_MATCH
+        );
     }
 
     @Test
     void testArtefactRecipientsReturnsAccepted() {
         doNothing().when(subscriptionService).collectSubscribers(any());
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildSubscriberList(new Artefact()).getStatusCode(),
-                     STATUS_CODE_MATCH);
+                     STATUS_CODE_MATCH
+        );
     }
 
     @Test
     void testBuildDeletedArtefactSubscribers() {
         doNothing().when(subscriptionService).collectThirdPartyForDeletion(any());
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildDeletedArtefactSubscribers(new Artefact())
-                         .getStatusCode(), STATUS_CODE_MATCH);
+            .getStatusCode(), STATUS_CODE_MATCH);
     }
 
     @Test
@@ -132,11 +148,30 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    void testConfigureListTypesForSubscription() {
+        doNothing().when(subscriptionService).configureListTypesForSubscription(USER_ID, LIST_TYPES);
+
+        assertEquals(
+            new ResponseEntity<>(
+                String.format(
+                    "Location list Type successfully updated for user %s",
+                    USER_ID
+                ),
+                HttpStatus.OK
+            ),
+            subscriptionController.configureListTypesForSubscription(USER_ID, LIST_TYPES),
+            "Returned subscription does not match expected subscription"
+        );
+    }
+
+    @Test
     void testDeleteSubscriptionsByUserId() {
         when(subscriptionService.deleteAllByUserId("test string")).thenReturn(
             "All subscriptions deleted for user id");
-        assertEquals("All subscriptions deleted for user id",
-                     subscriptionController.deleteAllSubscriptionsForUser("test string").getBody(),
-                     "Subscription for user should be deleted");
+        assertEquals(
+            "All subscriptions deleted for user id",
+            subscriptionController.deleteAllSubscriptionsForUser("test string").getBody(),
+            "Subscription for user should be deleted"
+        );
     }
 }
