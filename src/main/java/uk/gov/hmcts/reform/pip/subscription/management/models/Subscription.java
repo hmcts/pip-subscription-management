@@ -2,7 +2,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.models;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.vladmihalcea.hibernate.type.array.ListArrayType;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,7 +41,7 @@ public class Subscription {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "uuid", insertable = false, updatable = false, nullable = false)
-    @ApiModelProperty(hidden = true)
+    @Schema(hidden = true)
     @Type(type = "org.hibernate.type.PostgresUUIDType")
     private UUID id;
 
@@ -64,7 +64,7 @@ public class Subscription {
     @Enumerated(EnumType.STRING)
     private Channel channel;
 
-    @ApiModelProperty(hidden = true)
+    @Schema(hidden = true)
     private LocalDateTime createdDate = LocalDateTime.now();
 
     @Valid

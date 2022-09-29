@@ -4,7 +4,7 @@ plugins {
   id 'pmd'
   id 'jacoco'
   id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-  id 'org.springframework.boot' version '2.5.14'
+  id 'org.springframework.boot' version '2.6.7'
   id 'org.owasp.dependencycheck' version '7.0.3'
   id 'org.sonarqube' version '3.3'
   id 'com.github.ben-manes.versions' version '0.42.0'
@@ -170,23 +170,24 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-json'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux'
-  implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-resource-server'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-client'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
+
+  implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.11'
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
-  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '4.0.0'
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-resource-server'
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-client'
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: '2.6.0'
+
+  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '4.4.0'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.4.1'
   implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '1.1.1', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.6.4'
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
   implementation group: 'com.vladmihalcea', name: 'hibernate-types-52', version: '2.14.0'
-  implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
   // Force upgrade snakeyaml version for CVE-2022-25857
   implementation( group: 'org.yaml', name: 'snakeyaml').version {

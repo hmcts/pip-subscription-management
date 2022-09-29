@@ -82,3 +82,6 @@ service-to-service:
 azure:
   application-insights:
     instrumentation-key: ${INSTRUMENTATION_KEY:00000000-0000-0000-0000-000000000000}
+springdoc:
+  swagger-ui:
+    path: /swagger-ui/
