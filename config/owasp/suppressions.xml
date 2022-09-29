@@ -95,16 +95,16 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-   file name: spring-cloud-azure-starter-active-directory-4.0.0.jar
+   file name: spring-cloud-azure-starter-active-directory-4.4.0.jar
    ]]></notes>
-    <packageUrl regex="true">^pkg:maven/com.azure.spring/spring-cloud-azure-starter-active-directory@4.0.0</packageUrl>
+    <packageUrl regex="true">^pkg:maven/com.azure.spring/spring-cloud-azure-starter-active-directory@4.4.0</packageUrl>
     <cve>CVE-2021-42306</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[
-   file name: spring-boot-starter-oauth2-client-2.5.14.jar
+   file name: spring-boot-starter-oauth2-client-2.7.4.jar
    ]]></notes>
-    <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-oauth2-client@2.5.14</packageUrl>
+    <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-oauth2-client@2.7.4</packageUrl>
     <cve>CVE-2018-1258</cve>
     <cve>CVE-2021-22112</cve>
     <cve>CVE-2022-22976</cve>
@@ -112,9 +112,9 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-   file name: spring-boot-starter-oauth2-resource-server-2.5.14.jar
+   file name: spring-boot-starter-oauth2-resource-server-2.7.4.jar
    ]]></notes>
-    <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-oauth2-resource-server@2.5.14</packageUrl>
+    <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-oauth2-resource-server@2.7.4</packageUrl>
     <cve>CVE-2018-1258</cve>
     <cve>CVE-2021-22112</cve>
     <cve>CVE-2022-22976</cve>
