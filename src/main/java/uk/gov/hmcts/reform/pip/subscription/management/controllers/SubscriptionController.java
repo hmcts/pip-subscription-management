@@ -1,10 +1,11 @@
 package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,25 +30,29 @@ import java.util.UUID;
 import javax.validation.Valid;
 
 @RestController
-@Api(tags = "Subscription management API")
+@Tag(name = "Subscription Management API")
 @RequestMapping("/subscription")
 @Valid
 @IsAdmin
 public class SubscriptionController {
 
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
+    private static final String AUTH_ERROR_CODE = "403";
+    private static final String OK_ERROR_CODE = "200";
 
     @Autowired
     SubscriptionService subscriptionService;
 
     @PostMapping(consumes = "application/json")
-    @ApiOperation("Endpoint to create a new unique subscription - the 'id' field is hidden from swagger as it is auto"
-        + " generated on creation")
+    @Operation(summary = "Endpoint to create a new unique subscription "
+        + "- the 'id' field is hidden from swagger as it is auto generated on creation")
     @ApiResponses({
-        @ApiResponse(code = 201, message = "Subscription successfully created with the id: {subscription id} "
+        @ApiResponse(responseCode = "201", description = "Subscription successfully created with the id: "
+            + "{subscription id} "
             + "for user: {userId}"),
-        @ApiResponse(code = 400, message = "This subscription object has an invalid format. Please check again."),
-        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+        @ApiResponse(responseCode = "400", description = "This subscription object has an invalid format. Please "
+            + "check again."),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     })
     public ResponseEntity<String> createSubscription(@RequestBody @Valid SubscriptionDto sub) {
         Subscription subscription = subscriptionService.createSubscription(sub.toEntity());
@@ -57,15 +62,14 @@ public class SubscriptionController {
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscription: {subId} was deleted"),
-        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
+        @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscription: {subId} was deleted"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = "404", description = "No subscription found with the subscription id {subId}")
     })
     @Transactional
-    @ApiOperation("Endpoint to delete a given unique subscription, using subscription ID as a parameter.")
+    @Operation(summary = "Endpoint to delete a given unique subscription, using subscription ID as a parameter.")
     @DeleteMapping("/{subId}")
-    public ResponseEntity<String> deleteById(@ApiParam(value = "The specific subscription ID to be deleted",
-        required = true) @PathVariable UUID subId) {
+    public ResponseEntity<String> deleteById(@Parameter @PathVariable UUID subId) {
 
         subscriptionService.deleteById(subId);
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
@@ -73,35 +77,31 @@ public class SubscriptionController {
 
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscription {subId} found"),
-        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(code = 404, message = "No subscription found with the subscription id {subId}")
+        @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscription {subId} found"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = "404", description = "No subscription found with the subscription id {subId}")
     })
-    @ApiOperation("Returns the subscription object associated with a given subscription id.")
+    @Operation(summary = "Returns the subscription object associated with a given subscription id.")
     @GetMapping("/{subId}")
-    public ResponseEntity<Subscription> findBySubId(@ApiParam(value = "The specific subscription id to find",
-        required = true)
-                                                    @PathVariable UUID subId) {
+    public ResponseEntity<Subscription> findBySubId(@Parameter @PathVariable UUID subId) {
         return ResponseEntity.ok(subscriptionService.findById(subId));
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscriptions list for user id {userId} found"),
-        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(code = 404, message = "No subscription found with the user id {userId}")
+        @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscriptions list for user id {userId} found"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = "404", description = "No subscription found with the user id {userId}")
     })
-    @ApiOperation("Returns the list of relevant subscriptions associated with a given user id.")
+    @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
     @GetMapping("/user/{userId}")
-    public ResponseEntity<UserSubscription> findByUserId(@ApiParam(
-        value = "The specific user id to find subscription for", required = true)
-                                                         @PathVariable String userId) {
+    public ResponseEntity<UserSubscription> findByUserId(@Parameter @PathVariable String userId) {
         return ResponseEntity.ok(subscriptionService.findByUserId(userId));
     }
 
     @ApiResponses({
-        @ApiResponse(code = 202, message = "Subscriber request has been accepted"),
+        @ApiResponse(responseCode = "202", description = "Subscriber request has been accepted"),
     })
-    @ApiOperation("Takes in artefact to build subscriber list.")
+    @Operation(summary = "Takes in artefact to build subscriber list.")
     @PostMapping("/artefact-recipients")
     public ResponseEntity<String> buildSubscriberList(@RequestBody Artefact artefact) {
         subscriptionService.collectSubscribers(artefact);
@@ -109,9 +109,9 @@ public class SubscriptionController {
     }
 
     @ApiResponses({
-        @ApiResponse(code = 202, message = "Third Parties list deletion accepted"),
+        @ApiResponse(responseCode = "202", description = "Third Parties list deletion accepted"),
     })
-    @ApiOperation("Takes in a deleted artefact to notify subscribed third parties")
+    @Operation(summary = "Takes in a deleted artefact to notify subscribed third parties")
     @PostMapping("/deleted-artefact")
     public ResponseEntity<String> buildDeletedArtefactSubscribers(@RequestBody Artefact artefact) {
         subscriptionService.collectThirdPartyForDeletion(artefact);
@@ -120,11 +120,12 @@ public class SubscriptionController {
     }
 
     @PutMapping("/configure-list-types/{userId}")
-    @ApiOperation("Endpoint to update list type for existing subscription")
+    @Operation(summary = "Endpoint to update list type for existing subscription")
     @ApiResponses({
-        @ApiResponse(code = 201, message = "Subscription successfully updated for user: {userId}"),
-        @ApiResponse(code = 400, message = "This request object has an invalid format. Please check again."),
-        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+        @ApiResponse(responseCode = "201", description = "Subscription successfully updated for user: {userId}"),
+        @ApiResponse(responseCode = "400", description =
+            "This request object has an invalid format. Please check again."),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     })
     public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
                                                     @RequestBody List<String> listType) {
@@ -135,9 +136,10 @@ public class SubscriptionController {
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscription Management - MI Data request (all) accepted.")
+        @ApiResponse(responseCode = OK_ERROR_CODE, description =
+            "Subscription Management - MI Data request (all) accepted.")
     })
-    @ApiOperation("Returns a list of metadata for all existing subscriptions for MI reporting.")
+    @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting.")
     @GetMapping("/mi-data-all")
     @IsAdmin
     public ResponseEntity<String> getSubscriptionDataForMiReportingAll() {
@@ -146,9 +148,11 @@ public class SubscriptionController {
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Subscription Management - MI Data request (local) accepted.")
+        @ApiResponse(responseCode = OK_ERROR_CODE, description =
+            "Subscription Management - MI Data request (local) accepted.")
     })
-    @ApiOperation("Returns a list of subscription data for specifically location-based subscriptions for MI reporting.")
+    @Operation(summary = "Returns a list of subscription data "
+        + "for specifically location-based subscriptions for MI reporting.")
     @GetMapping("/mi-data-local")
     @IsAdmin
     public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
@@ -157,14 +161,13 @@ public class SubscriptionController {
     }
 
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Deleted all subscriptions for user id {userId}"),
-        @ApiResponse(code = 403, message = NOT_AUTHORIZED_MESSAGE)
+        @ApiResponse(responseCode = OK_ERROR_CODE, description = "Deleted all subscriptions for user id {userId}"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     })
-    @ApiOperation("Deletes all subscriptions for the supplied user id")
+    @Operation(summary = "Deletes all subscriptions for the supplied user id")
     @Transactional
     @DeleteMapping("/user/{userId}")
-    public ResponseEntity<String> deleteAllSubscriptionsForUser(@ApiParam(value = "The specific user id to delete "
-        + "the subscriptions for", required = true) @PathVariable String userId) {
+    public ResponseEntity<String> deleteAllSubscriptionsForUser(@Parameter @PathVariable String userId) {
         return ResponseEntity.ok(subscriptionService.deleteAllByUserId(userId));
     }
 }

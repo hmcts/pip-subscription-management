@@ -2,7 +2,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.models;
 
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -20,13 +20,13 @@ public class SubscriptionDto {
     /**
      * Unique subscription ID.
      */
-    @ApiModelProperty(hidden = true)
+    @Schema(hidden = true)
     private UUID id;
 
     /**
      *  P&I user id.
      **/
-    @ApiModelProperty(example = "e.g. 410129ka214k")
+    @Schema(example = "e.g. 410129ka214k")
     @Valid
     @NotNull
     @NotBlank
@@ -36,7 +36,7 @@ public class SubscriptionDto {
     @NotNull
     private SearchType searchType;
 
-    @ApiModelProperty(example = "Value to categorise your entry")
+    @Schema(example = "Value to categorise your entry")
     @Valid
     @NotNull
     @NotBlank
