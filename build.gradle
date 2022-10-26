@@ -3,7 +3,7 @@ plugins {
   id 'checkstyle'
   id 'pmd'
   id 'jacoco'
-  id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+  id 'io.spring.dependency-management' version '1.1.0'
   id 'org.springframework.boot' version '2.7.5'
   id 'org.owasp.dependencycheck' version '7.3.0'
   id 'org.sonarqube' version '3.4.0.2513'
@@ -182,10 +182,10 @@ dependencies {
 
   implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '4.4.0'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.4.1'
-  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '1.1.1', {
+  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '1.2.1', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
-  implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
+  implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
   implementation group: 'com.vladmihalcea', name: 'hibernate-types-52', version: '2.14.0'
 
   // Force upgrade snakeyaml version for CVE-2022-38752
