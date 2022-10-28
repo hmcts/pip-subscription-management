@@ -10,6 +10,7 @@ plugins {
   id 'com.github.ben-manes.versions' version '0.43.0'
   id 'io.freefair.lombok' version '6.5.1'
   id 'org.jetbrains.kotlin.jvm' version '1.7.20'
+  id 'org.flywaydb.flyway' version '9.4.0'
 }
 
 apply plugin: 'org.owasp.dependencycheck'
@@ -67,6 +68,21 @@ tasks.withType(Test) {
 
 test {
   failFast = true
+}
+
+flyway {
+  url = System.getenv('FLYWAY_URL')
+  user = System.getenv('FLYWAY_USER')
+  password = System.getenv('FLYWAY_PASSWORD')
+  baselineOnMigrate = true
+  baselineVersion = '000'
+}
+
+task migratePostgresDatabase(type: org.flywaydb.gradle.task.FlywayMigrateTask) {
+  baselineOnMigrate = true
+  if (project.hasProperty("dburl")) {
+    url = "jdbc:postgresql://${dburl}"
+  }
 }
 
 task functional(type: Test) {
@@ -187,6 +203,9 @@ dependencies {
   }
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
   implementation group: 'com.vladmihalcea', name: 'hibernate-types-52', version: '2.20.0'
+
+  // Include Flyway for database migrations
+  implementation group: 'org.flywaydb', name: 'flyway-core', version: '9.6.0'
 
   // Force upgrade snakeyaml version for CVE-2022-38752
   implementation( group: 'org.yaml', name: 'snakeyaml').version {

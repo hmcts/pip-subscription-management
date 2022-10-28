@@ -47,7 +47,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     @Transactional
     @Modifying
     @Query(value = "UPDATE Subscription "
-        + "SET list_type = string_to_array(:list_type, ',') "
+        + "SET list_type = string_to_array(:list_type, ','),"
+        + "SET last_updated_date = CURRENT_DATE "
         + "WHERE user_id = :user_id "
         + "AND search_type = 'LOCATION_ID'",
         nativeQuery = true)
