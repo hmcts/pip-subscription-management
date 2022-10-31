@@ -19,7 +19,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationS
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -58,7 +57,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         duplicateSubscriptionHandler(subscription);
 
-        subscription.setLastUpdatedDate(LocalDateTime.now());
+        subscription.setLastUpdatedDate(subscription.getCreatedDate());
 
         if (subscription.getSearchType().equals(SearchType.LOCATION_ID)) {
             subscription.setLocationName(dataManagementService.getCourtName(subscription.getSearchValue()));

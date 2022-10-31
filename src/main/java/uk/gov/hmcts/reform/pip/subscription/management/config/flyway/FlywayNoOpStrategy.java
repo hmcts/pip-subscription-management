@@ -2,7 +2,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.config.flyway;
 
 import org.flywaydb.core.Flyway;
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
-import uk.gov.hmcts.reform.pip.data.management.errorhandling.exceptions.PendingMigrationScriptException;
+import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.PendingMigrationScriptException;
 
 import java.util.stream.Stream;
 

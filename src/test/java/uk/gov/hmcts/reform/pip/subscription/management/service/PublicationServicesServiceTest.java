@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import com.azure.core.http.ContentType;
+import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import nl.altindag.log.LogCaptor;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {Application.class})
 @ActiveProfiles({"test", "non-async"})
+@AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class PublicationServicesServiceTest {
 
     private static MockWebServer mockPublicationServicesEndpoint;
