@@ -5,6 +5,7 @@
 def type = "java"
 def product = "pip"
 def component = "subscription-management"
+def kv = product + '-ss-kv'
 
 static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   [$class     : 'AzureKeyVaultSecret',
