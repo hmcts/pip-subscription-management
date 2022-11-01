@@ -674,7 +674,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testMIReportingSubscriptionDataAll() throws Exception {
+    void testMiReportingSubscriptionDataAll() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
             .andExpect(status().isOk()).andReturn();
@@ -682,7 +682,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testMIReportingSubscriptionDataLocal() throws Exception {
+    void testMiReportingSubscriptionDataLocal() throws Exception {
         mvc.perform(setupMockSubscription("9", SearchType.LOCATION_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
             .andExpect(status().isOk()).andReturn();
