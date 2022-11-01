@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.io.IOUtils;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import nonapi.io.github.classgraph.utils.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -148,7 +147,7 @@ class SubscriptionControllerTests {
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
-                                                                              SearchType searchType, String userId, ListType listType)
+                                                               SearchType searchType, String userId, ListType listType)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
@@ -683,7 +682,7 @@ class SubscriptionControllerTests {
 
     @Test
     void testMiReportingSubscriptionDataLocal() throws Exception {
-        mvc.perform(setupMockSubscription("9", SearchType.LOCATION_ID, VALID_USER_ID));
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
             .andExpect(status().isOk()).andReturn();
         assertThat(response.getResponse().getContentAsString()).contains(VALID_USER_ID);
