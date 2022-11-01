@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.io.IOUtils;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import nonapi.io.github.classgraph.utils.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -51,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@WithMockUser(username = "admin", authorities = { "APPROLE_api.request.admin" })
+@WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.LawOfDemeter"})
 class SubscriptionControllerTests {
@@ -94,6 +96,8 @@ class SubscriptionControllerTests {
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
+    private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL = "/subscription/mi-data-all";
+    private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL = "/subscription/mi-data-local";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
@@ -144,7 +148,7 @@ class SubscriptionControllerTests {
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
-                SearchType searchType, String userId, ListType listType)
+                                                                              SearchType searchType, String userId, ListType listType)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
@@ -205,11 +209,14 @@ class SubscriptionControllerTests {
             returnedSubscription.getId(), 0L, "id should not equal zero"
         );
         assertEquals(SUBSCRIPTION.getCaseName(), returnedSubscription.getCaseName(),
-                     VALIDATION_CASE_NAME);
+                     VALIDATION_CASE_NAME
+        );
         assertEquals(SUBSCRIPTION.getCaseNumber(), returnedSubscription.getCaseNumber(),
-                     VALIDATION_CASE_NUMBER);
+                     VALIDATION_CASE_NUMBER
+        );
         assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
-                     VALIDATION_CASE_URN);
+                     VALIDATION_CASE_URN
+        );
         assertEquals(LOCATION_NAME_1, returnedSubscription.getLocationName(),
                      VALIDATION_LOCATION_NAME
         );
@@ -266,11 +273,14 @@ class SubscriptionControllerTests {
             returnedSubscription2.getId(), 0L, "id should not equal zero"
         );
         assertEquals(SUBSCRIPTION.getCaseName(), returnedSubscription.getCaseName(),
-                     VALIDATION_CASE_NAME);
+                     VALIDATION_CASE_NAME
+        );
         assertEquals(SUBSCRIPTION.getCaseNumber(), returnedSubscription.getCaseNumber(),
-                     VALIDATION_CASE_NUMBER);
+                     VALIDATION_CASE_NUMBER
+        );
         assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
-                     VALIDATION_CASE_URN);
+                     VALIDATION_CASE_URN
+        );
         assertEquals(LOCATION_NAME_1, returnedSubscription.getLocationName(),
                      VALIDATION_LOCATION_NAME
         );
@@ -385,7 +395,7 @@ class SubscriptionControllerTests {
         String randomUuid = UUID_STRING;
         MvcResult response = mvc.perform(get("/subscription/" + randomUuid))
             .andExpect(status()
-                                                                                           .isNotFound()).andReturn();
+                           .isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
         String errorResponse = response.getResponse().getContentAsString();
@@ -411,12 +421,14 @@ class SubscriptionControllerTests {
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
         UserSubscription userSubscriptions =
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(3,
-                     userSubscriptions.getLocationSubscriptions().size() + userSubscriptions
-                         .getCaseSubscriptions().size(),
-                     VALIDATION_SUBSCRIPTION_LIST);
+        assertEquals(
+            3,
+            userSubscriptions.getLocationSubscriptions().size() + userSubscriptions
+                .getCaseSubscriptions().size(),
+            VALIDATION_SUBSCRIPTION_LIST
+        );
 
         LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
         assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
@@ -439,13 +451,15 @@ class SubscriptionControllerTests {
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
         UserSubscription userSubscriptions =
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
         assertEquals(1, userSubscriptions.getLocationSubscriptions().size(),
-                     "Court subscription list does not contain 1 court");
+                     "Court subscription list does not contain 1 court"
+        );
 
         assertEquals(0, userSubscriptions.getCaseSubscriptions().size(),
-                     "Court subscription list contains unknown cases");
+                     "Court subscription list contains unknown cases"
+        );
 
         LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
         assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
@@ -463,7 +477,7 @@ class SubscriptionControllerTests {
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
         UserSubscription userSubscriptions =
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
         assertEquals(0, userSubscriptions.getLocationSubscriptions().size(),
                      VALIDATION_LOCATION_LIST
@@ -491,7 +505,7 @@ class SubscriptionControllerTests {
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
         UserSubscription userSubscriptions =
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
         assertEquals(0, userSubscriptions.getLocationSubscriptions().size(),
                      VALIDATION_LOCATION_LIST
@@ -516,10 +530,11 @@ class SubscriptionControllerTests {
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
         UserSubscription userSubscriptions =
-                OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
         assertEquals(new UserSubscription(), userSubscriptions,
-                     VALIDATION_NO_SUBSCRIPTIONS);
+                     VALIDATION_NO_SUBSCRIPTIONS
+        );
     }
 
     @Test
@@ -539,7 +554,8 @@ class SubscriptionControllerTests {
     @Test
     void testBuildCourtSubscribersListReturnsAccepted() throws Exception {
         mvc.perform(setupMockSubscriptionWithListType(LOCATION_ID, SearchType.LOCATION_ID,
-                                                      VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST));
+                                                      VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST
+        ));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
@@ -552,7 +568,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_create", authorities = { "APPROLE_unknown.create" })
+    @WithMockUser(username = "unauthorized_create", authorities = {"APPROLE_unknown.create"})
     void testUnauthorizedCreateSubscription() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
@@ -560,36 +576,40 @@ class SubscriptionControllerTests {
             mvc.perform(mappedSubscription).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_delete", authorities = { "APPROLE_unknown.delete" })
+    @WithMockUser(username = "unauthorized_delete", authorities = {"APPROLE_unknown.delete"})
     void testUnauthorizedDeleteById() throws Exception {
         MvcResult mvcResult = mvc.perform(getSubscriptionByUuid(UUID.randomUUID().toString())
-                                                ).andExpect(status().isForbidden()).andReturn();
+        ).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_find_by_id", authorities = { "APPROLE_unknown.find" })
+    @WithMockUser(username = "unauthorized_find_by_id", authorities = {"APPROLE_unknown.find"})
     void testUnauthorizedFindSubscriptionById() throws Exception {
         MvcResult mvcResult = mvc.perform(get(String.format("/subscription/%s", UUID.randomUUID())))
-             .andExpect(status().isForbidden()).andReturn();
+            .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_find_by_user_id", authorities = { "APPROLE_unknown.find" })
+    @WithMockUser(username = "unauthorized_find_by_user_id", authorities = {"APPROLE_unknown.find"})
     void testUnauthorizedFindSubscriptionByUserId() throws Exception {
         MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_USER_PATH)).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
@@ -601,8 +621,10 @@ class SubscriptionControllerTests {
             .content(UPDATED_LIST_TYPE);
         MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
 
-        assertEquals(String.format("Location list Type successfully updated for user %s",
-                                   VALID_USER_ID),
+        assertEquals(String.format(
+                         "Location list Type successfully updated for user %s",
+                         VALID_USER_ID
+                     ),
                      result.getResponse().getContentAsString(), RESPONSE_MATCH
         );
     }
@@ -649,6 +671,22 @@ class SubscriptionControllerTests {
             deleteResponse.getResponse().getContentAsString(),
             "Responses are not equal"
         );
+    }
+
+    @Test
+    void testMIReportingSubscriptionDataAll() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
+            .andExpect(status().isOk()).andReturn();
+        assertThat(response.getResponse().getContentAsString()).contains(VALID_USER_ID);
+    }
+
+    @Test
+    void testMIReportingSubscriptionDataLocal() throws Exception {
+        mvc.perform(setupMockSubscription("9", SearchType.LOCATION_ID, VALID_USER_ID));
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
+            .andExpect(status().isOk()).andReturn();
+        assertThat(response.getResponse().getContentAsString()).contains(VALID_USER_ID);
     }
 }
 
