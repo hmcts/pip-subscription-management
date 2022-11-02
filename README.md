@@ -249,7 +249,7 @@ that exist in this model but are created automatically once the object has been 
 
 ## Flyway
 
-Flyway is integrated with Data Management.
+Flyway is integrated with Subscription Management.
 
 - On the pipeline flyway is enabled but run on start up switched off
 - Locally, flyway is disabled. This is due to all tables existing in a single database locally which causes flyway to fail startup due to mismatching scripts
