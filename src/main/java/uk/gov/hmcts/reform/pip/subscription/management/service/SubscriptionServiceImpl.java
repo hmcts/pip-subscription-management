@@ -285,23 +285,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public String getAllSubscriptionsDataForMiReporting() {
-        List<String> data = repository.getAllSubsDataForMi();
         StringBuilder builder = new StringBuilder(48);
-        builder.append("uuid, channel, search_type, user_id, location\n");
-        for (String s : data) {
-            builder.append(s).append('\n');
-        }
+        builder.append("id,channel,search_type,user_id,court_name").append(System.lineSeparator());
+        repository.getAllSubsDataForMi()
+            .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
     }
 
     @Override
     public String getLocalSubscriptionsDataForMiReporting() {
-        List<String> data = repository.getLocalSubsDataForMi();
         StringBuilder builder = new StringBuilder(49);
-        builder.append("uuid, search_value, channel, user_id, location\n");
-        for (String s : data) {
-            builder.append(s).append('\n');
-        }
+        builder.append("id,search_value,channel,user_id,court_name").append(System.lineSeparator());
+        repository.getLocalSubsDataForMi()
+            .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
     }
 
