@@ -256,7 +256,12 @@ Flyway is integrated with Subscription Management.
 
 If you want to test the scripts locally, you will first need to clear the "flyway_schema_history' table, and then set the 'ENABLE_FLYWAY' environment variable to 'true'.
 
+## Materialised View
+
+There is a materialised view created for the Subscription table, which contains a subset of the fields.
+
+This view is implemented via Flyway.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
-
