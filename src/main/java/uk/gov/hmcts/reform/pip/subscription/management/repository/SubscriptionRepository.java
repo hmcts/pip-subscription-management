@@ -21,12 +21,16 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     Optional<Subscription> findById(UUID id);
 
+    List<Subscription> findByIdIn(List<UUID> id);
+
     List<Subscription> findByUserId(String userId);
 
     @Override
     List<Subscription> findAll();
 
     void deleteById(UUID id);
+
+    void deleteByIdIn(List<UUID> id);
 
     @Query(value = "SELECT * FROM Subscription "
         + "WHERE search_type = :search_type "
