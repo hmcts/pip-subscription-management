@@ -88,6 +88,26 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    void testBulkDeleteSubscriptionsSuccess() {
+        UUID testId1 = UUID.randomUUID();
+        UUID testId2 = UUID.randomUUID();
+        UUID testId3 = UUID.randomUUID();
+        List<UUID> testIds = List.of(testId1, testId2, testId3);
+        String expectedTestIds = String.join(", ", new String[]{
+            testId1.toString(),
+            testId2.toString(),
+            testId3.toString()
+        });
+
+        doNothing().when(subscriptionService).bulkDeleteSubscriptions(testIds);
+        ResponseEntity<String> response = subscriptionController.bulkDeleteSubscriptions(testIds);
+
+        assertEquals(String.format("Subscription(s) with ID %s deleted", expectedTestIds), response.getBody(),
+                     "Subscription should be deleted");
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
+    }
+
+    @Test
     void testFindSubscription() {
         when(subscriptionService.findById(any())).thenReturn(mockSubscription);
         assertEquals(mockSubscription, subscriptionController.findBySubId(UUID.randomUUID()).getBody(), "The found "
