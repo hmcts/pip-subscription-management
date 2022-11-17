@@ -15,6 +15,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.mana
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.ListTypeSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
@@ -145,6 +146,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 locationSubscription.setListType(subscription.getListType());
                 locationSubscription.setDateAdded(subscription.getCreatedDate());
                 userSubscription.getLocationSubscriptions().add(locationSubscription);
+            } else if (subscription.getSearchType() == SearchType.LIST_TYPE) {
+                ListTypeSubscription listTypeSubscription = new ListTypeSubscription();
+                listTypeSubscription.setSubscriptionId(subscription.getId());
+                listTypeSubscription.setListType(subscription.getSearchValue());
+                listTypeSubscription.setDateAdded(subscription.getCreatedDate());
+                listTypeSubscription.setChannel(subscription.getChannel());
+                userSubscription.getListTypeSubscriptions().add(listTypeSubscription);
             } else {
                 CaseSubscription caseSubscription = new CaseSubscription();
                 caseSubscription.setCaseName(subscription.getCaseName());
