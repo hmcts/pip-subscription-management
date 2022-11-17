@@ -12,7 +12,7 @@ import java.util.List;
 public class MetadataService {
 
     /**
-     * Returns a list of channels associated with the subscription
+     * Returns a list of channels associated with the subscription.
      * @return The list of channels.
      */
     public List<Channel> retrieveChannels() {

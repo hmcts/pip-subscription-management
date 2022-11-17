@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Model which represents a list type subscription
+ * Model which represents a list type subscription.
  */
 @Data
 public class ListTypeSubscription {

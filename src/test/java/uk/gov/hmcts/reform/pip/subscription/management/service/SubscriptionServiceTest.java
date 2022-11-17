@@ -22,6 +22,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.mana
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.ListTypeSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
@@ -417,6 +418,38 @@ class SubscriptionServiceTest {
         assertEquals(mockSubscription.getId(),
                      subscriptionService.findByUserId(USER_ID).getCaseSubscriptions().get(0).getSubscriptionId(),
                      "Should match subscriptionId");
+    }
+
+    @Test
+    void testFindByUserIdListTypeSubscriptions() {
+        mockSubscription.setSearchType(SearchType.LIST_TYPE);
+        mockSubscription.setSearchValue(ListType.CARE_STANDARDS_LIST.toString());
+
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        List<ListTypeSubscription> listTypeSubscriptions =
+            subscriptionService.findByUserId(USER_ID).getListTypeSubscriptions();
+
+
+        assertEquals(1, listTypeSubscriptions.size(), "Unexpected number of list type subscriptions returned");
+
+        assertEquals(mockSubscription.getId(), listTypeSubscriptions.get(0).getSubscriptionId(),
+                     "Returned list type subscription does not match ID");
+        assertEquals(mockSubscription.getSearchValue(), listTypeSubscriptions.get(0).getListType(),
+                     "Returned list type subscription does not match list type");
+        assertEquals(mockSubscription.getChannel(), listTypeSubscriptions.get(0).getChannel(),
+                     "Returned list type subscription does not match channel");
+        assertEquals(mockSubscription.getCreatedDate(), listTypeSubscriptions.get(0).getDateAdded(),
+                     "Returned list type subscription does not match created date");
+    }
+
+    @Test
+    void testFindByUserIdNoListTypeSubscriptions() {
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        assertEquals(0, subscriptionService.findByUserId(USER_ID).getListTypeSubscriptions().size(),
+                     "Unexpected number of list type subscriptions returned");
     }
 
     @Test

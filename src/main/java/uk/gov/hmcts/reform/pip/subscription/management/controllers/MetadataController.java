@@ -13,8 +13,8 @@ import uk.gov.hmcts.reform.pip.subscription.management.authentication.roles.IsAd
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.service.MetadataService;
 
-import javax.validation.Valid;
 import java.util.List;
+import javax.validation.Valid;
 
 /**
  * This controller returns any metadata for subscriptions, so that everything is in a single place.
