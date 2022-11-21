@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,6 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -53,7 +55,7 @@ import static uk.gov.hmcts.reform.pip.subscription.management.helpers.Subscripti
 
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
-@SuppressWarnings({"PMD.LawOfDemeter", "PMD.TooManyFields"})
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.TooManyFields", "PMD.ExcessiveImports"})
 class SubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
     private static final String USER_ID_NO_SUBS = "Tina21";
@@ -103,6 +105,9 @@ class SubscriptionServiceTest {
     private final List<Object> cases = new ArrayList<>();
     private final Map<String, List<Object>> searchTerms = new ConcurrentHashMap<>();
     private final Map<String, List<Subscription>> returnedMappedEmails = new ConcurrentHashMap<>();
+
+    @Captor
+    private ArgumentCaptor<ArrayList<UUID>> listCaptor;
 
     @Mock
     DataManagementService dataManagementService;
@@ -279,6 +284,43 @@ class SubscriptionServiceTest {
         assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.deleteById(testUuid),
                      "SubscriptionNotFoundException not thrown when trying to delete a subscription"
                          + " that does not exist");
+    }
+
+    @Test
+    void testBulkDeleteSubscriptionsSuccess() {
+        UUID testId1 = UUID.randomUUID();
+        UUID testId2 = UUID.randomUUID();
+
+        Subscription subscription1 = new Subscription();
+        subscription1.setId(testId1);
+        Subscription subscription2 = new Subscription();
+        subscription2.setId(testId2);
+
+        List<UUID> testIds = List.of(testId1, testId2);
+        List<Subscription> subscriptions = List.of(subscription1, subscription2);
+
+        doNothing().when(subscriptionRepository).deleteByIdIn(listCaptor.capture());
+        when(subscriptionRepository.findByIdIn(testIds)).thenReturn(subscriptions);
+        subscriptionService.bulkDeleteSubscriptions(testIds);
+        assertThat(listCaptor.getValue())
+            .as("Subscription IDs to delete do not match")
+            .isEqualTo(testIds);
+    }
+
+    @Test
+    void testBulkDeleteSubscriptionsException() {
+        UUID testId1 = UUID.randomUUID();
+        UUID testId2 = UUID.randomUUID();
+        List<UUID> testIds = List.of(testId1, testId2);
+
+        Subscription subscription = new Subscription();
+        subscription.setId(testId2);
+
+        when(subscriptionRepository.findByIdIn(testIds)).thenReturn(List.of(subscription));
+        assertThatThrownBy(() -> subscriptionService.bulkDeleteSubscriptions(testIds))
+            .as("Exception does not match")
+            .isInstanceOf(SubscriptionNotFoundException.class)
+            .hasMessage("No subscription found with the subscription ID(s): " + testId1);
     }
 
     @Test

@@ -39,6 +39,7 @@ public class SubscriptionController {
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
     private static final String AUTH_ERROR_CODE = "403";
     private static final String OK_ERROR_CODE = "200";
+    private static final String NOT_FOUND_ERROR_CODE = "404";
 
     @Autowired
     SubscriptionService subscriptionService;
@@ -64,7 +65,8 @@ public class SubscriptionController {
     @ApiResponses({
         @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscription: {subId} was deleted"),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = "404", description = "No subscription found with the subscription id {subId}")
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
+            description = "No subscription found with the subscription id {subId}")
     })
     @Transactional
     @Operation(summary = "Endpoint to delete a given unique subscription, using subscription ID as a parameter.")
@@ -75,11 +77,28 @@ public class SubscriptionController {
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
     }
 
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscription(s) with ID {subIds} deleted"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
+            description = "No subscription found with the subscription IDs: {subIds}")
+    })
+    @Transactional
+    @Operation(summary = "Delete a set of subscriptions using the subscription ID")
+    @DeleteMapping("/bulk")
+    public ResponseEntity<String> bulkDeleteSubscriptions(@RequestBody List<UUID> subIds) {
+
+        subscriptionService.bulkDeleteSubscriptions(subIds);
+        return ResponseEntity.ok(String.format("Subscription(s) with ID %s deleted",
+                                               subIds.toString().replaceAll("\\[|\\]", "")));
+    }
+
 
     @ApiResponses({
         @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscription {subId} found"),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = "404", description = "No subscription found with the subscription id {subId}")
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
+            description = "No subscription found with the subscription id {subId}")
     })
     @Operation(summary = "Returns the subscription object associated with a given subscription id.")
     @GetMapping("/{subId}")
@@ -90,7 +109,8 @@ public class SubscriptionController {
     @ApiResponses({
         @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscriptions list for user id {userId} found"),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
-        @ApiResponse(responseCode = "404", description = "No subscription found with the user id {userId}")
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
+            description = "No subscription found with the user id {userId}")
     })
     @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
     @GetMapping("/user/{userId}")
