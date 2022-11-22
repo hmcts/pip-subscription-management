@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import com.azure.core.http.ContentType;
+import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest(classes = {Application.class})
 @ActiveProfiles({"test", "non-async"})
+@AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class DataManagementServiceTest {
 
     private static final String INVALID = "test";
