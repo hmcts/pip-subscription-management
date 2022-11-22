@@ -21,12 +21,16 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     Optional<Subscription> findById(UUID id);
 
+    List<Subscription> findByIdIn(List<UUID> id);
+
     List<Subscription> findByUserId(String userId);
 
     @Override
     List<Subscription> findAll();
 
     void deleteById(UUID id);
+
+    void deleteByIdIn(List<UUID> id);
 
     @Query(value = "SELECT * FROM Subscription "
         + "WHERE search_type = :search_type "
@@ -47,7 +51,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     @Transactional
     @Modifying
     @Query(value = "UPDATE Subscription "
-        + "SET list_type = string_to_array(:list_type, ',') "
+        + "SET list_type = string_to_array(:list_type, ','),"
+        + "last_updated_date = now() "
         + "WHERE user_id = :user_id "
         + "AND search_type = 'LOCATION_ID'",
         nativeQuery = true)

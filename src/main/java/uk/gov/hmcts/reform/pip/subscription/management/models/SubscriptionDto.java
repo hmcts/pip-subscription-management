@@ -60,6 +60,8 @@ public class SubscriptionDto {
     @Valid
     private String locationName;
 
+    private LocalDateTime lastUpdatedDate;
+
     @Valid
     private List<String> listType;
 
@@ -76,6 +78,7 @@ public class SubscriptionDto {
         entity.setUrn(this.urn);
         entity.setLocationName(this.locationName);
         entity.setListType(this.listType);
+        entity.setLastUpdatedDate(this.lastUpdatedDate);
         return entity;
     }
 }

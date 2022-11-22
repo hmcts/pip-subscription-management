@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 import com.azure.core.http.ContentType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(classes = {Application.class})
 @ActiveProfiles({"test", "non-async"})
+@AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class ChannelManagementServiceTest {
 
     private static MockWebServer mockChannelManagementEmailsEndpoint;

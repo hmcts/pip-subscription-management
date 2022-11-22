@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
@@ -57,6 +58,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         duplicateSubscriptionHandler(subscription);
 
+        subscription.setLastUpdatedDate(subscription.getCreatedDate());
+
         if (subscription.getSearchType().equals(SearchType.LOCATION_ID)) {
             subscription.setLocationName(dataManagementService.getCourtName(subscription.getSearchValue()));
         }
@@ -88,6 +91,23 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                           id.toString()));
 
         repository.deleteById(id);
+    }
+
+    @Override
+    public void bulkDeleteSubscriptions(List<UUID> ids) {
+        List<Subscription> subscriptions = repository.findByIdIn(ids);
+        if (ids.size() > subscriptions.size()) {
+            List<UUID> missingIds = new ArrayList<>(ids);
+            missingIds.removeAll(subscriptions.stream()
+                                     .map(s -> s.getId())
+                                     .collect(Collectors.toList()));
+            throw new SubscriptionNotFoundException("No subscription found with the subscription ID(s): "
+                    + missingIds.toString().replaceAll("\\[|\\]", ""));
+        }
+
+        repository.deleteByIdIn(ids);
+        subscriptions.forEach(s -> log.info(writeLog(s.getUserId(), UserActions.DELETE_SUBSCRIPTION,
+                                                     s.getId().toString())));
     }
 
     @Override
