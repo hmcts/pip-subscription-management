@@ -58,6 +58,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         duplicateSubscriptionHandler(subscription);
 
+        subscription.setLastUpdatedDate(subscription.getCreatedDate());
+
         if (subscription.getSearchType().equals(SearchType.LOCATION_ID)) {
             subscription.setLocationName(dataManagementService.getCourtName(subscription.getSearchValue()));
         }

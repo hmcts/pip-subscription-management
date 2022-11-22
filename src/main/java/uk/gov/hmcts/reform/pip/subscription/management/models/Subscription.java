@@ -80,6 +80,9 @@ public class Subscription {
     private String locationName;
 
     @Valid
+    private LocalDateTime lastUpdatedDate;
+
+    @Valid
     @Type(type = "list-array")
     @Column(name = "list_type", columnDefinition = "text[]")
     private List<String> listType;
@@ -97,6 +100,7 @@ public class Subscription {
         dto.setUrn(this.urn);
         dto.setLocationName(this.locationName);
         dto.setListType(this.listType);
+        dto.setLastUpdatedDate(this.lastUpdatedDate);
         return dto;
     }
 }

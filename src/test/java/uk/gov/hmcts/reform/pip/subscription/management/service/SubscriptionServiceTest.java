@@ -56,7 +56,6 @@ import static uk.gov.hmcts.reform.pip.subscription.management.helpers.Subscripti
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
 @SuppressWarnings({"PMD.LawOfDemeter", "PMD.TooManyFields", "PMD.ExcessiveImports"})
-
 class SubscriptionServiceTest {
     private static final String USER_ID = "Ralph21";
     private static final String USER_ID_NO_SUBS = "Tina21";
@@ -184,6 +183,21 @@ class SubscriptionServiceTest {
         assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
         );
+    }
+
+    @Test
+    void testLastUpdatedDateIsSet() {
+        ArgumentCaptor<Subscription> argumentCaptor = ArgumentCaptor.forClass(Subscription.class);
+
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        when(subscriptionRepository.save(argumentCaptor.capture())).thenReturn(mockSubscription);
+
+        subscriptionService.createSubscription(mockSubscription);
+
+        Subscription subscription = argumentCaptor.getValue();
+
+        assertEquals(subscription.getCreatedDate(), subscription.getLastUpdatedDate(),
+                     "Last updated date should be equal to created date");
     }
 
     @Test
