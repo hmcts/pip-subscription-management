@@ -23,6 +23,12 @@ public interface SubscriptionService {
     void deleteById(UUID id);
 
     /**
+     * Bulk delete subscriptions by IDs.
+     * @param ids the list of IDs of the subscriptions to delete.
+     */
+    void bulkDeleteSubscriptions(List<UUID> ids);
+
+    /**
      * Find all subscriptions.
      * @return The list of subscriptions that have been found.
      */

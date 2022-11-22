@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
@@ -90,6 +91,23 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                           id.toString()));
 
         repository.deleteById(id);
+    }
+
+    @Override
+    public void bulkDeleteSubscriptions(List<UUID> ids) {
+        List<Subscription> subscriptions = repository.findByIdIn(ids);
+        if (ids.size() > subscriptions.size()) {
+            List<UUID> missingIds = new ArrayList<>(ids);
+            missingIds.removeAll(subscriptions.stream()
+                                     .map(s -> s.getId())
+                                     .collect(Collectors.toList()));
+            throw new SubscriptionNotFoundException("No subscription found with the subscription ID(s): "
+                    + missingIds.toString().replaceAll("\\[|\\]", ""));
+        }
+
+        repository.deleteByIdIn(ids);
+        subscriptions.forEach(s -> log.info(writeLog(s.getUserId(), UserActions.DELETE_SUBSCRIPTION,
+                                                     s.getId().toString())));
     }
 
     @Override
@@ -287,23 +305,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public String getAllSubscriptionsDataForMiReporting() {
-        List<String> data = repository.getAllSubsDataForMi();
         StringBuilder builder = new StringBuilder(48);
-        builder.append("uuid, channel, search_type, user_id, location\n");
-        for (String s : data) {
-            builder.append(s).append('\n');
-        }
+        builder.append("id,channel,search_type,user_id,court_name").append(System.lineSeparator());
+        repository.getAllSubsDataForMi()
+            .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
     }
 
     @Override
     public String getLocalSubscriptionsDataForMiReporting() {
-        List<String> data = repository.getLocalSubsDataForMi();
         StringBuilder builder = new StringBuilder(49);
-        builder.append("uuid, search_value, channel, user_id, location\n");
-        for (String s : data) {
-            builder.append(s).append('\n');
-        }
+        builder.append("id,search_value,channel,user_id,court_name").append(System.lineSeparator());
+        repository.getLocalSubsDataForMi()
+            .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
     }
 
