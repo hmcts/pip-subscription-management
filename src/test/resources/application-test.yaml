@@ -1,17 +1,12 @@
 spring:
   main:
     allow-bean-definition-overriding: true
-  datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:testdb
-    username: my-db
-    password: my-db
-    embedded-directory: build
-    jpa:
-      spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
 
 service-to-service:
   data-management: localhost:4550
   account-management: localhost:6969
   channel-management: localhost:8181
   publication-services: localhost:8081
+
+dbMigration:
+  runOnStartup: true
