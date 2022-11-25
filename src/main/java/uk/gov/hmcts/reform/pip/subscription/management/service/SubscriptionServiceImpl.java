@@ -53,8 +53,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     PublicationServicesService publicationServicesService;
 
     @Override
-    public Subscription createSubscription(Subscription subscription) {
-        log.info(writeLog(subscription.getUserId(), UserActions.CREATE_SUBSCRIPTION,
+    public Subscription createSubscription(Subscription subscription, String actioningUserId) {
+        log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION,
                           subscription.getSearchType().toString()));
 
         duplicateSubscriptionHandler(subscription);
@@ -77,7 +77,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void deleteById(UUID id) {
+    public void deleteById(UUID id, String actioningUserId) {
         Optional<Subscription> subscription = repository.findById(id);
 
         if (subscription.isEmpty()) {
@@ -87,8 +87,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             ));
         }
 
-        Subscription returnedSubscription = subscription.get();
-        log.info(writeLog(returnedSubscription.getUserId(), UserActions.DELETE_SUBSCRIPTION,
+        log.info(writeLog(actioningUserId, UserActions.DELETE_SUBSCRIPTION,
                           id.toString()));
 
         repository.deleteById(id);
