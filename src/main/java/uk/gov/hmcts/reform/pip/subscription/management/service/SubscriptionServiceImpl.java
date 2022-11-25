@@ -15,6 +15,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.mana
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.ListTypeSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
@@ -52,8 +53,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     PublicationServicesService publicationServicesService;
 
     @Override
-    public Subscription createSubscription(Subscription subscription) {
-        log.info(writeLog(subscription.getUserId(), UserActions.CREATE_SUBSCRIPTION,
+    public Subscription createSubscription(Subscription subscription, String actioningUserId) {
+        log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION,
                           subscription.getSearchType().toString()));
 
         duplicateSubscriptionHandler(subscription);
@@ -76,7 +77,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void deleteById(UUID id) {
+    public void deleteById(UUID id, String actioningUserId) {
         Optional<Subscription> subscription = repository.findById(id);
 
         if (subscription.isEmpty()) {
@@ -86,8 +87,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             ));
         }
 
-        Subscription returnedSubscription = subscription.get();
-        log.info(writeLog(returnedSubscription.getUserId(), UserActions.DELETE_SUBSCRIPTION,
+        log.info(writeLog(actioningUserId, UserActions.DELETE_SUBSCRIPTION,
                           id.toString()));
 
         repository.deleteById(id);
@@ -147,6 +147,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 locationSubscription.setListType(subscription.getListType());
                 locationSubscription.setDateAdded(subscription.getCreatedDate());
                 userSubscription.getLocationSubscriptions().add(locationSubscription);
+            } else if (subscription.getSearchType() == SearchType.LIST_TYPE) {
+                ListTypeSubscription listTypeSubscription = new ListTypeSubscription();
+                listTypeSubscription.setSubscriptionId(subscription.getId());
+                listTypeSubscription.setListType(subscription.getSearchValue());
+                listTypeSubscription.setDateAdded(subscription.getCreatedDate());
+                listTypeSubscription.setChannel(subscription.getChannel());
+                userSubscription.getListTypeSubscriptions().add(listTypeSubscription);
             } else {
                 CaseSubscription caseSubscription = new CaseSubscription();
                 caseSubscription.setCaseName(subscription.getCaseName());

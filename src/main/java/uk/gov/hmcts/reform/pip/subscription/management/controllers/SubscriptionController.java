@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.subscription.management.authentication.roles.IsAdmin;
@@ -55,8 +56,9 @@ public class SubscriptionController {
             + "check again."),
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     })
-    public ResponseEntity<String> createSubscription(@RequestBody @Valid SubscriptionDto sub) {
-        Subscription subscription = subscriptionService.createSubscription(sub.toEntity());
+    public ResponseEntity<String> createSubscription(@RequestBody @Valid SubscriptionDto sub,
+                                                     @RequestHeader("x-user-id") String actioningUserId) {
+        Subscription subscription = subscriptionService.createSubscription(sub.toEntity(), actioningUserId);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user %s",
                                 subscription.getId(), subscription.getUserId()));
@@ -71,9 +73,10 @@ public class SubscriptionController {
     @Transactional
     @Operation(summary = "Endpoint to delete a given unique subscription, using subscription ID as a parameter.")
     @DeleteMapping("/{subId}")
-    public ResponseEntity<String> deleteById(@Parameter @PathVariable UUID subId) {
+    public ResponseEntity<String> deleteById(@Parameter @PathVariable UUID subId,
+                                             @RequestHeader("x-user-id") String actioningUserId) {
 
-        subscriptionService.deleteById(subId);
+        subscriptionService.deleteById(subId, actioningUserId);
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
     }
 
