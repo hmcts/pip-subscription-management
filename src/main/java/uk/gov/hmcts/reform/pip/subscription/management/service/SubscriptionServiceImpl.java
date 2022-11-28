@@ -326,4 +326,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         repository.deleteAllByUserId(userId);
         return String.format("All subscriptions deleted for user id %s", userId);
     }
+
+    @Override
+    public List<Subscription> findSubscriptionsByLocationId(String value) {
+        return repository.findSubscriptionsByLocationId(value);
+    }
 }

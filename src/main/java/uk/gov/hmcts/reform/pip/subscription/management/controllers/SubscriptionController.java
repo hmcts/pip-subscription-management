@@ -190,4 +190,17 @@ public class SubscriptionController {
     public ResponseEntity<String> deleteAllSubscriptionsForUser(@Parameter @PathVariable String userId) {
         return ResponseEntity.ok(subscriptionService.deleteAllByUserId(userId));
     }
+
+    @ApiResponses({
+        @ApiResponse(responseCode = OK_ERROR_CODE, description =
+            "Subscriptions list for location id {locationId} found"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE),
+        @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description =
+            "No subscription found with the location id {locationId}")
+    })
+    @GetMapping("/location/{locationId}")
+    public ResponseEntity<List<Subscription>> findSubscriptionsByLocationId(
+                                                         @PathVariable String locationId) {
+        return ResponseEntity.ok(subscriptionService.findSubscriptionsByLocationId(locationId));
+    }
 }

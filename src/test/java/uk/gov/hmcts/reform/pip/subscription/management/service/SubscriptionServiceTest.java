@@ -76,6 +76,7 @@ class SubscriptionServiceTest {
     private static final String TEST_USER_EMAIL = "a@b.com";
     private static final String SUCCESS = "Success";
     private static final String TEST = "test";
+    private static final String LOCATION_ID = "1";
     public static final List<String> EXAMPLE_CSV_ALL = List.of(
         "a01d52c0-5c95-4f75-8994-a1c42cb45aaa,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,string",
         "370963e2-9d2f-423e-b6a1-3f1f8905cdf0,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1234",
@@ -722,6 +723,14 @@ class SubscriptionServiceTest {
         subscriptionService.deleteAllByUserId(testString);
         assertEquals(testString, captor.getValue(),
                      "The service layer failed to delete the correct user id subscriptions");
+    }
+
+    @Test
+    void testFindSubscriptionsByLocationIdReturnsExpected() {
+        when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
+            .thenReturn(mockSubscriptionList);
+        assertEquals(mockSubscriptionList, subscriptionService.findSubscriptionsByLocationId(LOCATION_ID),
+                     "The returned subscription list does not match the expected list");
     }
 }
 

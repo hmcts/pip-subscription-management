@@ -30,12 +30,14 @@ import static org.mockito.Mockito.when;
 class SubscriptionControllerTest {
 
     private Subscription mockSubscription;
+    private List<Subscription> mockSubscriptionList;
 
     private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
+    private static final String LOCATION_ID = "1";
 
     @Mock
     SubscriptionService subscriptionService;
@@ -193,5 +195,13 @@ class SubscriptionControllerTest {
             subscriptionController.deleteAllSubscriptionsForUser("test string").getBody(),
             "Subscription for user should be deleted"
         );
+    }
+
+    @Test
+    void testFindSubscriptionsByLocationIdReturnsOk() {
+        when(subscriptionService.findSubscriptionsByLocationId(LOCATION_ID))
+            .thenReturn(mockSubscriptionList);
+        assertEquals(HttpStatus.OK, subscriptionController.findSubscriptionsByLocationId(LOCATION_ID)
+                         .getStatusCode(), STATUS_CODE_MATCH);
     }
 }
