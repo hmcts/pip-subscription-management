@@ -112,6 +112,10 @@ class SubscriptionControllerTests {
     protected static final String SUBSCRIPTION_PATH = "/subscription";
     protected static final SubscriptionDto SUBSCRIPTION = new SubscriptionDto();
 
+    private static final String ACTIONING_USER_ID = "1234-1234";
+
+    private static final String USER_ID_HEADER = "x-user-id";
+
     @BeforeAll
     static void setup() throws IOException {
         OBJECT_MAPPER.findAndRegisterModules();
@@ -134,6 +138,7 @@ class SubscriptionControllerTests {
         SUBSCRIPTION.setCreatedDate(DATE_ADDED);
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
+            .header(USER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
     }
 
@@ -163,6 +168,7 @@ class SubscriptionControllerTests {
     protected MockHttpServletRequestBuilder setupRawJsonSubscription(String json) {
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(json)
+            .header(USER_ID_HEADER, ACTIONING_USER_ID)
             .contentType(MediaType.APPLICATION_JSON);
     }
 
@@ -360,7 +366,7 @@ class SubscriptionControllerTests {
         MvcResult deleteResponse = mvc.perform(delete(String.format(
             "/subscription/%s",
             returnedSubscription.getId()
-        ))).andExpect(status().isOk()).andReturn();
+        )).header(USER_ID_HEADER, ACTIONING_USER_ID)).andExpect(status().isOk()).andReturn();
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
         assertEquals(
             String.format("Subscription: %s was deleted", returnedSubscription.getId()),
@@ -373,7 +379,8 @@ class SubscriptionControllerTests {
     @Test
     void failedDelete() throws Exception {
         String randomUuid = UUID_STRING;
-        MvcResult response = mvc.perform(delete("/subscription/" + randomUuid))
+        MvcResult response = mvc.perform(delete("/subscription/" + randomUuid)
+                                             .header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
@@ -661,7 +668,7 @@ class SubscriptionControllerTests {
         MvcResult deleteResponse = mvc.perform(delete(String.format(
             "/subscription/user/%s",
             returnedSubscription.getUserId()
-        ))).andExpect(status().isOk()).andReturn();
+        )).header(USER_ID_HEADER, ACTIONING_USER_ID)).andExpect(status().isOk()).andReturn();
 
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
 

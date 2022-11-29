@@ -38,6 +38,7 @@ class SubscriptionControllerTest {
     private static final Channel EMAIL = Channel.EMAIL;
     private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
     private static final String LOCATION_ID = "1";
+    private static final String ACTIONING_USER_ID = "1234-1234";
 
     @Mock
     SubscriptionService subscriptionService;
@@ -57,7 +58,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testCreateSubscription() {
-        when(subscriptionService.createSubscription(mockSubscription))
+        when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
             .thenReturn(mockSubscription);
         assertEquals(
             new ResponseEntity<>(
@@ -66,7 +67,7 @@ class SubscriptionControllerTest {
                 ),
                 HttpStatus.CREATED
             ),
-            subscriptionController.createSubscription(mockSubscription.toDto()),
+            subscriptionController.createSubscription(mockSubscription.toDto(), ACTIONING_USER_ID),
             "Returned subscription does not match expected subscription"
         );
     }
@@ -74,17 +75,18 @@ class SubscriptionControllerTest {
     @Test
     void testDeleteSubscription() {
         UUID testUuid = UUID.randomUUID();
-        doNothing().when(subscriptionService).deleteById(testUuid);
-        assertEquals(String.format("Subscription: %s was deleted", testUuid),
-                     subscriptionController.deleteById(testUuid).getBody(), "Subscription should be deleted"
+        doNothing().when(subscriptionService).deleteById(testUuid, ACTIONING_USER_ID);
+        assertEquals(String.format(
+            "Subscription: %s was deleted", testUuid), subscriptionController.deleteById(
+                testUuid, ACTIONING_USER_ID).getBody(), "Subscription should be deleted"
         );
     }
 
     @Test
     void testDeleteSubscriptionReturnsOk() {
         UUID testUuid = UUID.randomUUID();
-        doNothing().when(subscriptionService).deleteById(testUuid);
-        assertEquals(HttpStatus.OK, subscriptionController.deleteById(testUuid).getStatusCode(),
+        doNothing().when(subscriptionService).deleteById(testUuid, ACTIONING_USER_ID);
+        assertEquals(HttpStatus.OK, subscriptionController.deleteById(testUuid, ACTIONING_USER_ID).getStatusCode(),
                      STATUS_CODE_MATCH
         );
     }

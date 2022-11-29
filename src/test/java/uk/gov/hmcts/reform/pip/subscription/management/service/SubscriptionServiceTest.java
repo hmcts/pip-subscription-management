@@ -22,6 +22,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.mana
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.ListTypeSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
@@ -77,6 +78,8 @@ class SubscriptionServiceTest {
     private static final String SUCCESS = "Success";
     private static final String TEST = "test";
     private static final String LOCATION_ID = "1";
+    private static final String ACTIONING_USER_ID = "1234-1234";
+
     public static final List<String> EXAMPLE_CSV_ALL = List.of(
         "a01d52c0-5c95-4f75-8994-a1c42cb45aaa,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,string",
         "370963e2-9d2f-423e-b6a1-3f1f8905cdf0,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1234",
@@ -181,7 +184,7 @@ class SubscriptionServiceTest {
     void testCreateSubscription() {
         mockSubscription.setSearchType(SearchType.CASE_ID);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
-        assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
+        assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
         );
     }
@@ -193,7 +196,7 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchType(SearchType.CASE_ID);
         when(subscriptionRepository.save(argumentCaptor.capture())).thenReturn(mockSubscription);
 
-        subscriptionService.createSubscription(mockSubscription);
+        subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID);
 
         Subscription subscription = argumentCaptor.getValue();
 
@@ -206,7 +209,7 @@ class SubscriptionServiceTest {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
-        assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
+        assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
         );
     }
@@ -217,7 +220,7 @@ class SubscriptionServiceTest {
         mockSubscription.setListType(null);
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
-        assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
+        assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
         );
     }
@@ -229,7 +232,7 @@ class SubscriptionServiceTest {
                                              ListType.CIVIL_AND_FAMILY_DAILY_CAUSE_LIST.toString()));
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
-        assertEquals(subscriptionService.createSubscription(mockSubscription), mockSubscription,
+        assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
         );
     }
@@ -243,7 +246,7 @@ class SubscriptionServiceTest {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
 
         Subscription returnedSubscription =
-            subscriptionService.createSubscription(mockSubscription);
+            subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID);
 
         verify(subscriptionRepository, times(1)).delete(mockSubscription);
         assertEquals(returnedSubscription, mockSubscription,
@@ -274,7 +277,7 @@ class SubscriptionServiceTest {
         ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
         doNothing().when(subscriptionRepository).deleteById(captor.capture());
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
-        subscriptionService.deleteById(testUuid);
+        subscriptionService.deleteById(testUuid, ACTIONING_USER_ID);
         assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
     }
 
@@ -282,7 +285,8 @@ class SubscriptionServiceTest {
     void testDeleteException() {
         UUID testUuid = UUID.randomUUID();
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.empty());
-        assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.deleteById(testUuid),
+        assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.deleteById(
+            testUuid, ACTIONING_USER_ID),
                      "SubscriptionNotFoundException not thrown when trying to delete a subscription"
                          + " that does not exist");
     }
@@ -432,6 +436,38 @@ class SubscriptionServiceTest {
         assertEquals(mockSubscription.getId(),
                      subscriptionService.findByUserId(USER_ID).getCaseSubscriptions().get(0).getSubscriptionId(),
                      "Should match subscriptionId");
+    }
+
+    @Test
+    void testFindByUserIdListTypeSubscriptions() {
+        mockSubscription.setSearchType(SearchType.LIST_TYPE);
+        mockSubscription.setSearchValue(ListType.CARE_STANDARDS_LIST.toString());
+
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        List<ListTypeSubscription> listTypeSubscriptions =
+            subscriptionService.findByUserId(USER_ID).getListTypeSubscriptions();
+
+
+        assertEquals(1, listTypeSubscriptions.size(), "Unexpected number of list type subscriptions returned");
+
+        assertEquals(mockSubscription.getId(), listTypeSubscriptions.get(0).getSubscriptionId(),
+                     "Returned list type subscription does not match ID");
+        assertEquals(mockSubscription.getSearchValue(), listTypeSubscriptions.get(0).getListType(),
+                     "Returned list type subscription does not match list type");
+        assertEquals(mockSubscription.getChannel(), listTypeSubscriptions.get(0).getChannel(),
+                     "Returned list type subscription does not match channel");
+        assertEquals(mockSubscription.getCreatedDate(), listTypeSubscriptions.get(0).getDateAdded(),
+                     "Returned list type subscription does not match created date");
+    }
+
+    @Test
+    void testFindByUserIdNoListTypeSubscriptions() {
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+
+        assertEquals(0, subscriptionService.findByUserId(USER_ID).getListTypeSubscriptions().size(),
+                     "Unexpected number of list type subscriptions returned");
     }
 
     @Test
