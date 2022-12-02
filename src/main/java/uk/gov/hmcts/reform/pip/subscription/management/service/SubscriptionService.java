@@ -12,15 +12,17 @@ public interface SubscriptionService {
     /**
      * Method to create a new subscription.
      * @param subscription The subscription to create.
+     * @param actioningUserId The ID of the user creating the subscription.
      * @return The created subscription.
      */
-    Subscription createSubscription(Subscription subscription);
+    Subscription createSubscription(Subscription subscription, String actioningUserId);
 
     /**
      * Delete subscription by id.
      * @param id The id of the subscription to delete.
+     * @param userId The id of the user deleting the subscription.
      */
-    void deleteById(UUID id);
+    void deleteById(UUID id, String actioningUserId);
 
     /**
      * Bulk delete subscriptions by IDs.

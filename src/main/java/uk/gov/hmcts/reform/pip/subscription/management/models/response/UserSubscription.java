@@ -12,13 +12,18 @@ import java.util.List;
 public class UserSubscription {
 
     /**
-     * Hearing object built from Data Management service containing case info on subscribed cases.
+     * Case subscription object built from Data Management service containing case info on subscribed cases.
      */
     private List<CaseSubscription> caseSubscriptions = new ArrayList<>();
 
     /**
-     * Court object built from Data Management service containing Court info on subscribed courts.
+     * Location subscription object built from Data Management service containing Court info on subscribed courts.
      */
     private List<LocationSubscription> locationSubscriptions = new ArrayList<>();
+
+    /**
+     * List Type subscription object built from Data Management service containing Court info on subscribed courts.
+     */
+    private List<ListTypeSubscription> listTypeSubscriptions = new ArrayList<>();
 
 }
