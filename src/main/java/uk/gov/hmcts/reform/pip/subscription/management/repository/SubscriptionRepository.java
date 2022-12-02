@@ -17,6 +17,7 @@ import java.util.UUID;
  * create the required functionality for us.
  */
 @Repository
+@SuppressWarnings("PMD.TooManyMethods")
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
 
     Optional<Subscription> findById(UUID id);
@@ -70,4 +71,9 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
                                                       @Param("list_type") String listType);
 
     void deleteAllByUserId(String userId);
+
+    @Modifying
+    @javax.transaction.Transactional
+    @Query(value = "REFRESH MATERIALIZED VIEW sdp_mat_view_subscription", nativeQuery = true)
+    void refreshSubscriptionView();
 }
