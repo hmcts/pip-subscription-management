@@ -77,4 +77,9 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         + "AND search_type = 'LOCATION_ID'",
         nativeQuery = true)
     List<Subscription> findSubscriptionsByLocationId(@Param("search_value") String searchValue);
+
+    @Modifying
+    @javax.transaction.Transactional
+    @Query(value = "REFRESH MATERIALIZED VIEW sdp_mat_view_subscription", nativeQuery = true)
+    void refreshSubscriptionView();
 }
