@@ -336,6 +336,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public List<Subscription> findSubscriptionsByLocationId(String value) {
+        List<Subscription> locationSubscriptions = repository.findSubscriptionsByLocationId(value);
+        if (locationSubscriptions.isEmpty()) {
+            throw new SubscriptionNotFoundException(String.format(
+                "No subscription found with the location id %s",
+                value
+            ));
+        }
         return repository.findSubscriptionsByLocationId(value);
     }
 }

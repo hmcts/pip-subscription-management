@@ -768,5 +768,14 @@ class SubscriptionServiceTest {
         assertEquals(mockSubscriptionList, subscriptionService.findSubscriptionsByLocationId(LOCATION_ID),
                      "The returned subscription list does not match the expected list");
     }
+
+    @Test
+    void testFindSubscriptionsByLocationIdException() {
+        when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID)).thenReturn(List.of());
+        assertThrows(SubscriptionNotFoundException.class, () ->
+                         subscriptionService.findSubscriptionsByLocationId(LOCATION_ID),
+                     "SubscriptionNotFoundException not thrown "
+                         + "when trying to find a subscription that does not exist");
+    }
 }
 

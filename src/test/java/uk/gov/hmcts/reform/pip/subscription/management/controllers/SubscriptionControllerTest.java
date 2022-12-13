@@ -200,6 +200,14 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    void testFindSubscriptionsByLocationId() {
+        when(subscriptionService.findSubscriptionsByLocationId(LOCATION_ID))
+            .thenReturn(mockSubscriptionList);
+        assertEquals(mockSubscriptionList, subscriptionController.findSubscriptionsByLocationId(LOCATION_ID).getBody(),
+                     "The found subscription does not match expected subscription");
+    }
+
+    @Test
     void testFindSubscriptionsByLocationIdReturnsOk() {
         when(subscriptionService.findSubscriptionsByLocationId(LOCATION_ID))
             .thenReturn(mockSubscriptionList);
