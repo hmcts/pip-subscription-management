@@ -20,9 +20,10 @@ group = 'uk.gov.hmcts.reform.pip'
 mainClassName = 'uk.gov.hmcts.reform.pip.subscription.management.Application'
 version = '0.0.1'
 
-allprojects {
-  sourceCompatibility = '11'
-  targetCompatibility = '11'
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
 }
 
 sourceSets {
@@ -56,6 +57,11 @@ sourceSets {
 
 tasks.withType(JavaCompile) {
   options.compilerArgs << "-Xlint:unchecked" << "-Werror"
+}
+
+// https://github.com/gradle/gradle/issues/16791
+tasks.withType(JavaExec).configureEach {
+  javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
 }
 
 tasks.withType(Test) {
@@ -122,7 +128,7 @@ pmd {
 }
 
 jacoco {
-  toolVersion = "0.8.6"
+  toolVersion = "0.8.8"
 }
 
 jacocoTestReport {
