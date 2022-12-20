@@ -101,6 +101,7 @@ class SubscriptionControllerTests {
     private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
+    private static final String GET_SUBSCRIPTIONS_BY_LOCATION_ID = "/subscription/location/";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
     private static final String UPDATED_LIST_TYPE = "[\"CIVIL_DAILY_CAUSE_LIST\"]";
 
@@ -152,7 +153,7 @@ class SubscriptionControllerTests {
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
-                                                               SearchType searchType, String userId, ListType listType)
+                                         SearchType searchType, String userId, ListType listType)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
@@ -693,6 +694,52 @@ class SubscriptionControllerTests {
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
             .andExpect(status().isOk()).andReturn();
         assertThat(response.getResponse().getContentAsString()).contains(VALID_USER_ID);
+    }
+
+    @Test
+    void testFindSubscriptionsByLocationId() throws Exception {
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
+
+        MvcResult response = mvc.perform(get(GET_SUBSCRIPTIONS_BY_LOCATION_ID + LOCATION_ID))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        List<Subscription> userSubscriptions =
+            Arrays.asList(OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), Subscription[].class));
+
+        assertEquals(1, userSubscriptions.size(),
+                     "Subscriptions list for location id " + LOCATION_ID + " not found"
+        );
+        assertEquals(LOCATION_ID, userSubscriptions.get(0).getSearchValue(),
+                     "Subscriptions list for location id " + LOCATION_ID + " not found"
+        );
+    }
+
+    @Test
+    void testFindSubscriptionsByLocationIdNotFound() throws Exception {
+
+        MvcResult response = mvc.perform(get(GET_SUBSCRIPTIONS_BY_LOCATION_ID + LOCATION_ID))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), response.getResponse().getStatus(),
+                     "Subscriptions list for location id should not be found"
+        );
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
+    void testFindSubscriptionsByLocationIdUnauthorized() throws Exception {
+
+        MvcResult response = mvc.perform(get(GET_SUBSCRIPTIONS_BY_LOCATION_ID + LOCATION_ID))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), response.getResponse().getStatus(),
+                     "Subscriptions list for location id should not be found"
+        );
     }
 }
 
