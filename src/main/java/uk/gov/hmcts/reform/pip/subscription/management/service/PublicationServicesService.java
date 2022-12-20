@@ -91,17 +91,11 @@ public class PublicationServicesService {
 
         listOfSubscriptions.forEach(subscription -> {
             switch (subscription.getSearchType()) {
-                case CASE_URN:
-                    subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
-                    break;
-                case CASE_ID:
-                    subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
-                    break;
-                case LOCATION_ID:
-                    subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
-                    break;
-                default:
-                    break;
+                case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
+                case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
+                case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
+                default -> log.error(String.format("Search type was not one of allowed options: %s",
+                                                   subscription.getSearchType()));
             }
         });
 

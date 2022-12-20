@@ -20,7 +20,7 @@ public interface SubscriptionService {
     /**
      * Delete subscription by id.
      * @param id The id of the subscription to delete.
-     * @param userId The id of the user deleting the subscription.
+     * @param actioningUserId The id of the user deleting the subscription.
      */
     void deleteById(UUID id, String actioningUserId);
 
