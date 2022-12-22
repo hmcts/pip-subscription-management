@@ -333,4 +333,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         repository.deleteAllByUserId(userId);
         return String.format("All subscriptions deleted for user id %s", userId);
     }
+
+    @Override
+    public List<Subscription> findSubscriptionsByLocationId(String value) {
+        List<Subscription> locationSubscriptions = repository.findSubscriptionsByLocationId(value);
+        if (locationSubscriptions.isEmpty()) {
+            throw new SubscriptionNotFoundException(String.format(
+                "No subscription found with the location id %s",
+                value
+            ));
+        }
+        return repository.findSubscriptionsByLocationId(value);
+    }
 }
