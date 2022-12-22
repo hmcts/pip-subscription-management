@@ -439,7 +439,8 @@ class SubscriptionControllerTests {
 
         LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
         assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
-        assertEquals(DATE_ADDED, location.getDateAdded(), VALIDATION_DATE_ADDED);
+        assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
+                     VALIDATION_DATE_ADDED);
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
@@ -470,7 +471,8 @@ class SubscriptionControllerTests {
 
         LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
         assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
-        assertEquals(DATE_ADDED, location.getDateAdded(), VALIDATION_DATE_ADDED);
+        assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
+                     VALIDATION_DATE_ADDED);
     }
 
     @Test
