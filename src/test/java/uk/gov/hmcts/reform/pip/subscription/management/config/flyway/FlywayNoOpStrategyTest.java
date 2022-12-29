@@ -4,14 +4,15 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationInfoService;
 import org.flywaydb.core.api.MigrationState;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.PendingMigrationScriptException;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,8 +49,12 @@ class FlywayNoOpStrategyTest {
         when(migrationInfoService.all()).thenReturn(migrationInfos);
         when(migrationInfo.getState()).thenReturn(MigrationState.PENDING);
 
-        assertThrows(PendingMigrationScriptException.class, () -> {
-            new FlywayNoOpStrategy().migrate(flyway);
-        }, "No exception thrown for pending flyway");
+        FlywayNoOpStrategy flywayNoOpStrategy = new FlywayNoOpStrategy();
+        try {
+            flywayNoOpStrategy.migrate(flyway);
+            Assert.fail("No exception thrown for pending flyway");
+        } catch (PendingMigrationScriptException e) {
+            assertNotNull(e.getMessage(), "Exception is not empty");
+        }
     }
 }
