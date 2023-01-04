@@ -61,7 +61,8 @@ public class SubscriptionController {
         Subscription subscription = subscriptionService.createSubscription(sub.toEntity(), actioningUserId);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user %s",
-                                subscription.getId(), subscription.getUserId()));
+                                subscription.getId(), subscription.getUserId()
+            ));
     }
 
     @ApiResponses({
@@ -92,8 +93,10 @@ public class SubscriptionController {
     public ResponseEntity<String> bulkDeleteSubscriptions(@RequestBody List<UUID> subIds) {
 
         subscriptionService.bulkDeleteSubscriptions(subIds);
-        return ResponseEntity.ok(String.format("Subscription(s) with ID %s deleted",
-                                               subIds.toString().replaceAll("\\[|\\]", "")));
+        return ResponseEntity.ok(String.format(
+            "Subscription(s) with ID %s deleted",
+            subIds.toString().replaceAll("\\[|\\]", "")
+        ));
     }
 
 
@@ -123,6 +126,7 @@ public class SubscriptionController {
 
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "Subscriber request has been accepted"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     })
     @Operation(summary = "Takes in artefact to build subscriber list.")
     @PostMapping("/artefact-recipients")
@@ -133,6 +137,7 @@ public class SubscriptionController {
 
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "Third Parties list deletion accepted"),
+        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     })
     @Operation(summary = "Takes in a deleted artefact to notify subscribed third parties")
     @PostMapping("/deleted-artefact")
@@ -151,11 +156,13 @@ public class SubscriptionController {
         @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     })
     public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
-                                                    @RequestBody List<String> listType) {
+                                                                    @RequestBody List<String> listType) {
         subscriptionService.configureListTypesForSubscription(userId, listType);
         return ResponseEntity.status(HttpStatus.OK)
-            .body(String.format("Location list Type successfully updated for user %s",
-                                userId));
+            .body(String.format(
+                "Location list Type successfully updated for user %s",
+                userId
+            ));
     }
 
     @ApiResponses({
@@ -203,7 +210,7 @@ public class SubscriptionController {
     })
     @GetMapping("/location/{locationId}")
     public ResponseEntity<List<Subscription>> findSubscriptionsByLocationId(
-                                                         @PathVariable String locationId) {
+        @PathVariable String locationId) {
         return ResponseEntity.ok(subscriptionService.findSubscriptionsByLocationId(locationId));
     }
 }
