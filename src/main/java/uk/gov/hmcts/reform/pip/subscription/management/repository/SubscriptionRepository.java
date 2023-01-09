@@ -17,7 +17,7 @@ import java.util.UUID;
  * create the required functionality for us.
  */
 @Repository
-@SuppressWarnings("PMD.TooManyMethods")
+@SuppressWarnings({"PMD.TooManyMethods"})
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
 
     Optional<Subscription> findById(UUID id);
@@ -71,6 +71,12 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
                                                       @Param("list_type") String listType);
 
     void deleteAllByUserId(String userId);
+
+    @Query(value = "SELECT * FROM Subscription "
+        + "WHERE search_value = :search_value "
+        + "AND search_type = 'LOCATION_ID'",
+        nativeQuery = true)
+    List<Subscription> findSubscriptionsByLocationId(@Param("search_value") String searchValue);
 
     @Modifying
     @javax.transaction.Transactional

@@ -77,18 +77,12 @@ class PublicationServicesServiceTest {
     @EnumSource(value = SearchType.class, names = {"LOCATION_ID", "CASE_URN", "CASE_ID"})
     void testPostSubscriptionSummaries(SearchType searchType) {
         switch (searchType) {
-            case LOCATION_ID:
-                subscriptionsSummaryDetails.addToLocationId(TEST_ID);
-                break;
-            case CASE_URN:
-                subscriptionsSummaryDetails.addToCaseUrn(TEST_ID);
-                break;
-            case CASE_ID:
-                subscriptionsSummaryDetails.addToCaseNumber(TEST_ID);
-                break;
-            default:
-                break;
+            case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(TEST_ID);
+            case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(TEST_ID);
+            case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(TEST_ID);
+            default -> { }
         }
+
         subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
 
         subscription.setSearchType(searchType);

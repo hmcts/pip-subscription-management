@@ -7,6 +7,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubsc
 import java.util.List;
 import java.util.UUID;
 
+@SuppressWarnings({"PMD.TooManyMethods"})
 public interface SubscriptionService {
 
     /**
@@ -20,7 +21,7 @@ public interface SubscriptionService {
     /**
      * Delete subscription by id.
      * @param id The id of the subscription to delete.
-     * @param userId The id of the user deleting the subscription.
+     * @param actioningUserId The id of the user deleting the subscription.
      */
     void deleteById(UUID id, String actioningUserId);
 
@@ -69,4 +70,6 @@ public interface SubscriptionService {
      * @return A confirmation message.
      */
     String deleteAllByUserId(String userId);
+
+    List<Subscription> findSubscriptionsByLocationId(String value);
 }
