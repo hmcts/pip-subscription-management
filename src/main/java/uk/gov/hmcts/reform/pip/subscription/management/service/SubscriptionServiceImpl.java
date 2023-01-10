@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
@@ -99,10 +98,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         if (ids.size() > subscriptions.size()) {
             List<UUID> missingIds = new ArrayList<>(ids);
             missingIds.removeAll(subscriptions.stream()
-                                     .map(s -> s.getId())
-                                     .collect(Collectors.toList()));
+                                     .map(Subscription::getId)
+                                     .toList());
             throw new SubscriptionNotFoundException("No subscription found with the subscription ID(s): "
-                    + missingIds.toString().replaceAll("\\[|\\]", ""));
+                    + missingIds.toString().replace("[", "").replace("]", ""));
         }
 
         repository.deleteByIdIn(ids);
@@ -195,7 +194,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         List<Subscription> filteredList = new ArrayList<>();
         subscriptions.forEach(subscription -> {
             if (accountManagementService.isUserAuthorised(subscription.getUserId(),
-                                                          artefact.getListType(), artefact.getSensitivity())) {
+                                                          artefact.getListType(), artefact.getSensitivity())
+                                                            .equals(Boolean.TRUE)) {
                 filteredList.add(subscription);
             }
         });
