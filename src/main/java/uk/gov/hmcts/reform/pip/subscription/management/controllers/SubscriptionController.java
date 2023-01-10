@@ -23,7 +23,9 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
+import uk.gov.hmcts.reform.pip.subscription.management.service.UserSubscriptionService;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +45,12 @@ public class SubscriptionController {
 
     @Autowired
     SubscriptionService subscriptionService;
+
+    @Autowired
+    UserSubscriptionService userSubscriptionService;
+
+    @Autowired
+    SubscriptionNotificationService subscriptionNotificationService;
 
     @PostMapping(consumes = "application/json")
     @Operation(summary = "Endpoint to create a new unique subscription "
@@ -108,14 +116,14 @@ public class SubscriptionController {
     @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
     @GetMapping("/user/{userId}")
     public ResponseEntity<UserSubscription> findByUserId(@Parameter @PathVariable String userId) {
-        return ResponseEntity.ok(subscriptionService.findByUserId(userId));
+        return ResponseEntity.ok(userSubscriptionService.findByUserId(userId));
     }
 
     @ApiResponse(responseCode = "202", description = "Subscriber request has been accepted")
     @Operation(summary = "Takes in artefact to build subscriber list.")
     @PostMapping("/artefact-recipients")
     public ResponseEntity<String> buildSubscriberList(@RequestBody Artefact artefact) {
-        subscriptionService.collectSubscribers(artefact);
+        subscriptionNotificationService.collectSubscribers(artefact);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body("Subscriber request has been accepted");
     }
 
@@ -123,7 +131,7 @@ public class SubscriptionController {
     @Operation(summary = "Takes in a deleted artefact to notify subscribed third parties")
     @PostMapping("/deleted-artefact")
     public ResponseEntity<String> buildDeletedArtefactSubscribers(@RequestBody Artefact artefact) {
-        subscriptionService.collectThirdPartyForDeletion(artefact);
+        subscriptionNotificationService.collectThirdPartyForDeletion(artefact);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(
             "Deleted artefact third party subscriber notification request has been accepted");
     }
@@ -169,7 +177,7 @@ public class SubscriptionController {
     @Transactional
     @DeleteMapping("/user/{userId}")
     public ResponseEntity<String> deleteAllSubscriptionsForUser(@Parameter @PathVariable String userId) {
-        return ResponseEntity.ok(subscriptionService.deleteAllByUserId(userId));
+        return ResponseEntity.ok(userSubscriptionService.deleteAllByUserId(userId));
     }
 
     @ApiResponse(responseCode = OK_ERROR_CODE, description =

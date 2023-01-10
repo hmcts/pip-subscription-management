@@ -1,13 +1,10 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
-import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 
 import java.util.List;
 import java.util.UUID;
 
-@SuppressWarnings({"PMD.TooManyMethods"})
 public interface SubscriptionService {
 
     /**
@@ -44,16 +41,6 @@ public interface SubscriptionService {
      */
     Subscription findById(UUID subscriptionId);
 
-    /**
-     * Find all subscriptions for a given user.
-     * @return The list of subscriptions that have been found.
-     */
-    UserSubscription findByUserId(String userId);
-
-    void collectSubscribers(Artefact artefact);
-
-    void collectThirdPartyForDeletion(Artefact artefact);
-
     String getAllSubscriptionsDataForMiReporting();
 
     String getLocalSubscriptionsDataForMiReporting();
@@ -63,13 +50,6 @@ public interface SubscriptionService {
      * @param userId and ListType to update.
      */
     void configureListTypesForSubscription(String userId, List<String> listType);
-
-    /**
-     * Delete all subscriptions by the user id.
-     * @param userId The user id to delete the subscriptions from.
-     * @return A confirmation message.
-     */
-    String deleteAllByUserId(String userId);
 
     List<Subscription> findSubscriptionsByLocationId(String value);
 }
