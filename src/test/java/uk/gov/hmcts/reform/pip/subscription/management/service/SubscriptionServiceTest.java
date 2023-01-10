@@ -258,7 +258,7 @@ class SubscriptionServiceTest {
         doNothing().when(subscriptionRepository).updateLocationSubscriptions(any(), any());
         subscriptionService.configureListTypesForSubscription(USER_ID, List.of(ListType.CIVIL_DAILY_CAUSE_LIST.name()));
 
-        assertEquals(mockSubscription.getUserId(), USER_ID,
+        assertEquals(USER_ID, mockSubscription.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR);
     }
 
@@ -267,7 +267,7 @@ class SubscriptionServiceTest {
         doNothing().when(subscriptionRepository).updateLocationSubscriptions(USER_ID, "");
         subscriptionService.configureListTypesForSubscription(USER_ID, null);
 
-        assertEquals(mockSubscription.getUserId(), USER_ID,
+        assertEquals(USER_ID, mockSubscription.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR);
     }
 
@@ -720,9 +720,8 @@ class SubscriptionServiceTest {
         long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
         assertThat(testString)
             .as("Header row missing")
-            .contains("user_id");
-        assertThat(testString)
             .as("Json parsing has probably failed")
+            .contains("user_id")
             .contains("Oxford")
             .hasLineCount(4);
         assertThat(splitLineString)
@@ -740,11 +739,11 @@ class SubscriptionServiceTest {
         long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
         assertThat(testString)
             .as("Json parsing has probably failed")
-            .contains("CASE_ID")
-            .hasLineCount(4);
-        assertThat(testString)
             .as("Header row missing")
-            .contains("user_id");
+            .contains("CASE_ID")
+            .contains("user_id")
+            .hasLineCount(4);
+
         assertThat(splitLineString)
             .as("Wrong comma count compared to header row!")
             .allSatisfy(

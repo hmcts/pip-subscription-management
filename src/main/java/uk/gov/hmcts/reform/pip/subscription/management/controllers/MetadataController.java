@@ -2,7 +2,6 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -34,10 +33,8 @@ public class MetadataController {
 
     @GetMapping("/channels")
     @Operation(summary = "Endpoint to retrieve the available channels as a list")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "List of channels returned in JSON array format"),
-        @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    })
+    @ApiResponse(responseCode = "200", description = "List of channels returned in JSON array format")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     public ResponseEntity<List<Channel>> retrieveChannels() {
         return ResponseEntity.ok(metadataService.retrieveChannels());
     }

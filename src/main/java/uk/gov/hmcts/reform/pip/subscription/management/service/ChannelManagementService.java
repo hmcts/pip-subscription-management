@@ -21,8 +21,8 @@ import static org.springframework.security.oauth2.client.web.reactive.function.c
 @Component
 public class ChannelManagementService {
 
-    private static final String EMAIL_PATH = "/channel/emails";
-    private static final String API_PATH = "/channel/api";
+    private static final String EMAIL_PATH = "channel/emails";
+    private static final String API_PATH = "channel/api";
 
     @Autowired
     private WebClient webClient;
@@ -32,7 +32,7 @@ public class ChannelManagementService {
 
     public Map<String, List<Subscription>> getMappedEmails(List<Subscription> listOfSubs) {
         try {
-            return webClient.post().uri(url + EMAIL_PATH)
+            return webClient.post().uri(url + "/" + EMAIL_PATH)
                 .attributes(clientRegistrationId("channelManagementApi"))
                 .body(BodyInserters.fromValue(listOfSubs))
                 .retrieve()
@@ -46,7 +46,7 @@ public class ChannelManagementService {
 
     public Map<String, List<Subscription>> getMappedApis(List<Subscription> subscriptions) {
         try {
-            return webClient.post().uri(url + API_PATH)
+            return webClient.post().uri(url + "/" + API_PATH)
                 .attributes(clientRegistrationId("channelManagementApi"))
                 .bodyValue(subscriptions)
                 .retrieve()
