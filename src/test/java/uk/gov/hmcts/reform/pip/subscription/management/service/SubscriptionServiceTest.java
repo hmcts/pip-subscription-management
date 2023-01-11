@@ -74,7 +74,7 @@ class SubscriptionServiceTest {
     SubscriptionRepository subscriptionRepository;
 
     @InjectMocks
-    SubscriptionServiceImpl subscriptionService;
+    SubscriptionService subscriptionService;
 
     @BeforeEach
     void setup() {
