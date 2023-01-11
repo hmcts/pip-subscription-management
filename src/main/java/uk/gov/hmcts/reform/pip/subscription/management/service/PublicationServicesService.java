@@ -22,8 +22,10 @@ import static org.springframework.security.oauth2.client.web.reactive.function.c
 @Slf4j
 @Component
 public class PublicationServicesService {
-    private static final String NOTIFY_SUBSCRIPTION_PATH = "/notify/subscription";
-    private static final String NOTIFY_API_PATH = "/notify/api";
+    private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
+    private static final String NOTIFY_API_PATH = "notify/api";
+    private static final String PUBLICATION_SERVICE_API = "publicationServicesApi";
+    private static final String REQUEST_FAILED = "Request failed";
 
     @Autowired
     private WebClient webClient;
@@ -34,8 +36,8 @@ public class PublicationServicesService {
     public String postSubscriptionSummaries(UUID artefactId, String email, List<Subscription> listOfSubscriptions) {
         SubscriptionsSummary payload = formatSubscriptionsSummary(artefactId, email, listOfSubscriptions);
         try {
-            webClient.post().uri(url + NOTIFY_SUBSCRIPTION_PATH)
-                .attributes(clientRegistrationId("publicationServicesApi"))
+            webClient.post().uri(url + "/" + NOTIFY_SUBSCRIPTION_PATH)
+                .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
                 .body(BodyInserters.fromValue(payload)).retrieve()
                 .bodyToMono(Void.class).block();
             return payload.toString();
@@ -43,36 +45,36 @@ public class PublicationServicesService {
         } catch (WebClientException ex) {
             log.error(String.format("Request failed with error message: %s", ex.getMessage()));
         }
-        return "Request failed";
+        return REQUEST_FAILED;
     }
 
     public String sendThirdPartyList(ThirdPartySubscription subscriptions) {
         try {
-            webClient.post().uri(url + NOTIFY_API_PATH)
-                .attributes(clientRegistrationId("publicationServicesApi"))
+            webClient.post().uri(url + "/" + NOTIFY_API_PATH)
+                .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
                 .bodyValue(subscriptions).retrieve()
                 .bodyToMono(Void.class).block();
             return "Successfully sent";
         } catch (WebClientResponseException ex) {
-            log.error("Request to Publication Services {} failed due to: {}", NOTIFY_API_PATH,
+            log.error("Request to Publication Services {} failed due to: {}", "/" + NOTIFY_API_PATH,
                       ex.getResponseBodyAsString()
             );
-            return "Request failed";
+            return REQUEST_FAILED;
         }
     }
 
     public String sendEmptyArtefact(ThirdPartySubscriptionArtefact subscriptionArtefact) {
         try {
-            webClient.put().uri(url + NOTIFY_API_PATH)
-                .attributes(clientRegistrationId("publicationServicesApi"))
+            webClient.put().uri(url + "/" + NOTIFY_API_PATH)
+                .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
                 .bodyValue(subscriptionArtefact).retrieve()
                 .bodyToMono(Void.class).block();
             return "Successfully sent";
         } catch (WebClientResponseException ex) {
-            log.error("Request to Publication Services {} failed due to: {}", NOTIFY_API_PATH,
+            log.error("Request to Publication Services {} failed due to: {}", "/" + NOTIFY_API_PATH,
                       ex.getResponseBodyAsString()
             );
-            return "Request failed";
+            return REQUEST_FAILED;
         }
     }
 
