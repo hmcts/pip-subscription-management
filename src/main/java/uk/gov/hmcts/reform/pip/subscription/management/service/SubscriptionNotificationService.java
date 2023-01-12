@@ -27,6 +27,9 @@ import static uk.gov.hmcts.reform.pip.subscription.management.models.external.da
 @Service
 @Slf4j
 public class SubscriptionNotificationService {
+    private static final String CASE_NUMBER_KEY = "caseNumber";
+    private static final String CASE_URN_KEY = "caseUrn";
+
     @Autowired
     SubscriptionRepository repository;
 
@@ -103,15 +106,15 @@ public class SubscriptionNotificationService {
         List<Subscription> subscriptionList = new ArrayList<>();
         Map<String, Object> caseMap = (LinkedHashMap) caseObject;
 
-        if (caseMap.containsKey("caseNumber")) {
-            subscriptionList.addAll(querySubscriptionValue(CASE_ID.name(), caseMap.get("caseNumber").toString()));
+        if (caseMap.containsKey(CASE_NUMBER_KEY)) {
+            subscriptionList.addAll(querySubscriptionValue(CASE_ID.name(), caseMap.get(CASE_NUMBER_KEY).toString()));
         }
 
-        if (caseMap.containsKey("caseUrn")) {
-            subscriptionList.addAll(querySubscriptionValue(CASE_URN.name(), caseMap.get("caseUrn").toString()));
+        if (caseMap.containsKey(CASE_URN_KEY)) {
+            subscriptionList.addAll(querySubscriptionValue(CASE_URN.name(), caseMap.get(CASE_URN_KEY).toString()));
         }
 
-        if (!caseMap.containsKey("caseNumber") || !caseMap.containsKey("caseUrn")) {
+        if (!caseMap.containsKey(CASE_NUMBER_KEY) || !caseMap.containsKey(CASE_URN_KEY)) {
             log.warn(writeLog(String.format("No value found in %s for case number or urn", caseObject)));
         }
         return subscriptionList;

@@ -69,7 +69,8 @@ public class UserSubscriptionService {
                     caseSubscription.setDateAdded(subscription.getCreatedDate());
                     userSubscription.getCaseSubscriptions().add(caseSubscription);
                 }
-                default -> { }
+                default -> { // No default case
+                }
             }
         });
         return userSubscription;
