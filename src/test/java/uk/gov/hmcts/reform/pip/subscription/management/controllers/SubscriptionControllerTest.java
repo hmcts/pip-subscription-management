@@ -14,7 +14,9 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
+import uk.gov.hmcts.reform.pip.subscription.management.service.UserSubscriptionService;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -42,6 +44,12 @@ class SubscriptionControllerTest {
 
     @Mock
     SubscriptionService subscriptionService;
+
+    @Mock
+    UserSubscriptionService userSubscriptionService;
+
+    @Mock
+    SubscriptionNotificationService subscriptionNotificationService;
 
     @InjectMocks
     SubscriptionController subscriptionController;
@@ -128,7 +136,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testFindByUserId() {
-        when(subscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
+        when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
         assertEquals(userSubscription, subscriptionController.findByUserId(USER_ID).getBody(),
                      "Should return users subscriptions"
         );
@@ -136,7 +144,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testFindByUserIdReturnsOk() {
-        when(subscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
+        when(userSubscriptionService.findByUserId(USER_ID)).thenReturn(userSubscription);
         assertEquals(HttpStatus.OK, subscriptionController.findByUserId(USER_ID).getStatusCode(),
                      STATUS_CODE_MATCH
         );
@@ -144,7 +152,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testArtefactRecipientsReturnsAccepted() {
-        doNothing().when(subscriptionService).collectSubscribers(any());
+        doNothing().when(subscriptionNotificationService).collectSubscribers(any());
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildSubscriberList(new Artefact()).getStatusCode(),
                      STATUS_CODE_MATCH
         );
@@ -152,7 +160,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testBuildDeletedArtefactSubscribers() {
-        doNothing().when(subscriptionService).collectThirdPartyForDeletion(any());
+        doNothing().when(subscriptionNotificationService).collectThirdPartyForDeletion(any());
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildDeletedArtefactSubscribers(new Artefact())
             .getStatusCode(), STATUS_CODE_MATCH);
     }
@@ -190,7 +198,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testDeleteSubscriptionsByUserId() {
-        when(subscriptionService.deleteAllByUserId("test string")).thenReturn(
+        when(userSubscriptionService.deleteAllByUserId("test string")).thenReturn(
             "All subscriptions deleted for user id");
         assertEquals(
             "All subscriptions deleted for user id",

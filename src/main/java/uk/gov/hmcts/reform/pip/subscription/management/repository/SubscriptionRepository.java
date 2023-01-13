@@ -26,9 +26,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     List<Subscription> findByUserId(String userId);
 
-    @Override
-    List<Subscription> findAll();
-
     void deleteById(UUID id);
 
     void deleteByIdIn(List<UUID> id);
@@ -67,8 +64,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         + "AND (ARRAY_LENGTH(list_type, 1) IS NULL OR (list_type && string_to_array(:list_type, ',')))",
         nativeQuery = true)
     List<Subscription> findSubscriptionsByLocationSearchValue(@Param("search_type") String searchType,
-                                                      @Param("search_value") String searchValue,
-                                                      @Param("list_type") String listType);
+                                                              @Param("search_value") String searchValue,
+                                                              @Param("list_type") String listType);
 
     void deleteAllByUserId(String userId);
 
