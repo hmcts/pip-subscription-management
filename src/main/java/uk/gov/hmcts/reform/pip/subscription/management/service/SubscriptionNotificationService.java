@@ -106,11 +106,11 @@ public class SubscriptionNotificationService {
         List<Subscription> subscriptionList = new ArrayList<>();
         Map<String, Object> caseMap = (LinkedHashMap) caseObject;
 
-        if (caseMap.containsKey(CASE_NUMBER_KEY)) {
+        if (caseMap.containsKey(CASE_NUMBER_KEY) && caseMap.get(CASE_NUMBER_KEY) != null) {
             subscriptionList.addAll(querySubscriptionValue(CASE_ID.name(), caseMap.get(CASE_NUMBER_KEY).toString()));
         }
 
-        if (caseMap.containsKey(CASE_URN_KEY)) {
+        if (caseMap.containsKey(CASE_URN_KEY) && caseMap.get(CASE_URN_KEY) != null) {
             subscriptionList.addAll(querySubscriptionValue(CASE_URN.name(), caseMap.get(CASE_URN_KEY).toString()));
         }
 
