@@ -83,6 +83,7 @@ class SubscriptionControllerTests {
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String RESPONSE_MATCH = "Response should match";
+    private static final String SUBSCRIBER_REQUEST_SUCCESS = "Subscriber request has been accepted";
 
     private static final String RAW_JSON_MISSING_SEARCH_VALUE =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"channel\": \"EMAIL\"}";
@@ -150,6 +151,18 @@ class SubscriptionControllerTests {
         SUBSCRIPTION.setUserId(userId);
         SUBSCRIPTION.setSearchType(searchType);
         return setupMockSubscription(searchValue);
+    }
+
+    protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue, SearchType searchType,
+                                                                  String userId, String caseNumber, String caseUrn)
+        throws JsonProcessingException {
+
+        SUBSCRIPTION.setUserId(userId);
+        SUBSCRIPTION.setSearchType(searchType);
+        SUBSCRIPTION.setCaseNumber(caseNumber);
+        SUBSCRIPTION.setUrn(caseUrn);
+        return setupMockSubscription(searchValue);
+
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
@@ -547,7 +560,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testBuildSubscribersListReturnsAccepted() throws Exception {
+    void testBuildSubscriberListReturnsAccepted() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
@@ -555,7 +568,35 @@ class SubscriptionControllerTests {
             .content(rawArtefact);
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
-        assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
+        assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(),
+                     RESPONSE_MATCH
+        );
+    }
+
+    @Test
+    void testBuildSubscriberListCaseUrnNull() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID, CASE_ID,null));
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ARTEFACT_RECIPIENT_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(rawArtefact);
+        MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
+
+        assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(),
+                     RESPONSE_MATCH
+        );
+    }
+
+    @Test
+    void testBuildSubscriberListCaseNumberNull() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID, null,CASE_URN));
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ARTEFACT_RECIPIENT_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(rawArtefact);
+        MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
+
+        assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(),
                      RESPONSE_MATCH
         );
     }
@@ -571,7 +612,7 @@ class SubscriptionControllerTests {
             .content(rawArtefact);
         MvcResult result = mvc.perform(request).andExpect(status().isAccepted()).andReturn();
 
-        assertEquals("Subscriber request has been accepted", result.getResponse().getContentAsString(),
+        assertEquals(SUBSCRIBER_REQUEST_SUCCESS, result.getResponse().getContentAsString(),
                      RESPONSE_MATCH
         );
     }
