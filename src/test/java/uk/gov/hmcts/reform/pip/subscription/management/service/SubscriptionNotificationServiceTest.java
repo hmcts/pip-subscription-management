@@ -194,6 +194,72 @@ class SubscriptionNotificationServiceTest {
     }
 
     @Test
+    void testCollectSubscribersCaseUrnNull() {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        map.put(CASE_URN_KEY, null);
+        cases.add(map);
+        searchTerms.put("cases", cases);
+        publicArtefactMatches.setSearch(searchTerms);
+        mockSubscription.setSearchType(SearchType.CASE_URN);
+        mockSubscription.setSearchValue(CASE_URN_KEY);
+
+        mockSubscriptionsSummaryDetails.addToCaseUrn(CASE_URN_KEY);
+        mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
+
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST))
+            .thenReturn(List.of(mockSubscription));
+
+        returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
+
+        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                  TEST_USER_EMAIL,
+                                                                  List.of(mockSubscription))).thenReturn(SUCCESS);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
+            subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
+
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
+        }
+    }
+
+    @Test
+    void testCollectSubscribersCaseNumberNull() {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        map.put(CASE_NUMBER_KEY, null);
+        cases.add(map);
+        searchTerms.put("cases", cases);
+        publicArtefactMatches.setSearch(searchTerms);
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setSearchValue(CASE_NUMBER_KEY);
+
+        mockSubscriptionsSummaryDetails.addToCaseNumber(CASE_NUMBER_KEY);
+        mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
+
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST))
+            .thenReturn(List.of(mockSubscription));
+
+        returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
+
+        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+
+        when(publicationServicesService.postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
+                                                                  TEST_USER_EMAIL,
+                                                                  List.of(mockSubscription))).thenReturn(SUCCESS);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
+            subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
+
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG),
+                       LOG_MESSAGE_MATCH);
+        }
+    }
+
+    @Test
     void testCollectSubscribersCaseId() {
         mockSubscription.setSearchType(SearchType.CASE_ID);
         mockSubscription.setSearchValue(CASE_ID);
