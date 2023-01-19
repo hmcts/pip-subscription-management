@@ -105,6 +105,8 @@ class SubscriptionControllerTests {
     private static final String GET_SUBSCRIPTIONS_BY_LOCATION_ID = "/subscription/location/";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
     private static final String UPDATED_LIST_TYPE = "[\"CIVIL_DAILY_CAUSE_LIST\"]";
+    private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
+    private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
     private static String rawArtefact;
 
@@ -166,7 +168,7 @@ class SubscriptionControllerTests {
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
-                                         SearchType searchType, String userId, ListType listType)
+                                                      SearchType searchType, String userId, ListType listType)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
@@ -453,7 +455,8 @@ class SubscriptionControllerTests {
         LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
         assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
         assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
-                     VALIDATION_DATE_ADDED);
+                     VALIDATION_DATE_ADDED
+        );
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
@@ -485,7 +488,8 @@ class SubscriptionControllerTests {
         LocationSubscription location = userSubscriptions.getLocationSubscriptions().get(0);
         assertEquals(LOCATION_NAME_1, location.getLocationName(), VALIDATION_LOCATION_NAME);
         assertEquals(DATE_ADDED.withNano(0), location.getDateAdded().withNano(0),
-                     VALIDATION_DATE_ADDED);
+                     VALIDATION_DATE_ADDED
+        );
     }
 
     @Test
@@ -602,6 +606,21 @@ class SubscriptionControllerTests {
     }
 
     @Test
+    @WithMockUser(username = "unauthorized_find_by_id", authorities = {"APPROLE_unknown.find"})
+    void testUnauthorizedBuildSubscriberList() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ARTEFACT_RECIPIENT_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(rawArtefact);
+
+        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
     void testBuildCourtSubscribersListReturnsAccepted() throws Exception {
         mvc.perform(setupMockSubscriptionWithListType(LOCATION_ID, SearchType.LOCATION_ID,
                                                       VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST
@@ -618,7 +637,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_create", authorities = {"APPROLE_unknown.create"})
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testUnauthorizedCreateSubscription() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
@@ -654,7 +673,7 @@ class SubscriptionControllerTests {
 
     @Test
     @WithMockUser(username = "unauthorized_find_by_user_id", authorities = {"APPROLE_unknown.find"})
-    void testUnauthorizedFindSubscriptionByUserId() throws Exception {
+    void testUnauthorizedFindByUserId() throws Exception {
         MvcResult mvcResult = mvc.perform(get(SUBSCRIPTION_USER_PATH)).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
@@ -663,7 +682,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testBuildUpdateListTypeSubscribers() throws Exception {
+    void testConfigureListTypesForSubscription() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
@@ -676,6 +695,21 @@ class SubscriptionControllerTests {
                          VALID_USER_ID
                      ),
                      result.getResponse().getContentAsString(), RESPONSE_MATCH
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedConfigureListTypesForSubscription() throws Exception {
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .put(UPDATE_LIST_TYPE_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(UPDATED_LIST_TYPE);
+        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
         );
     }
 
@@ -693,9 +727,25 @@ class SubscriptionControllerTests {
         );
     }
 
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedBuildDeletedArtefactSubscribers() throws Exception {
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(DELETED_ARTEFACT_RECIPIENT_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(rawArtefact);
+        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+
     @DisplayName("Delete all subscriptions by user id")
     @Test
-    void deleteSubscriptionsByUserIdEndpoint() throws Exception {
+    void testDeleteAllSubscriptionsForUser() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -724,7 +774,21 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testMiReportingSubscriptionDataAll() throws Exception {
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedDeleteAllSubscriptionsForUser() throws Exception {
+        MvcResult mvcResult =
+            mvc.perform(delete(String.format(
+                "/subscription/user/%s",
+                SUBSCRIPTION.getUserId()
+            )).header(USER_ID_HEADER, ACTIONING_USER_ID)).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testGetSubscriptionDataForMiReportingAll() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
             .andExpect(status().isOk()).andReturn();
@@ -732,11 +796,37 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testMiReportingSubscriptionDataLocal() throws Exception {
+    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
+    void testGetSubscriptionDataForMiReportingAllUnauthorized() throws Exception {
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testGetSubscriptionDataForMiReportingLocal() throws Exception {
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
             .andExpect(status().isOk()).andReturn();
         assertThat(response.getResponse().getContentAsString()).contains(VALID_USER_ID);
+    }
+
+    @Test
+    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
+    void testGetSubscriptionDataForMiReportingLocalUnauthorized() throws Exception {
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
@@ -768,7 +858,7 @@ class SubscriptionControllerTests {
             .andReturn();
 
         assertEquals(HttpStatus.NOT_FOUND.value(), response.getResponse().getStatus(),
-                     "Subscriptions list for location id should not be found"
+                     FORBIDDEN_STATUS_CODE
         );
     }
 
@@ -781,7 +871,7 @@ class SubscriptionControllerTests {
             .andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), response.getResponse().getStatus(),
-                     "Subscriptions list for location id should not be found"
+                     FORBIDDEN_STATUS_CODE
         );
     }
 }
