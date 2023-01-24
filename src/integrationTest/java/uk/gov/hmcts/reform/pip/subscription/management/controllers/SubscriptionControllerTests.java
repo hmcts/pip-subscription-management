@@ -746,6 +746,12 @@ class SubscriptionControllerTests {
         assertEquals(String.format("Subscription(s) with ID %s deleted", subscriptionId),
                      deleteResponse.getResponse().getContentAsString(), RESPONSE_MATCH
         );
+
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(subscriptionId))
+            .andExpect(status().isNotFound()).andReturn();
+        assertEquals(HttpStatus.NOT_FOUND.value(), getResponse.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
