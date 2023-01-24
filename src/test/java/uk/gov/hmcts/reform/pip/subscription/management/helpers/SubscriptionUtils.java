@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class SubscriptionUtils {
 
@@ -37,16 +36,18 @@ public final class SubscriptionUtils {
         final int caseUrnInterval = 6;
 
         List<Subscription> subs = new ArrayList<>();
-        Map<Integer, String> mockData = new ConcurrentHashMap<>();
-        mockData.put(0, "Ralph");
-        mockData.put(1, "Ralph");
-        mockData.put(2, "Jenny");
-        mockData.put(3, "Thomas");
-        mockData.put(4, "Pauline");
-        mockData.put(5, "Cedric");
-        mockData.put(6, "Adrian");
-        mockData.put(7, "Cedric");
-        mockData.put(8, "Jonathan");
+        Map<Integer, String> mockData = Map.of(
+            0, "Ralph",
+            1, "Ralph",
+            2, "Jenny",
+            3, "Thomas",
+            4, "Pauline",
+            5, "Cedric",
+            6, "Adrian",
+            7, "Cedric",
+            8, "Jonathan"
+        );
+
         for (int i = 0; i < 8; i++) {
             Subscription subscription = createMockSubscription(mockData.get(i), String.format("court-%s", i),
                                                                i < 3 ? Channel.API_COURTEL : Channel.EMAIL,
