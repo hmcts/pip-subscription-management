@@ -730,12 +730,16 @@ class SubscriptionControllerTests {
 
     @Test
     void testBuildBulkDeletedSubscribersReturnsAccepted() throws Exception {
-        MvcResult subscription =
+        MvcResult caseSubscription =
             mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID)).andReturn();
+        MvcResult locationSubscription =
+            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING)).andReturn();
 
-        String subscriptionId = getSubscriptionId(subscription.getResponse().getContentAsString());
+        String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
+        String locationSubscriptionId = getSubscriptionId(locationSubscription.getResponse().getContentAsString());
 
-        String subscriptionIdRequest = "[\"" + subscriptionId + "\"]";
+        String subscriptionIdRequest = "[\"" + caseSubscriptionId + "\","
+            + "\"" + locationSubscriptionId + "\"]";
 
 
         MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
@@ -743,13 +747,23 @@ class SubscriptionControllerTests {
                                                    .content(subscriptionIdRequest))
             .andExpect(status().isOk()).andReturn();
 
-        assertEquals(String.format("Subscription(s) with ID %s deleted", subscriptionId),
+        assertEquals(String.format("Subscription(s) with ID %s deleted",
+                                   caseSubscriptionId + ", " + locationSubscriptionId),
                      deleteResponse.getResponse().getContentAsString(), RESPONSE_MATCH
         );
 
-        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(subscriptionId))
+        MvcResult getCaseSubscriptionResponse =
+            mvc.perform(getSubscriptionByUuid(caseSubscriptionId))
             .andExpect(status().isNotFound()).andReturn();
-        assertEquals(HttpStatus.NOT_FOUND.value(), getResponse.getResponse().getStatus(),
+        assertEquals(HttpStatus.NOT_FOUND.value(),
+                     getCaseSubscriptionResponse.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+        MvcResult getLocationSubscriptionResponse =
+            mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
+            .andExpect(status().isNotFound()).andReturn();
+        assertEquals(HttpStatus.NOT_FOUND.value(),
+                     getLocationSubscriptionResponse.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE
         );
     }
