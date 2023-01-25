@@ -82,6 +82,7 @@ class SubscriptionControllerTests {
     public static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String RESPONSE_MATCH = "Response should match";
     private static final String SUBSCRIBER_REQUEST_SUCCESS = "Subscriber request has been accepted";
 
@@ -757,14 +758,14 @@ class SubscriptionControllerTests {
             .andExpect(status().isNotFound()).andReturn();
         assertEquals(HttpStatus.NOT_FOUND.value(),
                      getCaseSubscriptionResponse.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
+                     NOT_FOUND_STATUS_CODE
         );
         MvcResult getLocationSubscriptionResponse =
             mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
             .andExpect(status().isNotFound()).andReturn();
         assertEquals(HttpStatus.NOT_FOUND.value(),
                      getLocationSubscriptionResponse.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
+                     NOT_FOUND_STATUS_CODE
         );
     }
 
@@ -779,7 +780,7 @@ class SubscriptionControllerTests {
             .andExpect(status().isNotFound()).andReturn();
 
         assertEquals(HttpStatus.NOT_FOUND.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
+                     NOT_FOUND_STATUS_CODE
         );
     }
 
