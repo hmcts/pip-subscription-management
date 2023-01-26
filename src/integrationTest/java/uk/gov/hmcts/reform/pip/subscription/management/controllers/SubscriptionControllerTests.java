@@ -82,6 +82,7 @@ class SubscriptionControllerTests {
     public static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
+    private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String RESPONSE_MATCH = "Response should match";
     private static final String SUBSCRIBER_REQUEST_SUCCESS = "Subscriber request has been accepted";
 
@@ -102,6 +103,7 @@ class SubscriptionControllerTests {
     private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
+    private static final String DELETED_BULK_SUBSCRIPTION_PATH = "/subscription/bulk";
     private static final String GET_SUBSCRIPTIONS_BY_LOCATION_ID = "/subscription/location/";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
     private static final String UPDATED_LIST_TYPE = "[\"CIVIL_DAILY_CAUSE_LIST\"]";
@@ -725,6 +727,85 @@ class SubscriptionControllerTests {
         assertEquals("Deleted artefact third party subscriber notification request has been accepted",
                      result.getResponse().getContentAsString(), RESPONSE_MATCH
         );
+    }
+
+    @Test
+    void testBuildBulkDeletedSubscribersReturnsAccepted() throws Exception {
+        MvcResult caseSubscription =
+            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID)).andReturn();
+        MvcResult locationSubscription =
+            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING)).andReturn();
+
+        String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
+        String locationSubscriptionId = getSubscriptionId(locationSubscription.getResponse().getContentAsString());
+
+        String subscriptionIdRequest = "[\"" + caseSubscriptionId + "\","
+            + "\"" + locationSubscriptionId + "\"]";
+
+
+        MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
+                                                   .contentType(MediaType.APPLICATION_JSON)
+                                                   .content(subscriptionIdRequest))
+            .andExpect(status().isOk()).andReturn();
+
+        assertEquals(String.format("Subscription(s) with ID %s deleted",
+                                   caseSubscriptionId + ", " + locationSubscriptionId),
+                     deleteResponse.getResponse().getContentAsString(), RESPONSE_MATCH
+        );
+
+        MvcResult getCaseSubscriptionResponse =
+            mvc.perform(getSubscriptionByUuid(caseSubscriptionId))
+            .andExpect(status().isNotFound()).andReturn();
+        assertEquals(HttpStatus.NOT_FOUND.value(),
+                     getCaseSubscriptionResponse.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE
+        );
+        MvcResult getLocationSubscriptionResponse =
+            mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
+            .andExpect(status().isNotFound()).andReturn();
+        assertEquals(HttpStatus.NOT_FOUND.value(),
+                     getLocationSubscriptionResponse.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testBuildBulkDeletedSubscribersReturnsNotFound() throws Exception {
+
+        String subscriptionIdRequest = "[\"" + UUID_STRING + "\"]";
+
+        MvcResult response = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subscriptionIdRequest))
+            .andExpect(status().isNotFound()).andReturn();
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), response.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedBulkDeletedSubscribers() throws Exception {
+
+        String subscriptionIdRequest = "[\"" + UUID_STRING + "\"]";
+
+        MvcResult mvcResult = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
+                                             .contentType(MediaType.APPLICATION_JSON)
+                                             .content(subscriptionIdRequest))
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    private String getSubscriptionId(String response) {
+        String subscriptionId;
+        int startIndex = response.indexOf("the id ") + "the id ".length();
+        int endIndex = response.indexOf(" for user ");
+        subscriptionId = response.substring(startIndex, endIndex);
+        return subscriptionId.trim();
     }
 
     @Test
