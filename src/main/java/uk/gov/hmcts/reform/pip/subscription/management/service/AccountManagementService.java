@@ -1,5 +1,8 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,10 +13,10 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +33,7 @@ public class AccountManagementService {
 
     private static final String IS_AUTHORISED = "account/isAuthorised";
     private static final String GET_USERS_EMAIL = "account/emails";
+    private static final String ACCOUNT_MANAGEMENT_API = "accountManagementApi";
 
     @Autowired
     private WebClient webClient;
@@ -46,7 +50,7 @@ public class AccountManagementService {
         try {
             return webClient.get().uri(
                 String.format("%s/%s/%s/%s/%s", url, IS_AUTHORISED, userId, listType, sensitivity))
-                .attributes(clientRegistrationId("accountManagementApi"))
+                .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
                 .retrieve().bodyToMono(Boolean.class).block();
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
@@ -62,7 +66,7 @@ public class AccountManagementService {
     public Map<String, Optional<String>> getMappedEmails(List<String> listOfUsers) {
         try {
             return webClient.post().uri(url + "/" + GET_USERS_EMAIL)
-                .attributes(clientRegistrationId("accountManagementApi"))
+                .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
                 .body(BodyInserters.fromValue(listOfUsers))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Optional<String>>>() {})
@@ -71,5 +75,44 @@ public class AccountManagementService {
             log.error(String.format("Request with body failed. With error message: %s", ex.getMessage()));
             return Collections.emptyMap();
         }
+    }
+
+    public String getUserInfo(String provenanceUserId) {
+        try {
+            return webClient.get().uri(url + "/account/azure/" + provenanceUserId)
+                .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
+                .retrieve().bodyToMono(String.class).block();
+        } catch (WebClientException ex) {
+            log.error(String.format("Request to account management failed with error message: %s", ex.getMessage()));
+            return "Failed to find user info for user: " + provenanceUserId;
+        }
+    }
+
+    public List<String> getAllAccounts(String provenances, String role)
+        throws JsonProcessingException {
+        try {
+            String result = webClient.get().uri(String.format(
+                    "%s/account/all?provenances=%s&roles=%s", url, provenances, role))
+                .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
+                .retrieve().bodyToMono(String.class).block();
+            return findAllSystemAdmins(result);
+        } catch (WebClientException ex) {
+            log.error(String.format("Request to account management failed with error message: %s", ex.getMessage()));
+            return List.of("Failed to find all the accounts");
+        }
+    }
+
+    private List<String> findAllSystemAdmins(String result) throws JsonProcessingException {
+        List<String> systemAdmins = new ArrayList<>();
+        JsonNode node = new ObjectMapper().readTree(result);
+        if (!node.isEmpty()) {
+            JsonNode content = node.get("content");
+            content.forEach(jsonObject -> {
+                if (jsonObject.has("roles")) {
+                    systemAdmins.add(jsonObject.get("email").asText());
+                }
+            });
+        }
+        return systemAdmins;
     }
 }

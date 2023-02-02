@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Profile({"test", "non-async"})
 @Configuration
-public class WebClientConfigTest {
+public class WebClientConfigTest { //NOSONAR
 
     @Bean
     public WebClient webClient() {

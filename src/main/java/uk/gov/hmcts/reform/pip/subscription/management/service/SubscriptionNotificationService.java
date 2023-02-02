@@ -85,8 +85,8 @@ public class SubscriptionNotificationService {
     private List<Subscription> validateSubscriptionPermissions(List<Subscription> subscriptions, Artefact artefact) {
         List<Subscription> filteredList = new ArrayList<>();
         subscriptions.forEach(subscription -> {
-            if (accountManagementService.isUserAuthorised(subscription.getUserId(), artefact.getListType(),
-                                                          artefact.getSensitivity())) {
+            if (Boolean.TRUE.equals(accountManagementService.isUserAuthorised(subscription.getUserId(),
+                artefact.getListType(), artefact.getSensitivity()))) {
                 filteredList.add(subscription);
             }
         });

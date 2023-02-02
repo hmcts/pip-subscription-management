@@ -8,6 +8,8 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
+import uk.gov.hmcts.reform.pip.model.system.admin.DeleteLocationSubscriptionAction;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
@@ -28,6 +30,7 @@ public class PublicationServicesService {
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
     private static final String PUBLICATION_SERVICE_API = "publicationServicesApi";
     private static final String REQUEST_FAILED = "Request failed";
+    private static final String REQUEST_FAILED_ERROR = "Request failed with error message: %s";
 
     @Autowired
     private WebClient webClient;
@@ -45,7 +48,7 @@ public class PublicationServicesService {
             return payload.toString();
 
         } catch (WebClientException ex) {
-            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            log.error(String.format(REQUEST_FAILED_ERROR, ex.getMessage()));
         }
         return REQUEST_FAILED;
     }
@@ -90,9 +93,35 @@ public class PublicationServicesService {
             return payload.toString();
 
         } catch (WebClientException ex) {
-            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+            log.error(String.format(REQUEST_FAILED_ERROR, ex.getMessage()));
         }
         return REQUEST_FAILED;
+    }
+
+    public String sendSystemAdminEmail(List<String> emails, String requesterName, ActionResult actionResult,
+                                       String additionalDetails) {
+        DeleteLocationSubscriptionAction payload =
+            formatSystemAdminAction(emails, requesterName, actionResult, additionalDetails);
+        try {
+            return webClient.post().uri(url + "/notify/sysadmin/update")
+                .body(BodyInserters.fromValue(payload))
+                .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
+                .retrieve().bodyToMono(String.class).block();
+
+        } catch (WebClientException ex) {
+            log.error(String.format(REQUEST_FAILED_ERROR, ex.getMessage()));
+            return "";
+        }
+    }
+
+    private DeleteLocationSubscriptionAction formatSystemAdminAction(List<String> emails,
+        String requesterName, ActionResult actionResult, String additionalDetails) {
+        DeleteLocationSubscriptionAction systemAdminAction = new DeleteLocationSubscriptionAction();
+        systemAdminAction.setEmailList(emails);
+        systemAdminAction.setRequesterName(requesterName);
+        systemAdminAction.setActionResult(actionResult);
+        systemAdminAction.setDetailString(additionalDetails);
+        return systemAdminAction;
     }
 
     /**

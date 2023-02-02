@@ -24,6 +24,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.UserSubscriptionService;
@@ -37,6 +38,7 @@ import javax.validation.Valid;
 @RequestMapping("/subscription")
 @Valid
 @IsAdmin
+@SuppressWarnings({"PMD.TooManyMethods"})
 public class SubscriptionController {
 
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
@@ -52,6 +54,9 @@ public class SubscriptionController {
 
     @Autowired
     SubscriptionNotificationService subscriptionNotificationService;
+
+    @Autowired
+    SubscriptionLocationService subscriptionLocationService;
 
     @PostMapping(consumes = "application/json")
     @Operation(summary = "Endpoint to create a new unique subscription "
@@ -189,7 +194,7 @@ public class SubscriptionController {
     @GetMapping("/{locationId}")
     public ResponseEntity<List<Subscription>> findSubscriptionsByLocationId(
                                                          @PathVariable String locationId) {
-        return ResponseEntity.ok(subscriptionService.findSubscriptionsByLocationId(locationId));
+        return ResponseEntity.ok(subscriptionLocationService.findSubscriptionsByLocationId(locationId));
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscription for location {locationId} has been deleted")
@@ -197,7 +202,10 @@ public class SubscriptionController {
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No subscription found for location {locationId}")
     @DeleteMapping("/location/{locationId}")
     @IsAdmin
-    public ResponseEntity<String> deleteSubscriptionByLocation(@PathVariable Integer locationId) {
-        return ResponseEntity.ok(subscriptionService.deleteSubscriptionByLocation(locationId));
+    public ResponseEntity<String> deleteSubscriptionByLocation(
+        @RequestHeader("x-provenance-user-id") String provenanceUserId,
+        @PathVariable Integer locationId) throws JsonProcessingException {
+        return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(locationId.toString(),
+                                                                                  provenanceUserId));
     }
 }
