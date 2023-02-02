@@ -11,6 +11,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRe
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,6 +30,12 @@ public class SubscriptionService {
 
     @Autowired
     DataManagementService dataManagementService;
+
+    @Autowired
+    AccountManagementService accountManagementService;
+
+    @Autowired
+    PublicationServicesService publicationServicesService;
 
     public Subscription createSubscription(Subscription subscription, String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION,
@@ -138,5 +145,29 @@ public class SubscriptionService {
             ));
         }
         return repository.findSubscriptionsByLocationId(value);
+    }
+
+    public String deleteSubscriptionByLocation(Integer locationId) {
+        List<Subscription> locationSubscriptions = findSubscriptionsByLocationId(locationId.toString());
+        if (!locationSubscriptions.isEmpty()) {
+            List<String> userEmails = getUserEmailsForAllSubscriptions(locationSubscriptions);
+            String locationName = dataManagementService.getCourtName(locationId.toString());
+            publicationServicesService.sendLocationDeletionSubscriptionEmail(userEmails, locationName);
+        }
+        return String.format("All subscriptions deleted for location id %s", locationId);
+    }
+
+    private List<String> getUserEmailsForAllSubscriptions(List<Subscription> subscriptions) {
+        List<String> userIds = subscriptions.stream()
+            .map(subscription -> subscription.getUserId()).toList();
+        Map<String, Optional<String>> usersInfo =
+            accountManagementService.getMappedEmails(userIds);
+
+        List<String> userEmails = new ArrayList<>();
+
+        usersInfo.forEach((userId, email) -> {
+            userEmails.add(email.get());
+        });
+        return userEmails;
     }
 }

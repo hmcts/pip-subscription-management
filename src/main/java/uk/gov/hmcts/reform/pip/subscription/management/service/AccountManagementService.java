@@ -3,12 +3,21 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
 
@@ -20,6 +29,7 @@ public class AccountManagementService {
     private String url;
 
     private static final String IS_AUTHORISED = "account/isAuthorised";
+    private static final String GET_USERS_EMAIL = "account/emails";
 
     @Autowired
     private WebClient webClient;
@@ -47,5 +57,19 @@ public class AccountManagementService {
             }
         }
         return false;
+    }
+
+    public Map<String, Optional<String>> getMappedEmails(List<String> listOfUsers) {
+        try {
+            return webClient.post().uri(url + "/" + GET_USERS_EMAIL)
+                .attributes(clientRegistrationId("accountManagementApi"))
+                .body(BodyInserters.fromValue(listOfUsers))
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Optional<String>>>() {})
+                .block();
+        } catch (WebClientException ex) {
+            log.error(String.format("Request with body failed. With error message: %s", ex.getMessage()));
+            return Collections.emptyMap();
+        }
     }
 }

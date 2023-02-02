@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.LocationSubscriptionDeletion;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 
@@ -24,6 +25,7 @@ import static org.springframework.security.oauth2.client.web.reactive.function.c
 public class PublicationServicesService {
     private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
     private static final String NOTIFY_API_PATH = "notify/api";
+    private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
     private static final String PUBLICATION_SERVICE_API = "publicationServicesApi";
     private static final String REQUEST_FAILED = "Request failed";
 
@@ -78,6 +80,21 @@ public class PublicationServicesService {
         }
     }
 
+    public String sendLocationDeletionSubscriptionEmail(List<String> emails, String locationName) {
+        LocationSubscriptionDeletion payload = formatLocationSubscriptionDeletion(emails, locationName);
+        try {
+            webClient.post().uri(url + "/" + NOTIFY_LOCATION_SUBSCRIPTION_PATH)
+                .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
+                .body(BodyInserters.fromValue(payload)).retrieve()
+                .bodyToMono(Void.class).block();
+            return payload.toString();
+
+        } catch (WebClientException ex) {
+            log.error(String.format("Request failed with error message: %s", ex.getMessage()));
+        }
+        return REQUEST_FAILED;
+    }
+
     /**
      * Process data to form a subscriptions summary model which can be sent to publication services.
      *
@@ -107,5 +124,13 @@ public class PublicationServicesService {
         subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
 
         return subscriptionsSummary;
+    }
+
+    private LocationSubscriptionDeletion formatLocationSubscriptionDeletion(
+        List<String> emails, String locationName) {
+        LocationSubscriptionDeletion locationSubscriptionDeletion = new LocationSubscriptionDeletion();
+        locationSubscriptionDeletion.setLocationName(locationName);
+        locationSubscriptionDeletion.setSubscriberEmails(emails);
+        return locationSubscriptionDeletion;
     }
 }
