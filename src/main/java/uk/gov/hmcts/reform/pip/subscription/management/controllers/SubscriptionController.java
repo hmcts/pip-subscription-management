@@ -191,7 +191,7 @@ public class SubscriptionController {
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description =
         "No subscription found with the location id {locationId}")
-    @GetMapping("/{locationId}")
+    @GetMapping("/location/{locationId}")
     public ResponseEntity<List<Subscription>> findSubscriptionsByLocationId(
                                                          @PathVariable String locationId) {
         return ResponseEntity.ok(subscriptionLocationService.findSubscriptionsByLocationId(locationId));
@@ -200,6 +200,7 @@ public class SubscriptionController {
     @ApiResponse(responseCode = OK_CODE, description = "Subscription for location {locationId} has been deleted")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = "User has not been authorized")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No subscription found for location {locationId}")
+    @Transactional
     @DeleteMapping("/location/{locationId}")
     @IsAdmin
     public ResponseEntity<String> deleteSubscriptionByLocation(
