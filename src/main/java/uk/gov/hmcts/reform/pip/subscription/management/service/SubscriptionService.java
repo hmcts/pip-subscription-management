@@ -120,16 +120,16 @@ public class SubscriptionService {
     }
 
     public String getAllSubscriptionsDataForMiReporting() {
-        StringBuilder builder = new StringBuilder(48);
-        builder.append("id,channel,search_type,user_id,court_name").append(System.lineSeparator());
+        StringBuilder builder = new StringBuilder(60);
+        builder.append("id,channel,search_type,user_id,court_name,created_date").append(System.lineSeparator());
         repository.getAllSubsDataForMi()
             .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
     }
 
     public String getLocalSubscriptionsDataForMiReporting() {
-        StringBuilder builder = new StringBuilder(49);
-        builder.append("id,search_value,channel,user_id,court_name").append(System.lineSeparator());
+        StringBuilder builder = new StringBuilder(60);
+        builder.append("id,search_value,channel,user_id,court_name,created_date").append(System.lineSeparator());
         repository.getLocalSubsDataForMi()
             .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
