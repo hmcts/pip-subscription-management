@@ -69,8 +69,6 @@ class SubscriptionLocationServiceTest {
             .thenReturn("{\"displayName\": \"ReqName\"}");
         when(accountManagementService.getAllAccounts("PI_AAD", "SYSTEM_ADMIN"))
             .thenReturn(List.of(EMAIL_ADDRESS));
-        when(accountManagementService.getAllAccounts("PI_AAD", "SYSTEM_ADMIN"))
-            .thenReturn(List.of("test@test.com"));
 
         doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
 
