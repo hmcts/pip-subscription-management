@@ -60,7 +60,7 @@ public class SubscriptionLocationService {
                 String.format("Total %s subscription(s) for location %s",
                               locationSubscriptions.size(), locationName));
 
-            return String.format("All subscriptions deleted for location id %s", locationId);
+            return String.format("Total %s subscriptions deleted for location id %s", subIds.size(), locationId);
         }
 
     }

@@ -232,7 +232,7 @@ class SubscriptionControllerTest {
     @Test
     void testDeleteSubscriptionByLocationReturnsOk() throws JsonProcessingException {
         when(subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME))
-            .thenReturn("All subscriptions deleted for location id");
+            .thenReturn("Total 10 subscriptions deleted for location id");
 
         assertEquals(HttpStatus.OK, subscriptionController.deleteSubscriptionByLocation(
             REQUESTER_NAME, Integer.parseInt(LOCATION_ID)).getStatusCode(),

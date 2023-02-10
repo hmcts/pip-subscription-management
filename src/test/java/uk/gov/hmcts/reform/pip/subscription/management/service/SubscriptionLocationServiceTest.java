@@ -73,7 +73,7 @@ class SubscriptionLocationServiceTest {
         doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
 
         assertEquals("The subscription for given location is not deleted",
-                     "All subscriptions deleted for location id 1",
+                     "Total 8 subscriptions deleted for location id 1",
                      subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME));
     }
 
@@ -100,7 +100,7 @@ class SubscriptionLocationServiceTest {
         doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
 
         assertEquals("The subscription for given location is not deleted",
-                     "All subscriptions deleted for location id 1",
+                     "Total 8 subscriptions deleted for location id 1",
                      subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME));
     }
 
