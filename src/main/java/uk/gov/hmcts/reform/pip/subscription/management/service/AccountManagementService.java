@@ -95,14 +95,14 @@ public class AccountManagementService {
                     "%s/account/all?provenances=%s&roles=%s", url, provenances, role))
                 .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
                 .retrieve().bodyToMono(String.class).block();
-            return findAllSystemAdmins(result);
+            return findUserEmails(result);
         } catch (WebClientException ex) {
             log.error(String.format("Request to account management failed with error message: %s", ex.getMessage()));
             return List.of("Failed to find all the accounts");
         }
     }
 
-    private List<String> findAllSystemAdmins(String result) throws JsonProcessingException {
+    private List<String> findUserEmails(String result) throws JsonProcessingException {
         List<String> systemAdmins = new ArrayList<>();
         JsonNode node = new ObjectMapper().readTree(result);
         if (!node.isEmpty()) {
