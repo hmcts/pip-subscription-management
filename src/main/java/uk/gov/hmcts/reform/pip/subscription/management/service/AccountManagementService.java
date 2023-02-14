@@ -1,8 +1,10 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +15,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 
@@ -88,7 +91,7 @@ public class AccountManagementService {
         }
     }
 
-    public List<String> getAllAccounts(String provenances, String role)
+    public List<PiUser> getAllAccounts(String provenances, String role)
         throws JsonProcessingException {
         try {
             String result = webClient.get().uri(String.format(
@@ -98,21 +101,15 @@ public class AccountManagementService {
             return findUserEmails(result);
         } catch (WebClientException ex) {
             log.error(String.format("Request to account management failed with error message: %s", ex.getMessage()));
-            return List.of("Failed to find all the accounts");
+            return new ArrayList<>();
         }
     }
 
-    private List<String> findUserEmails(String result) throws JsonProcessingException {
-        List<String> systemAdmins = new ArrayList<>();
-        JsonNode node = new ObjectMapper().readTree(result);
-        if (!node.isEmpty()) {
-            JsonNode content = node.get("content");
-            content.forEach(jsonObject -> {
-                if (jsonObject.has("roles")) {
-                    systemAdmins.add(jsonObject.get("email").asText());
-                }
-            });
-        }
-        return systemAdmins;
+    private List<PiUser> findUserEmails(String jsonResponse) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        JsonNode node = new ObjectMapper().readTree(jsonResponse);
+        JsonNode content = node.get("content");
+        return mapper.readValue(content.toString(), new TypeReference<>(){});
     }
 }

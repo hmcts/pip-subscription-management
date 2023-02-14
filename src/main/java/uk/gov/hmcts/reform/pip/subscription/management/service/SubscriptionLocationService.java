@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -16,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import static uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.Roles.SYSTEM_ADMIN;
+import static uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.UserProvenances.PI_AAD;
 
 @Slf4j
 @Service
@@ -78,8 +82,11 @@ public class SubscriptionLocationService {
             JsonNode node = new ObjectMapper().readTree(result);
             if (!node.isEmpty()) {
                 String requesterName = node.get("displayName").asText();
-                List<String> systemAdmins = accountManagementService.getAllAccounts("PI_AAD", "SYSTEM_ADMIN");
-                publicationServicesService.sendSystemAdminEmail(systemAdmins, requesterName,
+                List<PiUser> systemAdmins = accountManagementService.getAllAccounts(PI_AAD.toString(),
+                                                                                    SYSTEM_ADMIN.toString());
+                List<String> systemAdminEmails = systemAdmins.stream()
+                    .map(PiUser::getEmail).toList();
+                publicationServicesService.sendSystemAdminEmail(systemAdminEmails, requesterName,
                                                                 ActionResult.SUCCEEDED, additionalDetails);
             }
         } catch (JsonProcessingException e) {

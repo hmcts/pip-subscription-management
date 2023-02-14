@@ -19,6 +19,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
 
@@ -213,7 +214,7 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint.enqueue(new MockResponse()
             .setBody("{\"content\":[{\"email\":\"junaid335@yahoo.com\",\"roles\":\"SYSTEM_ADMIN\"}]}"));
 
-        List<String> result =
+        List<PiUser> result =
             accountManagementService.getAllAccounts("prov", "role");
 
         assertFalse(result.isEmpty(),
@@ -228,10 +229,10 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint.start(6969);
         mockAccountManagementEndpoint.enqueue(new MockResponse().setResponseCode(HttpStatus.BAD_REQUEST.value()));
 
-        List<String> result =
+        List<PiUser> result =
             accountManagementService.getAllAccounts("prov", "role");
 
-        assertTrue(result.get(0).contains("Failed to find all the accounts"),
+        assertTrue(result.isEmpty(),
                    "System admin users have not been returned from the server");
 
         mockAccountManagementEndpoint.shutdown();

@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
+import static uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.Roles.SYSTEM_ADMIN;
+import static uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.UserProvenances.PI_AAD;
 
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
@@ -60,6 +63,8 @@ class SubscriptionLocationServiceTest {
 
     @Test
     void testDeleteSubscriptionByLocation() throws JsonProcessingException {
+        PiUser sysAdminUser = new PiUser();
+        sysAdminUser.setEmail(EMAIL_ADDRESS);
 
         when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
             .thenReturn(mockSubscriptionList);
@@ -67,8 +72,8 @@ class SubscriptionLocationServiceTest {
             .thenReturn(COURT_NAME);
         when(accountManagementService.getUserInfo(REQUESTER_NAME))
             .thenReturn("{\"displayName\": \"ReqName\"}");
-        when(accountManagementService.getAllAccounts("PI_AAD", "SYSTEM_ADMIN"))
-            .thenReturn(List.of(EMAIL_ADDRESS));
+        when(accountManagementService.getAllAccounts(PI_AAD.toString(), SYSTEM_ADMIN.toString()))
+            .thenReturn(List.of(sysAdminUser));
 
         doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
 
