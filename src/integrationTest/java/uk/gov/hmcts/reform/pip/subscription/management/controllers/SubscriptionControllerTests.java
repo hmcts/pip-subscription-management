@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -104,7 +105,7 @@ class SubscriptionControllerTests {
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final String DELETED_BULK_SUBSCRIPTION_PATH = "/subscription/bulk";
-    private static final String GET_SUBSCRIPTIONS_BY_LOCATION_ID = "/subscription/location/";
+    private static final String SUBSCRIPTIONS_BY_LOCATION = "/subscription/location/";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
     private static final String UPDATED_LIST_TYPE = "[\"CIVIL_DAILY_CAUSE_LIST\"]";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
@@ -115,12 +116,16 @@ class SubscriptionControllerTests {
     @Autowired
     protected MockMvc mvc;
 
+    @Value("${system-admin-provenance-id}")
+    private String systemAdminProvenanceId;
+
     protected static final String SUBSCRIPTION_PATH = "/subscription";
     protected static final SubscriptionDto SUBSCRIPTION = new SubscriptionDto();
 
     private static final String ACTIONING_USER_ID = "1234-1234";
 
     private static final String USER_ID_HEADER = "x-user-id";
+    private static final String X_PROVENANCE_USER_ID_HEADER = "x-provenance-user-id";
 
     @BeforeAll
     static void setup() throws IOException {
@@ -170,7 +175,8 @@ class SubscriptionControllerTests {
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
-                                                      SearchType searchType, String userId, ListType listType)
+                                                                              SearchType searchType,
+                                                                              String userId, ListType listType)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
@@ -581,7 +587,7 @@ class SubscriptionControllerTests {
 
     @Test
     void testBuildSubscriberListCaseUrnNull() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID, CASE_ID,null));
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID, CASE_ID, null));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
@@ -595,7 +601,7 @@ class SubscriptionControllerTests {
 
     @Test
     void testBuildSubscriberListCaseNumberNull() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID, null,CASE_URN));
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID, null, CASE_URN));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
@@ -748,24 +754,28 @@ class SubscriptionControllerTests {
                                                    .content(subscriptionIdRequest))
             .andExpect(status().isOk()).andReturn();
 
-        assertEquals(String.format("Subscription(s) with ID %s deleted",
-                                   caseSubscriptionId + ", " + locationSubscriptionId),
+        assertEquals(String.format(
+                         "Subscription(s) with ID %s deleted",
+                         caseSubscriptionId + ", " + locationSubscriptionId
+                     ),
                      deleteResponse.getResponse().getContentAsString(), RESPONSE_MATCH
         );
 
         MvcResult getCaseSubscriptionResponse =
             mvc.perform(getSubscriptionByUuid(caseSubscriptionId))
-            .andExpect(status().isNotFound()).andReturn();
-        assertEquals(HttpStatus.NOT_FOUND.value(),
-                     getCaseSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
+                .andExpect(status().isNotFound()).andReturn();
+        assertEquals(
+            HttpStatus.NOT_FOUND.value(),
+            getCaseSubscriptionResponse.getResponse().getStatus(),
+            NOT_FOUND_STATUS_CODE
         );
         MvcResult getLocationSubscriptionResponse =
             mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
-            .andExpect(status().isNotFound()).andReturn();
-        assertEquals(HttpStatus.NOT_FOUND.value(),
-                     getLocationSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
+                .andExpect(status().isNotFound()).andReturn();
+        assertEquals(
+            HttpStatus.NOT_FOUND.value(),
+            getLocationSubscriptionResponse.getResponse().getStatus(),
+            NOT_FOUND_STATUS_CODE
         );
     }
 
@@ -775,8 +785,8 @@ class SubscriptionControllerTests {
         String subscriptionIdRequest = "[\"" + UUID_STRING + "\"]";
 
         MvcResult response = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(subscriptionIdRequest))
+                                             .contentType(MediaType.APPLICATION_JSON)
+                                             .content(subscriptionIdRequest))
             .andExpect(status().isNotFound()).andReturn();
 
         assertEquals(HttpStatus.NOT_FOUND.value(), response.getResponse().getStatus(),
@@ -791,8 +801,8 @@ class SubscriptionControllerTests {
         String subscriptionIdRequest = "[\"" + UUID_STRING + "\"]";
 
         MvcResult mvcResult = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
-                                             .contentType(MediaType.APPLICATION_JSON)
-                                             .content(subscriptionIdRequest))
+                                              .contentType(MediaType.APPLICATION_JSON)
+                                              .content(subscriptionIdRequest))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
@@ -877,7 +887,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetSubscriptionDataForMiReportingAllUnauthorized() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
@@ -898,7 +908,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetSubscriptionDataForMiReportingLocalUnauthorized() throws Exception {
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
@@ -914,7 +924,7 @@ class SubscriptionControllerTests {
     void testFindSubscriptionsByLocationId() throws Exception {
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
 
-        MvcResult response = mvc.perform(get(GET_SUBSCRIPTIONS_BY_LOCATION_ID + LOCATION_ID))
+        MvcResult response = mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -934,7 +944,7 @@ class SubscriptionControllerTests {
     @Test
     void testFindSubscriptionsByLocationIdNotFound() throws Exception {
 
-        MvcResult response = mvc.perform(get(GET_SUBSCRIPTIONS_BY_LOCATION_ID + LOCATION_ID))
+        MvcResult response = mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -944,10 +954,10 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "unauthorized_account", authorities = {"APPROLE_unknown.account"})
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testFindSubscriptionsByLocationIdUnauthorized() throws Exception {
 
-        MvcResult response = mvc.perform(get(GET_SUBSCRIPTIONS_BY_LOCATION_ID + LOCATION_ID))
+        MvcResult response = mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
             .andExpect(status().isForbidden())
             .andReturn();
 
@@ -955,5 +965,55 @@ class SubscriptionControllerTests {
                      FORBIDDEN_STATUS_CODE
         );
     }
+
+    @Test
+    void testDeleteSubscriptionByLocation() throws Exception {
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
+
+        mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
+            .andExpect(status().isOk());
+
+        MvcResult deleteResponse = mvc.perform(delete(
+                "/subscription/location/" + LOCATION_ID)
+                                                   .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+            .andExpect(status().isOk()).andReturn();
+
+        assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        assertEquals(
+            String.format("Total 1 subscriptions deleted for location id %s", LOCATION_ID),
+            deleteResponse.getResponse().getContentAsString(),
+            "Responses are not equal"
+        );
+    }
+
+    @Test
+    void testDeleteSubscriptionByLocationNotFound() throws Exception {
+        MvcResult response = mvc.perform(delete(
+                SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
+                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), response.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
+        MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
+                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+            .andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
 }
+
+
+
+
 
