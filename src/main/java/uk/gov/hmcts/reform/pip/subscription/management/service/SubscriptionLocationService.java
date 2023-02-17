@@ -13,6 +13,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.m
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -105,8 +106,11 @@ public class SubscriptionLocationService {
         List<String> userEmails = new ArrayList<>();
 
         usersInfo.forEach((userId, email) ->
-            userEmails.add(email.get())
+            userEmails.add(
+                email.isPresent() ? email.get() : ""
+            )
         );
+        userEmails.removeAll(Arrays.asList(""));
         return userEmails;
     }
 }
