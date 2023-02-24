@@ -19,6 +19,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.AzureAccount;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
@@ -33,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {Application.class})
@@ -183,11 +185,11 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint.start(6969);
         mockAccountManagementEndpoint.enqueue(new MockResponse().setBody(TRIGGER_RECEIVED));
 
-        String result =
+        AzureAccount result =
             accountManagementService.getUserInfo(UUID.randomUUID().toString());
 
-        assertTrue(result.contains(TRIGGER_RECEIVED),
-                   "User information has not been returned from the server");
+        assertNotNull(result,
+                      "User information has not been returned from the server");
 
         mockAccountManagementEndpoint.shutdown();
     }
@@ -198,10 +200,10 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint.start(6969);
         mockAccountManagementEndpoint.enqueue(new MockResponse().setResponseCode(HttpStatus.BAD_REQUEST.value()));
 
-        String result =
+        AzureAccount result =
             accountManagementService.getUserInfo(UUID.randomUUID().toString());
 
-        assertTrue(result.contains("Failed to find user info for user"),
+        assertNull(result.getDisplayName(),
                    "User information has not been returned from the server");
 
         mockAccountManagementEndpoint.shutdown();

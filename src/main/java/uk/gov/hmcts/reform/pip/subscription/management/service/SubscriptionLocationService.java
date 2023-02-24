@@ -1,14 +1,13 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.AzureAccount;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
@@ -78,23 +77,12 @@ public class SubscriptionLocationService {
 
     private void notifySystemAdminAboutSubscriptionDeletion(String provenanceUserId, String additionalDetails)
         throws JsonProcessingException {
-        String result = accountManagementService.getUserInfo(provenanceUserId);
-        try {
-            JsonNode node = new ObjectMapper().readTree(result);
-            if (!node.isEmpty()) {
-                String requesterName = node.get("displayName").asText();
-                List<PiUser> systemAdmins = accountManagementService.getAllAccounts(PI_AAD.toString(),
-                                                                                    SYSTEM_ADMIN.toString());
-                List<String> systemAdminEmails = systemAdmins.stream()
-                    .map(PiUser::getEmail).toList();
-                publicationServicesService.sendSystemAdminEmail(systemAdminEmails, requesterName,
-                                                                ActionResult.SUCCEEDED, additionalDetails);
-            }
-        } catch (JsonProcessingException e) {
-            log.error(String.format("Failed to get userInfo: %s",
-                                    e.getMessage()));
-            throw e;
-        }
+        AzureAccount userInfo = accountManagementService.getUserInfo(provenanceUserId);
+        List<PiUser> systemAdmins = accountManagementService.getAllAccounts(PI_AAD.toString(),
+                                                                            SYSTEM_ADMIN.toString());
+        List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();
+        publicationServicesService.sendSystemAdminEmail(systemAdminEmails, userInfo.getDisplayName(),
+                                                        ActionResult.SUCCEEDED, additionalDetails);
     }
 
     private List<String> getUserEmailsForAllSubscriptions(List<Subscription> subscriptions) {

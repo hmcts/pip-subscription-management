@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.AzureAccount;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
@@ -80,14 +81,14 @@ public class AccountManagementService {
         }
     }
 
-    public String getUserInfo(String provenanceUserId) {
+    public AzureAccount getUserInfo(String provenanceUserId) {
         try {
             return webClient.get().uri(url + "/account/azure/" + provenanceUserId)
                 .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
-                .retrieve().bodyToMono(String.class).block();
+                .retrieve().bodyToMono(AzureAccount.class).block();
         } catch (WebClientException ex) {
             log.error(String.format("Request to account management failed with error message: %s", ex.getMessage()));
-            return "Failed to find user info for user: " + provenanceUserId;
+            return new AzureAccount();
         }
     }
 

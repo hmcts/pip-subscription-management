@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.AzureAccount;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
@@ -38,6 +39,7 @@ class SubscriptionLocationServiceTest {
 
     private List<Subscription> mockSubscriptionList;
     private List<UUID> mockSubscriptionIds;
+    AzureAccount azureAccount;
 
     @Mock
     DataManagementService dataManagementService;
@@ -59,6 +61,9 @@ class SubscriptionLocationServiceTest {
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
         mockSubscriptionIds = mockSubscriptionList.stream()
             .map(subscription -> subscription.getId()).toList();
+
+        azureAccount = new AzureAccount();
+        azureAccount.setDisplayName("ReqName");
     }
 
     @Test
@@ -71,7 +76,7 @@ class SubscriptionLocationServiceTest {
         when(dataManagementService.getCourtName(LOCATION_ID))
             .thenReturn(COURT_NAME);
         when(accountManagementService.getUserInfo(REQUESTER_NAME))
-            .thenReturn("{\"displayName\": \"ReqName\"}");
+            .thenReturn(azureAccount);
         when(accountManagementService.getAllAccounts(PI_AAD.toString(), SYSTEM_ADMIN.toString()))
             .thenReturn(List.of(sysAdminUser));
 
@@ -100,28 +105,12 @@ class SubscriptionLocationServiceTest {
             .thenReturn(COURT_NAME);
         when(publicationService.sendLocationDeletionSubscriptionEmail(any(), any())).thenReturn(any());
         when(accountManagementService.getUserInfo(REQUESTER_NAME))
-            .thenReturn("{}");
+            .thenReturn(azureAccount);
 
         doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
 
         assertEquals("The subscription for given location is not deleted",
                      "Total 8 subscriptions deleted for location id 1",
                      subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME));
-    }
-
-    @Test
-    void testDeleteSubscriptionByLocationWhenSystemAdminException() {
-
-        when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
-            .thenReturn(mockSubscriptionList);
-        when(dataManagementService.getCourtName(LOCATION_ID))
-            .thenReturn(COURT_NAME);
-        when(accountManagementService.getUserInfo(REQUESTER_NAME))
-            .thenReturn("{test}");
-
-        assertThrows(JsonProcessingException.class, () -> subscriptionLocationService.deleteSubscriptionByLocation(
-                         LOCATION_ID, REQUESTER_NAME),
-                     "JsonProcessingException not thrown when trying to get errored system admin"
-                         + " api response");
     }
 }
