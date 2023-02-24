@@ -30,6 +30,12 @@ public class SubscriptionService {
     @Autowired
     DataManagementService dataManagementService;
 
+    @Autowired
+    AccountManagementService accountManagementService;
+
+    @Autowired
+    PublicationServicesService publicationServicesService;
+
     public Subscription createSubscription(Subscription subscription, String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION,
                           subscription.getSearchType().toString()));
@@ -127,16 +133,5 @@ public class SubscriptionService {
         repository.getLocalSubsDataForMi()
             .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
-    }
-
-    public List<Subscription> findSubscriptionsByLocationId(String value) {
-        List<Subscription> locationSubscriptions = repository.findSubscriptionsByLocationId(value);
-        if (locationSubscriptions.isEmpty()) {
-            throw new SubscriptionNotFoundException(String.format(
-                "No subscription found with the location id %s",
-                value
-            ));
-        }
-        return repository.findSubscriptionsByLocationId(value);
     }
 }

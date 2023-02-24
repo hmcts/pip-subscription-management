@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.function.client.WebClient;
+import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
@@ -48,11 +49,13 @@ class PublicationServicesServiceTest {
     private static final String RESULT_MATCH = "Returned strings should match";
     private static final String REQUEST_FAILED = "Request failed";
     private static final String TEST_API_DESTINATION = "http://www.abc.com";
+    private static final String SUCCESSFULLY_SENT = "Successfully sent";
     private static final Artefact TEST_ARTEFACT = new Artefact();
 
     private final SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
     private final Subscription subscription = new Subscription();
     private SubscriptionsSummaryDetails subscriptionsSummaryDetails;
+    LogCaptor logCaptor = LogCaptor.forClass(PublicationServicesService.class);
 
     @BeforeEach
     void setup() throws IOException {
@@ -113,7 +116,7 @@ class PublicationServicesServiceTest {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
-        assertEquals("Successfully sent", publicationServicesService
+        assertEquals(SUCCESSFULLY_SENT, publicationServicesService
             .sendThirdPartyList(new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())),
                      RESULT_MATCH);
     }
@@ -124,7 +127,7 @@ class PublicationServicesServiceTest {
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        assertEquals("Successfully sent", publicationServicesService.sendEmptyArtefact(
+        assertEquals(SUCCESSFULLY_SENT, publicationServicesService.sendEmptyArtefact(
             new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)), RESULT_MATCH);
     }
 
@@ -148,5 +151,27 @@ class PublicationServicesServiceTest {
                          .sendThirdPartyList(new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())),
                      "Messages match");
 
+    }
+
+    @Test
+    void testSendSystemAdminEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SUCCESSFULLY_SENT));
+
+        assertEquals(SUCCESSFULLY_SENT, publicationServicesService
+                         .sendSystemAdminEmail(List.of("test@test.com"), "Name",
+                                               ActionResult.ATTEMPTED, "Error"),
+                     "Email has not been sent");
+    }
+
+    @Test
+    void testFailedSendSystemAdminEmail() {
+        mockPublicationServicesEndpoint.enqueue(new MockResponse()
+                                                    .setResponseCode(400));
+
+        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), "Name",
+                                                        ActionResult.ATTEMPTED, "Error");
+
+        assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message"),
+                   "Exception was not logged.");
     }
 }

@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +15,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.UserSubscriptionService;
@@ -41,6 +43,7 @@ class SubscriptionControllerTest {
     private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
     private static final String LOCATION_ID = "1";
     private static final String ACTIONING_USER_ID = "1234-1234";
+    private static final String REQUESTER_NAME = "ReqName";
 
     @Mock
     SubscriptionService subscriptionService;
@@ -50,6 +53,9 @@ class SubscriptionControllerTest {
 
     @Mock
     SubscriptionNotificationService subscriptionNotificationService;
+
+    @Mock
+    SubscriptionLocationService subscriptionLocationService;
 
     @InjectMocks
     SubscriptionController subscriptionController;
@@ -209,7 +215,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testFindSubscriptionsByLocationId() {
-        when(subscriptionService.findSubscriptionsByLocationId(LOCATION_ID))
+        when(subscriptionLocationService.findSubscriptionsByLocationId(LOCATION_ID))
             .thenReturn(mockSubscriptionList);
         assertEquals(mockSubscriptionList, subscriptionController.findSubscriptionsByLocationId(LOCATION_ID).getBody(),
                      "The found subscription does not match expected subscription");
@@ -217,9 +223,19 @@ class SubscriptionControllerTest {
 
     @Test
     void testFindSubscriptionsByLocationIdReturnsOk() {
-        when(subscriptionService.findSubscriptionsByLocationId(LOCATION_ID))
+        when(subscriptionLocationService.findSubscriptionsByLocationId(LOCATION_ID))
             .thenReturn(mockSubscriptionList);
         assertEquals(HttpStatus.OK, subscriptionController.findSubscriptionsByLocationId(LOCATION_ID)
                          .getStatusCode(), STATUS_CODE_MATCH);
+    }
+
+    @Test
+    void testDeleteSubscriptionByLocationReturnsOk() throws JsonProcessingException {
+        when(subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME))
+            .thenReturn("Total 10 subscriptions deleted for location id");
+
+        assertEquals(HttpStatus.OK, subscriptionController.deleteSubscriptionByLocation(
+            REQUESTER_NAME, Integer.parseInt(LOCATION_ID)).getStatusCode(),
+                     "Delete subscription location endpoint has not returned OK");
     }
 }

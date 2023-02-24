@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,6 +24,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
 import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.UserSubscriptionService;
@@ -36,11 +38,12 @@ import javax.validation.Valid;
 @RequestMapping("/subscription")
 @Valid
 @IsAdmin
+@SuppressWarnings({"PMD.TooManyMethods"})
 public class SubscriptionController {
 
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
     private static final String AUTH_ERROR_CODE = "403";
-    private static final String OK_ERROR_CODE = "200";
+    private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
     @Autowired
@@ -51,6 +54,9 @@ public class SubscriptionController {
 
     @Autowired
     SubscriptionNotificationService subscriptionNotificationService;
+
+    @Autowired
+    SubscriptionLocationService subscriptionLocationService;
 
     @PostMapping(consumes = "application/json")
     @Operation(summary = "Endpoint to create a new unique subscription "
@@ -69,7 +75,7 @@ public class SubscriptionController {
                                 subscription.getId(), subscription.getUserId()));
     }
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscription: {subId} was deleted")
+    @ApiResponse(responseCode = OK_CODE, description = "Subscription: {subId} was deleted")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the subscription id {subId}")
@@ -83,7 +89,7 @@ public class SubscriptionController {
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
     }
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscription(s) with ID {subIds} deleted")
+    @ApiResponse(responseCode = OK_CODE, description = "Subscription(s) with ID {subIds} deleted")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the subscription IDs: {subIds}")
@@ -99,7 +105,7 @@ public class SubscriptionController {
     }
 
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscription {subId} found")
+    @ApiResponse(responseCode = OK_CODE, description = "Subscription {subId} found")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the subscription id {subId}")
@@ -109,7 +115,7 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.findById(subId));
     }
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description = "Subscriptions list for user id {userId} found")
+    @ApiResponse(responseCode = OK_CODE, description = "Subscriptions list for user id {userId} found")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the user id {userId}")
@@ -150,7 +156,7 @@ public class SubscriptionController {
                                 userId));
     }
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description =
+    @ApiResponse(responseCode = OK_CODE, description =
         "Subscription Management - MI Data request (all) accepted.")
     @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting.")
     @GetMapping("/mi-data-all")
@@ -160,7 +166,7 @@ public class SubscriptionController {
             .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
     }
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description =
+    @ApiResponse(responseCode = OK_CODE, description =
         "Subscription Management - MI Data request (local) accepted.")
     @Operation(summary = "Returns a list of subscription data "
         + "for specifically location-based subscriptions for MI reporting.")
@@ -171,7 +177,7 @@ public class SubscriptionController {
             .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
     }
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description = "Deleted all subscriptions for user id {userId}")
+    @ApiResponse(responseCode = OK_CODE, description = "Deleted all subscriptions for user id {userId}")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Deletes all subscriptions for the supplied user id")
     @Transactional
@@ -180,7 +186,7 @@ public class SubscriptionController {
         return ResponseEntity.ok(userSubscriptionService.deleteAllByUserId(userId));
     }
 
-    @ApiResponse(responseCode = OK_ERROR_CODE, description =
+    @ApiResponse(responseCode = OK_CODE, description =
         "Subscriptions list for location id {locationId} found")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description =
@@ -188,6 +194,19 @@ public class SubscriptionController {
     @GetMapping("/location/{locationId}")
     public ResponseEntity<List<Subscription>> findSubscriptionsByLocationId(
                                                          @PathVariable String locationId) {
-        return ResponseEntity.ok(subscriptionService.findSubscriptionsByLocationId(locationId));
+        return ResponseEntity.ok(subscriptionLocationService.findSubscriptionsByLocationId(locationId));
+    }
+
+    @ApiResponse(responseCode = OK_CODE, description = "Subscription for location {locationId} has been deleted")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = "User has not been authorized")
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No subscription found for location {locationId}")
+    @Transactional
+    @DeleteMapping("/location/{locationId}")
+    @IsAdmin
+    public ResponseEntity<String> deleteSubscriptionByLocation(
+        @RequestHeader("x-provenance-user-id") String provenanceUserId,
+        @PathVariable Integer locationId) throws JsonProcessingException {
+        return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(locationId.toString(),
+                                                                                  provenanceUserId));
     }
 }
