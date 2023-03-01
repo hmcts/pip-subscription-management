@@ -225,7 +225,7 @@ dependencies {
   implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.14.2'
 
   // Include Flyway for database migrations
-  implementation group: 'org.flywaydb', name: 'flyway-core', version: '9.14.0'
+  implementation group: 'org.flywaydb', name: 'flyway-core', version: '9.15.1'
 
   // Force upgrade snakeyaml version for CVE-2022-38752
   implementation( group: 'org.yaml', name: 'snakeyaml').version {
