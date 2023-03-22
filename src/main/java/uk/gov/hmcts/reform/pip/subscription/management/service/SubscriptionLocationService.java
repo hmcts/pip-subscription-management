@@ -4,11 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
+import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.AzureAccount;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.Roles.SYSTEM_ADMIN;
-import static uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.UserProvenances.PI_AAD;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 
 @Slf4j
 @Service

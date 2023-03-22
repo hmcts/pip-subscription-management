@@ -1,9 +1,9 @@
 package uk.gov.hmcts.reform.pip.subscription.management.helpers;
 
-import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
-import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
+import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

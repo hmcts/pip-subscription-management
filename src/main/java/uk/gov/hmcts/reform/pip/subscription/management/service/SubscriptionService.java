@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
-import static uk.gov.hmcts.reform.pip.subscription.management.models.SearchType.LOCATION_ID;
+import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
 
 /**
  * Service layer for dealing with subscriptions.

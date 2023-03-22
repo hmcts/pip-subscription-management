@@ -1,7 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 
 import java.util.List;
 

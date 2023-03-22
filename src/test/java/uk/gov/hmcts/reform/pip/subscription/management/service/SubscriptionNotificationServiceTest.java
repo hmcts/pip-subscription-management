@@ -9,16 +9,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
-import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
+import uk.gov.hmcts.reform.pip.model.publication.Artefact;
+import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
+import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
+import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.io.IOException;
@@ -339,12 +339,11 @@ class SubscriptionNotificationServiceTest {
         mockSubscription.setChannel(Channel.API_COURTEL);
         Map<String, List<Subscription>> returnedMap = new ConcurrentHashMap<>();
         returnedMap.put(TEST, List.of(mockSubscription));
-        ThirdPartySubscription thirdPartySubscription = new ThirdPartySubscription(TEST, TEST_UUID);
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
                                                                            MAGISTRATES_PUBLIC_LIST))
             .thenReturn(List.of(mockSubscription));
         when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
-        when(publicationServicesService.sendThirdPartyList(thirdPartySubscription)).thenReturn(SUCCESS);
+        when(publicationServicesService.sendThirdPartyList(any(ThirdPartySubscription.class))).thenReturn(SUCCESS);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
             assertTrue(logCaptor.getInfoLogs().get(0).contains(SUCCESS),
@@ -401,9 +400,7 @@ class SubscriptionNotificationServiceTest {
                                                                    publicArtefactMatches.getListType().name()))
             .thenReturn(List.of(mockSubscription));
         when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
-        ThirdPartySubscriptionArtefact subscriptionArtefact = new ThirdPartySubscriptionArtefact(
-            TEST, publicArtefactMatches);
-        when(publicationServicesService.sendEmptyArtefact(subscriptionArtefact))
+        when(publicationServicesService.sendEmptyArtefact(any(ThirdPartySubscriptionArtefact.class)))
             .thenReturn(SUBSCRIBER_NOTIFICATION_LOG);
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectThirdPartyForDeletion(publicArtefactMatches);
