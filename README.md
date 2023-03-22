@@ -56,7 +56,7 @@ All interactions with `pip-subscription-management` are performed through the AP
 - Ensures that subscriptions are only fulfilled if the user has permission to see the publication.
 - Provides MI reporting endpoints, which are used to produce the MI report.
 - Provides the ability to delete all subscriptions for a location. This is used when deleting a location from CaTH.
-- The ability to retrieve all subscription channels, which is used in our Frontend when setting up third party subscriptions
+- The ability to retrieve all subscription channels, which is used in our Frontend when setting up third party subscriptions.
 - Triggers a system admin and user email to be sent when subscriptions are deleted due to a location being deleted.
 - Flyway for database modifications via SQL ingestion.
 - Secure/Insecure Mode: Use of bearer tokens for authentication with the secure instance (if desired)
