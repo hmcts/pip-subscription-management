@@ -35,7 +35,6 @@ import javax.validation.constraints.NotNull;
     name = "list-array",
     typeClass = ListArrayType.class
 )
-@SuppressWarnings("PMD.UnusedAssignment")
 public class Subscription {
 
     /**
@@ -68,7 +67,7 @@ public class Subscription {
     private Channel channel;
 
     @Schema(hidden = true)
-    private LocalDateTime createdDate = LocalDateTime.now();
+    private LocalDateTime createdDate;
 
     @Valid
     private String caseNumber;
