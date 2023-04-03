@@ -19,10 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.hmcts.reform.pip.subscription.management.authentication.roles.IsAdmin;
+import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
+import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
@@ -67,9 +66,11 @@ public class SubscriptionController {
     @ApiResponse(responseCode = "400", description = "This subscription object has an invalid format. Please "
         + "check again.")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    public ResponseEntity<String> createSubscription(@RequestBody @Valid SubscriptionDto sub,
-                                                     @RequestHeader("x-user-id") String actioningUserId) {
-        Subscription subscription = subscriptionService.createSubscription(sub.toEntity(), actioningUserId);
+    public ResponseEntity<String> createSubscription(
+        @RequestBody @Valid uk.gov.hmcts.reform.pip.model.subscription.Subscription sub,
+        @RequestHeader("x-user-id") String actioningUserId
+    ) {
+        Subscription subscription = subscriptionService.createSubscription(new Subscription(sub), actioningUserId);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user %s",
                                 subscription.getId(), subscription.getUserId()));

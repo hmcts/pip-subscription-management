@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
-import uk.gov.hmcts.reform.pip.subscription.management.models.subscriptionmanagement.Location;
+import uk.gov.hmcts.reform.pip.model.location.Location;
 
 import java.net.URI;
 import java.net.URISyntaxException;

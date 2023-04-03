@@ -8,10 +8,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
+import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.AzureAccount;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.time.LocalDateTime;
@@ -23,9 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
-import static uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.Roles.SYSTEM_ADMIN;
-import static uk.gov.hmcts.reform.pip.subscription.management.models.external.account.management.UserProvenances.PI_AAD;
 
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
