@@ -1,267 +1,289 @@
-# Publishing and Information - Subscription Management
+# pip-subscription-management
 
-## Purpose
-The purpose of this service is to provide the ability to interact with and manage subscriptions.
+## Table of Contents
 
+- [Overview](#overview)
+- [Features and Functionality](#features-and-functionality)
+- [Subscription Breakdown](#subscription-breakdown)
+  - [Third Party - List Type Subscriptions](#third-party---list-type-subscription)
+  - [Third Party - Artefact deletion](#third-party---artefact-deletion)
+  - [Verified - Configure by List Type](#verified---configure-by-list-type)
+  - [Subscription Channels](#subscription-channel)
+- [Roles](#roles)
+- [Architecture Diagram](#architecture-diagram)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+    - [General](#general)
+    - [Local development](#local-development)
+    - [Nice-to-haves](#nice-to-haves)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+    - [Environment variables](#environment-variables)
+      - [Getting all environment variables with python](#get-environment-variables-with-python-scripts)
+      - [Additional Test secrets](#additional-test-secrets)
+      - [Application.yaml files](#applicationyaml-files)
+- [API Documentation](#api-documentation)
+- [Examples](#examples)
+  - [Requesting a bearer token](#requesting-a-bearer-token)
+  - [Using the bearer token](#using-the-bearer-token)
+- [Deployment](#deployment)
+- [Creating or debugging of SQL scripts with Flyway](#creating-or-debugging-of-sql-scripts-with-flyway)
+  - [Pipeline](#pipeline)
+  - [Local](#local)
+- [Monitoring and Logging](#monitoring-and-logging)
+- [Security & Quality Considerations](#security--quality-considerations)
+- [Test Suite](#test-suite)
+  - [Unit tests](#unit-tests)
+  - [Functional tests](#functional-tests)
+- [Contributing](#contributing)
+- [License](#license)
 
-The application exposes health endpoint (http://localhost:4550/health) and metrics endpoint
-(http://localhost:4550/metrics)
+## Overview
+`pip-subscription-management` is a microservice that deals with operations related to subscriptions, including all CRUD operations and the triggering of the fulfilment process. It does not do the fulfilment itself - this is the responsibility of the publication service.
 
-## Plugins
+It sits within the Court and Tribunal Hearings Service (CaTH hereafter), written with Spring Boot/Java.
 
-The template contains the following plugins:
+For context, a subscription in CaTH is something a user can set up in order to be notified when a new publication is received. There are also third party subscriptions which are set up by administrators, which notify selected third party APIs.
 
-  * checkstyle
+In practice, the service is usually containerized within a hosted kubernetes environment within Azure.
 
-    https://docs.gradle.org/current/userguide/checkstyle_plugin.html
+All interactions with `pip-subscription-management` are performed through the API (specified in [API Documentation](#api-documentation)) either as a standalone service or via connections to other microservices.
 
-    Performs code style checks on Java source files using Checkstyle and generates reports from these checks.
-    The checks are included in gradle's *check* task (you can run them by executing `./gradlew check` command).
+## Features and Functionality
 
-  * pmd
+- Creation and deletion (including bulk deletion) of subscriptions for a user or third party.
+- Configuration of which list types a user would like to receive for a subscription.
+- Ensures that subscriptions are only fulfilled if the user has permission to see the publication.
+- Provides MI reporting endpoints, which are used to produce the MI report.
+- Provides the ability to delete all subscriptions for a location. This is used when deleting a location from CaTH.
+- The ability to retrieve all subscription channels, which is used in our Frontend when setting up third party subscriptions.
+- Triggers a system admin and user email to be sent when subscriptions are deleted due to a location being deleted.
+- Flyway for database modifications via SQL ingestion.
+- Secure/Insecure Mode: Use of bearer tokens for authentication with the secure instance (if desired)
+- OpenAPI Spec/Swagger-UI: Documents and allows users or developers to access API resources within the browser.
+- Integration tests using TestContainers for dummy database operations.
 
-    https://docs.gradle.org/current/userguide/pmd_plugin.html
+## Subscription Breakdown
 
-    Performs static code analysis to finds common programming flaws. Included in gradle `check` task.
+Each subscription is associated with a user. The user can be a verified user (a person) or a third party.
 
+A verified user can subscribe by case number, case URN or a location. It's worth noting that users can subscribe by Case Name in the frontend, however it is mapped to a number or URN in the database.
 
-  * jacoco
+When a publication comes in via data management, it is checked to see if any subscriptions match any of the above subscription types.
 
-    https://docs.gradle.org/current/userguide/jacoco_plugin.html
+If it does, and as long as the user has permission to see that publication, a notification is sent to publication services which will fulfil that subscription.
 
-    Provides code coverage metrics for Java code via integration with JaCoCo.
-    You can create the report by running the following command:
+### Third Party - List Type Subscription
 
-    ```bash
-      ./gradlew jacocoTestReport
-    ```
+Third party subscriptions are set up by administrators. Third party's can only subscribe by List Type.
 
-    The report will be created in build/reports subdirectory in your project directory.
+In this scenario, as long as the publication matches the list type and the third party has permission to see it, the notification will be sent to publication services to fulfil the subscription.
 
-  * io.spring.dependency-management
+### Third Party - Artefact deletion
 
-    https://github.com/spring-gradle-plugins/dependency-management-plugin
+When an artefact is deleted, data management will inform subscription management.
 
-    Provides Maven-like dependency management. Allows you to declare dependency management
-    using `dependency 'groupId:artifactId:version'`
-    or `dependency group:'group', name:'name', version:version'`.
+If any third party subscriptions exist for the deleted artefact, subscription management will then trigger an empty artefact deletion request to publication services.
 
-  * org.springframework.boot
+### Verified - Configure by List Type
 
-    http://projects.spring.io/spring-boot/
+When a verified user subscribes by location, they also have the ability to configure which list types they would like to receive for that location.
 
-    Reduces the amount of work needed to create a Spring application
+If the user does not configure their list types, then by default all list types are taken into account (following the normal rules of permissions)
 
-  * org.owasp.dependencycheck
+If the user does configure which list types they would like to receive, then this will be applied to all location subscriptions that the user has. There is no ability in the frontend for a user to configure list types per location, however if there was a need this service would handle it without any changes.
 
-    https://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
+### Subscription Channels
 
-    Provides monitoring of the project's dependent libraries and creating a report
-    of known vulnerable components that are included in the build. To run it
-    execute `gradle dependencyCheck` command.
+Each subscription has a channel. For verified users, this is always EMAIL.
 
-  * com.github.ben-manes.versions
+For third parties, there can be a number of different API channels. This is selected by the administrator in the frontend when setting up a third party subscription.
 
-    https://github.com/ben-manes/gradle-versions-plugin
+## Roles
 
-    Provides a task to determine which dependencies have updates. Usage:
+Any endpoint that should require authentication, needs to be annotated either at controller or endpoint level with @IsAdmin.
 
-    ```bash
-      ./gradlew dependencyUpdates -Drevision=release
-    ```
+## Architecture Diagram
 
-## Setup
+![Architecture Diagram for pip-subscription-management](./subscription-man-arch.png)
 
-Located in `./bin/init.sh`. Simply run and follow the explanation how to execute it.
+The above diagram is somewhat simplified for readability (e.g. it does not include secure/insecure communications, but those are covered elsewhere).
 
-## Notes
+## Getting Started
 
-Since Spring Boot 2.1 bean overriding is disabled. If you want to enable it you will need to set `spring.main.allow-bean-definition-overriding` to `true`.
+### Prerequisites
 
-JUnit 5 is now enabled by default in the project. Please refrain from using JUnit4 and use the next generation
+##### General
 
-## Building and deploying the application
+- [Java JDK 17](https://openjdk.org/projects/jdk/17/) - this is used throughout all of our services.
+- REST client of some description (e.g. [Curl](https://github.com/curl/curl), [Insomnia](https://insomnia.rest/), [Postman](https://www.postman.com/)). Swagger-UI can also be used to send requests.
+- Docker - used to run integration tests due to our use of [TestContainers](https://www.testcontainers.org/)
 
-### Building the application
+##### Local development
 
-The project uses [Gradle](https://gradle.org) as a build tool. It already contains
-`./gradlew` wrapper script, so there's no need to install gradle.
+- [Azurite](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite) - Local Azure emulator used along with Azure Storage explorer for local storage.
+- [Azure Storage Explorer](https://azure.microsoft.com/en-us/products/storage/storage-explorer) - Used for viewing and storing blobs within an Azurite instance locally.
 
-To build the project execute the following command:
+##### Nice-to-haves
 
-```bash
-  ./gradlew build
+- [pip-dev-env](https://github.com/hmcts/pip-dev-env) - This repo provides a development environment wherein ensure all microservices, as well as external services (e.g. postgres & redis) are all running in tandem within the service. It eases the development process and is particularly helpful when working with cross-service communication, as it also reduces strain on local performance from having many separate IDE windows open.
+- PostgreSQL - for local development, it will help to install Postgres. Ensure your postgres instance matches the relevant [environment variables](#environment-variables). Most devs on the project are just using this within a docker container.
+- Some means of interfacing with the postgres database either locally or remotely. Good options include [DataGrip](https://www.jetbrains.com/datagrip/), [pgAdmin](https://www.pgadmin.org/) or [psql](https://www.postgresql.org/docs/9.1/app-psql.html). This will allow you to verify the impacts of your requests on the underlying database.
+
+### Installation
+
+- Clone the repository
+- Ensure all required [environment variables](#environment-variables) have been set.
+- Build using the command `./gradlew clean build`
+- Start the service using the command `./gradlew bootrun` in the newly created directory.
+
+### Configuration
+
+#### Environment Variables
+
+Environment variables are used by the service to control its behaviour in various ways.
+
+These variables can be found within various separate CaTH Azure keyvaults. You may need to obtain access to this via a support ticket.
+- Runtime secrets are stored in `pip-ss-{env}-kv` (where {env} is the environment where the given instance is running (e.g. production, staging, test, sandbox)).
+- Test secrets are stored in `pip-bootstrap-{env}-kv` with the same convention.
+
+##### Get environment variables with python scripts
+Python scripts to quickly grab all environment variables (subject to Azure permissions) are available for both [runtime](https://github.com/hmcts/pip-dev-env/blob/master/get_envs.py) and [test](https://github.com/hmcts/pip-secret-grabber/blob/master/main.py) secrets.
+
+##### Runtime secrets
+
+Below is a table of currently used environment variables for starting the service, along with a descriptor of their purpose and whether they are optional or required.
+
+| Variable                     | Description                                                                                                                                                                                                                                                            |Required?|
+|:-----------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|
+| SPRING_PROFILES_ACTIVE       | If set equal to `dev`, the application will run in insecure mode (i.e. no bearer token authentication required for incoming requests.) *Note - if you wish to communicate with other services, you will need to set them all to run in insecure mode in the same way.* |No|
+| DB_HOST                      | Postgres Hostname                                                                                                                                                                                                                                                      |Yes|
+| DB_PORT                      | Postgres Port                                                                                                                                                                                                                                                          |Yes|
+| DB_NAME                      | Postgres Db name                                                                                                                                                                                                                                                       |Yes|
+| DB_USER                      | Postgres Username                                                                                                                                                                                                                                                      |Yes|
+| DB_PASS                      | Postgres Password                                                                                                                                                                                                                                                      |Yes|
+| APP_URI                      | Uniform Resource Identifier - the location where the application expects to receive bearer tokens after a successful authentication process. The application then validates received bearer tokens using the AUD parameter in the token                                |No|
+| CLIENT_ID                    | Unique ID for the application within Azure AD. Used to identify the application during authentication.                                                                                                                                                                 |No|
+| TENANT_ID                    | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                                                                                                                          |No|
+| CLIENT_SECRET                | Secret key for authentication requests to the service.                                                                                                                                                                                                                 |No|
+| ACCOUNT_MANAGEMENT_URL       | URL used for connecting to the pip-account-management service. Defaults to staging if not provided.                                                                                                                                                                    |No|
+| DATA_MANAGEMENT_URL          | URL used for connecting to the pip-data-management service. Defaults to staging if not provided.                                                                                                                                                                       |No|
+| CHANNEL_MANAGEMENT_URL       | URL used for connecting to the pip-channel-management service. Defaults to staging if not provided.                                                                                                                                                                    |No|
+| PUBLICATION_SERVICES_URL     | URL used for connecting to the pip-publication-services service. Defaults to staging if not provided.                                                                                                                                                                  |No|
+| ACCOUNT_MANAGEMENT_AZ_API    | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-account management service                                                                                                            |No|
+| DATA_MANAGEMENT_AZ_API       | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-data-management service                                                                                                               |No|
+| CHANNEL_MANAGEMENT_AZ_API    | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-channel management service                                                                                                            |No|
+| PUBLICATION_SERVICES_AZ_API  | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-publication-services service                                                                                                          |No|
+| INSTRUMENTATION_KEY          | This is the instrumentation key used by the app to talk to Application Insights.                                                                                                                                                                                       |No|
+
+##### Additional Test secrets
+
+Secrets required for getting tests to run correctly can be found in the below table:
+
+| Variable                   | Description                                   |
+|:---------------------------|:----------------------------------------------|
+| SYSTEM_ADMIN_PROVENANCE_ID | Provenance ID for the test system admin user. |
+
+#### Application.yaml files
+The service can also be adapted using the yaml files found in the following locations:
+- [src/main/resources/application.yaml](./src/main/resources/application.yaml) for changes to the behaviour of the service itself.
+- [src/main/resources/application-dev.yaml](./src/main/resources/application-dev.yaml) for changes to the behaviour of the service when running locally.
+- [src/test/resources/application-test.yaml](./src/test/resources/application-test.yaml) for changes to other test types (e.g. unit tests).
+- [src/integrationTest/resources/application-integration.yaml](./src/integrationTest/resources/application-integration.yaml) for changes to the application when its running functional tests.
+
+## API Documentation
+Our full API specification can be found within our Swagger-UI page.
+It can be accessed locally by starting the service and going to [http://localhost:4550/swagger-ui/swagger-ui/index.html](http://localhost:4550/swagger-ui/swagger-ui/index.html)
+Alternatively, if you're on our VPN, you can access the swagger endpoint at our staging URL (ask a teammate to give you this).
+
+## Examples
+As mentioned, the full api documentation can be found within swagger-ui, but some of the most common operations are highlighted below.
+
+Most of the communication with this service benefits from using secure authentication. While possible to stand up locally in insecure mode, to simulate a production environment it is better to use secure mode.
+Before sending in any requests to the service, you'll need to obtain a bearer token using the following approach:
+
+### Requesting a bearer token
+To request a bearer token, sending a post request following this template:
 ```
-
-### Running the application
-
-####Environment Variables
-The application requires 4 environment variables ($DB_PASS, $DB_USER, $DB_NAME and $DB_PORT).
-These values are required to connect to the postgres db. They can be found in the pip-ss-kv-stg key vault within azure.
-
-Create the image of the application by executing the following command:
-
-```bash
-  ./gradlew assemble
+curl --request POST \
+  --url https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token \
+  --header 'Content-Type: multipart/form-data' \
+  --form client_id={CLIENT_ID_FOR_ANOTHER_SERVICE} \
+  --form scope={APP_URI}/.default \
+  --form client_secret={CLIENT_SECRET_FOR_ANOTHER_SERVICE}\
+  --form grant_type=client_credentials
 ```
+You can copy the above curl command into either Postman or Insomnia and they will automatically be converted to the relevant formats for those programs.
 
-Create docker image:
+*Note - the `_FOR_ANOTHER_SERVICE` variables need to be extracted from another registered microservice within the broader CaTH umbrella (e.g. [pip-data-management](https://github.com/hmcts/pip-data-management))*
 
-```bash
-  docker-compose build
+### Using the bearer token
+You can use the bearer token in the Authorization header when making requests. Here is an example using the create subscription endpoint.
 ```
-
-Run the distribution (created in `build/install/spring-boot-template` directory)
-by executing the following command:
-
-```bash
-  docker-compose up
-```
-
-This will start the API container exposing the application's port
-(set to `4550` in this template app).
-
-In order to test if the application is up, you can call its health endpoint:
-
-```bash
-  curl http://localhost:4550/health
-```
-
-You should get a response similar to this:
-
-```
-  {"status":"UP","diskSpace":{"status":"UP","total":249644974080,"free":137188298752,"threshold":10485760}}
-```
-
-### Alternative script to run application
-
-To skip all the setting up and building, just execute the following command:
-
-```bash
-./bin/run-in-docker.sh
-```
-
-For more information:
-
-```bash
-./bin/run-in-docker.sh -h
-```
-
-Script includes bare minimum environment variables necessary to start api instance. Whenever any variable is changed or any other script regarding docker image/container build, the suggested way to ensure all is cleaned up properly is by this command:
-
-```bash
-docker-compose rm
-```
-
-It clears stopped containers correctly. Might consider removing clutter of images too, especially the ones fiddled with:
-
-```bash
-docker images
-
-docker image rm <image-id>
-```
-
-There is no need to remove postgres and java or similar core images.
-
-## Hystrix
-
-[Hystrix](https://github.com/Netflix/Hystrix/wiki) is a library that helps you control the interactions
-between your application and other services by adding latency tolerance and fault tolerance logic. It does this
-by isolating points of access between the services, stopping cascading failures across them,
-and providing fallback options. We recommend you to use Hystrix in your application if it calls any services.
-
-### Hystrix circuit breaker
-
-This template API has [Hystrix Circuit Breaker](https://github.com/Netflix/Hystrix/wiki/How-it-Works#circuit-breaker)
-already enabled. It monitors and manages all the`@HystrixCommand` or `HystrixObservableCommand` annotated methods
-inside `@Component` or `@Service` annotated classes.
-
-### Other
-
-Hystrix offers much more than Circuit Breaker pattern implementation or command monitoring.
-Here are some other functionalities it provides:
- * [Separate, per-dependency thread pools](https://github.com/Netflix/Hystrix/wiki/How-it-Works#isolation)
- * [Semaphores](https://github.com/Netflix/Hystrix/wiki/How-it-Works#semaphores), which you can use to limit
- the number of concurrent calls to any given dependency
- * [Request caching](https://github.com/Netflix/Hystrix/wiki/How-it-Works#request-caching), allowing
- different code paths to execute Hystrix Commands without worrying about duplicating work
-
-## API
-This service exposes various RESTful api's that help complete its purpose. Below is a list of endpoints and their
-operations.
-
-POST `/subscription` - Creates a new unique subscription based on a valid JSON body conforming to the [Subscription model](#subscription-model). Returns 201
-on success with a message of "Subscription successfully created with the
-id: {subscription id}" or 400 on invalid payload
-
-DELETE `/subscription/{subscriptionId}` - Deletes a subscription from the database that matches the subscription ID.
-Returns a 200 on success with the message "Subscription: {subId} was deleted" or 404 if the supplied ID was not found.
-
-GET - `/subscription/{subscriptionId}` - Returns a single subscription based on the subscription ID. Returns a 200
-on success or a 404 if the subscription ID was not found.
-
-GET - `/subscription/user/{userId}` - Returns a [User Subscription Model](#usersubscription-model) containing the
-cases and locations a user is subscribed to. Returns a 200 on success.
-
-
-## Models
-Various models are used to build the objects needed to send and receive data, see models used in Subscription
-Management below.
-
-### Subscription Model
-Subscription model representing the incoming data, please note that `ID`, `createdDate` and `locationName` are attributes
-that exist in this model but are created automatically once the object has been received
-
-```json
-{
-  "userId": "ID of the user, linking to the user table",
-  "searchType": "ENUM of searchType",
-  "searchValue": "The Search value that is used against the search type",
-  "channel": "ENUM of the channel the user is to receive subscriptions by",
-  "caseNumber": "Case number of the case being subscribed to",
-  "caseName": "Name of the case being subscribed to",
-  "urn": "URN number being subscribed to"
-}
-```
-
-### UserSubscription Model
-
-```json
-{
-  "caseSubscriptions": [
+curl --request POST \
+  --url http://localhost:4550/subscription \
+  --header 'Authorization: Bearer {BEARER_TOKEN_HERE}' \
+  --header 'Content-Type: application/json' \
+  --header 'x-user-id: <UserIDOfTheUser>' \
+  --data-raw '[
     {
-      "subscriptionId": "UUID of the subscription",
-      "caseName": "Name of the case",
-      "caseNumber": "Case number of the case being subscribed to",
-      "urn": "URN number being subscribed to",
-      "dateAdded": "LocalDateTime of when the subscription was created"
+    	"userId": "<userId>",
+    	"searchType": "CASE_ID",
+    	"searchValue": "1234",
+    	"channel": "EMAIL"
     }
-  ],
-  "locationSubscriptions": [
-    {
-      "subscriptionId": "UUID of the subscription",
-      "locationName": "Name of the location being subscribed to",
-      "dateAdded": "LocalDateTime of when the subscription was created"
-    }
-  ]
-}
+  ]'
 ```
 
-## Flyway
+## Deployment
+We use [Jenkins](https://www.jenkins.io/) as our CI/CD system. The deployment of this can be controlled within our application logic using the various `Jenkinsfile`-prepended files within the root directory of the repository.
 
-Flyway is integrated with Subscription Management.
+Our builds run against our `dev` environment during the Jenkins build process. As this is a microservice, the build process involves standing up the service in a docker container in a Kubernetes cluster with the current staging master copies of the other interconnected microservices.
 
-- On the pipeline flyway is enabled but run on start up switched off
-- Locally, flyway is disabled. This is due to all tables existing in a single database locally which causes flyway to fail startup due to mismatching scripts
+If your debugging leads you to conclude that you need to implement a pipeline fix, this can be done in the [CNP Jenkins repo](https://github.com/hmcts/cnp-jenkins-library)
 
-If you want to test the scripts locally, you will first need to clear the "flyway_schema_history' table, and then set the 'ENABLE_FLYWAY' environment variable to 'true'.
+## Creating or debugging of SQL scripts with Flyway
+Flyway is used to apply incremental schema changes (migrations) to our database.
 
-## Materialised View
+### Pipeline
+Flyway is enabled on the pipeline, but is run at startup then switched off.
 
-There is a materialised view created for the Subscription table, which contains a subset of the fields.
+### Local
+For local development, flyway is turned off by default. This is due to all tables existing within a single database locally. This can cause flyway to fail at startup due to mismatching scripts.
 
-This view is implemented via Flyway.
+## Monitoring and Logging
+We utilise [Azure Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview) to store our logs. Ask a teammate for the specific resource in Azure to access these.
+Locally, we use [Log4j](https://logging.apache.org/log4j/2.x/).
+
+In addition, this service is also monitored in production and staging environments by [Dynatrace](https://www.dynatrace.com/). The URL for viewing our specific Dynatrace instance can be had by asking a team member.
+
+## Security & Quality Considerations
+We use a few automated tools to ensure quality and security within the service. A few examples can be found below:
+
+- SonarCloud - provides automated code analysis, finding vulnerabilities, bugs and code smells. Quality gates ensure that test coverage, code style and security are maintained where possible.
+- DependencyCheckAggregate - Ensures that dependencies are kept up to date and that those with known security vulnerabilities (based on the [National Vulnerability Database(NVD)](https://nvd.nist.gov/)) are flagged to developers for mitigation or suppression.
+- JaCoCo Test Coverage - Produces code coverage metrics which allows developers to determine which lines of code are covered (or not) by unit testing. This also makes up one of SonarCloud's quality gates.
+- PMD - Static code analysis tool providing code quality guidance and identifying potential issues relating to coding standards, performance or security.
+- CheckStyle - Enforces coding standards and conventions such as formatting, naming conventions and structure.
+
+## Test Suite
+
+This microservice is comprehensively tested using both unit and functional tests.
+
+### Unit tests
+
+Unit tests can be run on demand using `./gradlew test`.
+
+### Functional tests
+
+Functional tests can be run using `./gradlew functional`
+
+For our functional tests, we are using Square's [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver) library. This allows us to test the full HTTP stack for our service-to-service interactions.
+
+The functional tests also call out to Data Management in staging to retrieve publications.
+
+## Contributing
+We are happy to accept third-party contributions. See [.github/CONTRIBUTING.md](./.github/CONTRIBUTING.md) for more details.
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
