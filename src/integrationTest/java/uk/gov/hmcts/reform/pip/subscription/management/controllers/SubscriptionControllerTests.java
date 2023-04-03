@@ -20,14 +20,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.config.WebClientConfigurationTest;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.ExceptionResponse;
-import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
-import uk.gov.hmcts.reform.pip.subscription.management.models.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionDto;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.ListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
@@ -120,7 +119,8 @@ class SubscriptionControllerTests {
     private String systemAdminProvenanceId;
 
     protected static final String SUBSCRIPTION_PATH = "/subscription";
-    protected static final SubscriptionDto SUBSCRIPTION = new SubscriptionDto();
+    protected static final uk.gov.hmcts.reform.pip.model.subscription.Subscription SUBSCRIPTION =
+        new uk.gov.hmcts.reform.pip.model.subscription.Subscription();
 
     private static final String ACTIONING_USER_ID = "1234-1234";
 

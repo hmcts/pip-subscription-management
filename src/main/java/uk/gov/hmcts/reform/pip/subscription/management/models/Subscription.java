@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
+import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,7 +67,7 @@ public class Subscription {
     private Channel channel;
 
     @Schema(hidden = true)
-    private LocalDateTime createdDate = LocalDateTime.now();
+    private LocalDateTime createdDate;
 
     @Valid
     private String caseNumber;
@@ -87,8 +89,24 @@ public class Subscription {
     @Column(name = "list_type", columnDefinition = "text[]")
     private List<String> listType;
 
-    public SubscriptionDto toDto() {
-        SubscriptionDto dto = new SubscriptionDto();
+    public Subscription(uk.gov.hmcts.reform.pip.model.subscription.Subscription dto) {
+        this.id = dto.getId();
+        this.userId = dto.getUserId();
+        this.searchType = dto.getSearchType();
+        this.searchValue = dto.getSearchValue();
+        this.channel = dto.getChannel();
+        this.createdDate = dto.getCreatedDate();
+        this.caseNumber = dto.getCaseNumber();
+        this.caseName = dto.getCaseName();
+        this.urn = dto.getUrn();
+        this.locationName = dto.getLocationName();
+        this.lastUpdatedDate = dto.getLastUpdatedDate();
+        this.listType = dto.getListType();
+    }
+
+    public uk.gov.hmcts.reform.pip.model.subscription.Subscription toDto() {
+        uk.gov.hmcts.reform.pip.model.subscription.Subscription dto =
+            new uk.gov.hmcts.reform.pip.model.subscription.Subscription();
         dto.setSearchValue(this.searchValue);
         dto.setChannel(this.channel);
         dto.setUserId(this.userId);

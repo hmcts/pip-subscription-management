@@ -1,7 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.models.response;
 
 import lombok.Data;
-import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

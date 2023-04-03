@@ -4,11 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.reform.pip.subscription.management.models.Channel;
+import uk.gov.hmcts.reform.pip.model.publication.Artefact;
+import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
+import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Artefact;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscription;
-import uk.gov.hmcts.reform.pip.subscription.management.models.external.publication.services.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -18,11 +18,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
-import static uk.gov.hmcts.reform.pip.subscription.management.models.SearchType.CASE_ID;
-import static uk.gov.hmcts.reform.pip.subscription.management.models.SearchType.CASE_URN;
-import static uk.gov.hmcts.reform.pip.subscription.management.models.SearchType.LIST_TYPE;
-import static uk.gov.hmcts.reform.pip.subscription.management.models.SearchType.LOCATION_ID;
-import static uk.gov.hmcts.reform.pip.subscription.management.models.external.data.management.Sensitivity.CLASSIFIED;
+import static uk.gov.hmcts.reform.pip.model.publication.Sensitivity.CLASSIFIED;
+import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_ID;
+import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_URN;
+import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LIST_TYPE;
+import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
 
 @Service
 @Slf4j
