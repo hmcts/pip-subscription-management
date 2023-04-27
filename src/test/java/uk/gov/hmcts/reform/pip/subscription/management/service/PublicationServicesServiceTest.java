@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {Application.class})
@@ -46,8 +45,8 @@ class PublicationServicesServiceTest {
     PublicationServicesService publicationServicesService;
 
     private static final String TEST_ID = "123";
-    private static final String RESULT_MATCH = "Returned strings should match";
-    private static final String REQUEST_FAILED = "Request failed";
+    private static final String EMPTY_LOG_EMPTY_MESSAGE = "Error log not empty";
+    private static final String EMPTY_LOG_MATCH_MESSAGE = "Error log does not match";
     private static final String TEST_API_DESTINATION = "http://www.abc.com";
     private static final String SUCCESSFULLY_SENT = "Successfully sent";
     private static final Artefact TEST_ARTEFACT = new Artefact();
@@ -69,7 +68,6 @@ class PublicationServicesServiceTest {
         mockPublicationServicesEndpoint = new MockWebServer();
         mockPublicationServicesEndpoint.start(8081);
     }
-
 
     @AfterEach
     void tearDown() throws IOException {
@@ -94,21 +92,25 @@ class PublicationServicesServiceTest {
                                                                    ContentType.APPLICATION_JSON)
                                                         .setResponseCode(200));
 
+        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
+                                                             subscriptionsSummary.getEmail(),
+                                                             List.of(subscription));
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), EMPTY_LOG_EMPTY_MESSAGE);
 
-
-        String result = publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
-                                                             subscriptionsSummary.getEmail(), List.of(subscription));
-        assertEquals(subscriptionsSummary.toString(), result, RESULT_MATCH);
     }
 
     @Test
     void testPostSubscriptionSummariesThrows() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
-        String result = publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
-                                                             subscriptionsSummary.getEmail(), List.of(subscription));
+        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
+                                                             subscriptionsSummary.getEmail(),
+                                                             List.of(subscription));
 
-        assertEquals(REQUEST_FAILED, result, RESULT_MATCH);
+        assertTrue(
+            logCaptor.getErrorLogs().get(0).contains("Subscription email failed to send with error"),
+            EMPTY_LOG_MATCH_MESSAGE
+        );
     }
 
     @Test
@@ -116,9 +118,11 @@ class PublicationServicesServiceTest {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
-        assertEquals(SUCCESSFULLY_SENT, publicationServicesService
-            .sendThirdPartyList(new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())),
-                     RESULT_MATCH);
+
+        publicationServicesService.sendThirdPartyList(
+            new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())
+        );
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), EMPTY_LOG_EMPTY_MESSAGE);
     }
 
     @Test
@@ -127,8 +131,10 @@ class PublicationServicesServiceTest {
                                                     .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                     .setResponseCode(200));
 
-        assertEquals(SUCCESSFULLY_SENT, publicationServicesService.sendEmptyArtefact(
-            new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)), RESULT_MATCH);
+        publicationServicesService.sendEmptyArtefact(
+            new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)
+        );
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), EMPTY_LOG_EMPTY_MESSAGE);
     }
 
     @Test
@@ -136,20 +142,27 @@ class PublicationServicesServiceTest {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .setResponseCode(404));
 
-        try (LogCaptor logCaptor = LogCaptor.forClass(PublicationServicesService.class)) {
-            assertEquals(REQUEST_FAILED, publicationServicesService.sendEmptyArtefact(
-                new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)), RESULT_MATCH);
-            assertTrue(logCaptor.getErrorLogs().get(0).contains("Request to Publication Services /notify/api failed"),
-                       "Log message does not contain expected message");
-        }
+        publicationServicesService.sendEmptyArtefact(
+            new ThirdPartySubscriptionArtefact(TEST_API_DESTINATION, TEST_ARTEFACT)
+        );
+
+        assertTrue(logCaptor.getErrorLogs().get(0)
+                       .contains("Deleted artefact notification to third party failed to send with error"),
+                   EMPTY_LOG_MATCH_MESSAGE
+        );
     }
 
     @Test
     void testSendThirdPartyListReturnsFailed() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
-        assertEquals("Request failed", publicationServicesService
-                         .sendThirdPartyList(new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())),
-                     "Messages match");
+
+        publicationServicesService.sendThirdPartyList(
+            new ThirdPartySubscription(TEST_API_DESTINATION, UUID.randomUUID())
+        );
+        assertTrue(
+            logCaptor.getErrorLogs().get(0).contains("Publication to third party failed to send with error"),
+            EMPTY_LOG_MATCH_MESSAGE
+        );
 
     }
 
@@ -157,10 +170,9 @@ class PublicationServicesServiceTest {
     void testSendSystemAdminEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SUCCESSFULLY_SENT));
 
-        assertEquals(SUCCESSFULLY_SENT, publicationServicesService
-                         .sendSystemAdminEmail(List.of("test@test.com"), "Name",
-                                               ActionResult.ATTEMPTED, "Error"),
-                     "Email has not been sent");
+        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), "Name",
+                                                        ActionResult.ATTEMPTED, "Error");
+        assertTrue(logCaptor.getErrorLogs().isEmpty(), EMPTY_LOG_EMPTY_MESSAGE);
     }
 
     @Test
@@ -171,7 +183,9 @@ class PublicationServicesServiceTest {
         publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), "Name",
                                                         ActionResult.ATTEMPTED, "Error");
 
-        assertTrue(logCaptor.getErrorLogs().get(0).contains("Request failed with error message"),
-                   "Exception was not logged.");
+        assertTrue(
+            logCaptor.getErrorLogs().get(0).contains("System admin notification email failed to send with error"),
+            EMPTY_LOG_MATCH_MESSAGE
+        );
     }
 }

@@ -11,6 +11,8 @@ import uk.gov.hmcts.reform.pip.model.location.Location;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
+
 @Slf4j
 @Service
 public class DataManagementService {
@@ -26,14 +28,17 @@ public class DataManagementService {
         try {
             Location location = webClient.get().uri(new URI(String.format("%s/locations/%s", url, locationId)))
                 .retrieve()
-                .bodyToMono(Location.class).block();
+                .bodyToMono(Location.class)
+                .block();
             if (location != null) {
                 return location.getName();
             }
             return null;
         } catch (WebClientException | URISyntaxException ex) {
-            log.error("Data management request failed for LocationId: {}. Response: {}",
-                      locationId, ex.getMessage());
+            log.error(writeLog(
+                String.format("Data management request to get location name failed for LocationId: %s. Response: %s",
+                              locationId, ex.getMessage())
+            ));
             return null;
         }
     }
