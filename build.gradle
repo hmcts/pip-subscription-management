@@ -215,7 +215,7 @@ dependencies {
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
   implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.3'
 
-  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '4.5.0'
+  implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.1.0'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
   implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.0.2', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
