@@ -223,7 +223,7 @@ dependencies {
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
   implementation group: 'com.vladmihalcea', name: 'hibernate-types-52', version: '2.21.1'
 
-  implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.14.2'
+  implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.15.0'
 
   // Include Flyway for database migrations
   implementation group: 'org.flywaydb', name: 'flyway-core', version: '9.16.1'
