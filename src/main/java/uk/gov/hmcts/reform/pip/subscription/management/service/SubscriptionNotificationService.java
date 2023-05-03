@@ -137,8 +137,8 @@ public class SubscriptionNotificationService {
         });
 
         channelManagementService.getMappedApis(apiList)
-            .forEach((api, subscriptions) -> log.info(writeLog(
-                publicationServicesService.sendThirdPartyList(new ThirdPartySubscription(api, artefactId)))));
+            .forEach((api, subscriptions) ->
+                         publicationServicesService.sendThirdPartyList(new ThirdPartySubscription(api, artefactId)));
         log.info(writeLog(String.format("Collected %s api subscribers", apiList.size())));
     }
 
@@ -165,8 +165,8 @@ public class SubscriptionNotificationService {
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptions,
                                                                Channel.API_COURTEL.notificationRoute);
         channelManagementService.getMappedApis(apiList)
-            .forEach((api, subscription) -> log.info(writeLog(publicationServicesService.sendEmptyArtefact(
+            .forEach((api, subscription) -> publicationServicesService.sendEmptyArtefact(
                 new ThirdPartySubscriptionArtefact(api, artefactBeingDeleted)
-            ))));
+            ));
     }
 }

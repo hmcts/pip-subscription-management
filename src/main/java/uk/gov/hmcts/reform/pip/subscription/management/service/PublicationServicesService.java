@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Component
@@ -29,8 +30,6 @@ public class PublicationServicesService {
     private static final String NOTIFY_API_PATH = "notify/api";
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
     private static final String PUBLICATION_SERVICE_API = "publicationServicesApi";
-    private static final String REQUEST_FAILED = "Request failed";
-    private static final String REQUEST_FAILED_ERROR = "Request failed with error message: %s";
 
     @Autowired
     private WebClient webClient;
@@ -38,79 +37,85 @@ public class PublicationServicesService {
     @Value("${service-to-service.publication-services}")
     private String url;
 
-    public String postSubscriptionSummaries(UUID artefactId, String email, List<Subscription> listOfSubscriptions) {
+    public void postSubscriptionSummaries(UUID artefactId, String email, List<Subscription> listOfSubscriptions) {
         SubscriptionsSummary payload = formatSubscriptionsSummary(artefactId, email, listOfSubscriptions);
         try {
             webClient.post().uri(url + "/" + NOTIFY_SUBSCRIPTION_PATH)
                 .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
                 .body(BodyInserters.fromValue(payload)).retrieve()
-                .bodyToMono(Void.class).block();
-            return payload.toString();
+                .bodyToMono(Void.class)
+                .block();
 
         } catch (WebClientException ex) {
-            log.error(String.format(REQUEST_FAILED_ERROR, ex.getMessage()));
+            log.error(writeLog(
+                String.format("Subscription email failed to send with error: %s", ex.getMessage())
+            ));
         }
-        return REQUEST_FAILED;
     }
 
-    public String sendThirdPartyList(ThirdPartySubscription subscriptions) {
+    public void sendThirdPartyList(ThirdPartySubscription subscriptions) {
         try {
             webClient.post().uri(url + "/" + NOTIFY_API_PATH)
                 .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
                 .bodyValue(subscriptions).retrieve()
-                .bodyToMono(Void.class).block();
-            return "Successfully sent";
+                .bodyToMono(Void.class)
+                .block();
         } catch (WebClientResponseException ex) {
-            log.error("Request to Publication Services {} failed due to: {}", "/" + NOTIFY_API_PATH,
-                      ex.getResponseBodyAsString()
-            );
-            return REQUEST_FAILED;
+            log.error(writeLog(
+                String.format("Publication to third party failed to send with error: %s",
+                              ex.getResponseBodyAsString())
+            ));
         }
     }
 
-    public String sendEmptyArtefact(ThirdPartySubscriptionArtefact subscriptionArtefact) {
+    public void sendEmptyArtefact(ThirdPartySubscriptionArtefact subscriptionArtefact) {
         try {
             webClient.put().uri(url + "/" + NOTIFY_API_PATH)
                 .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
                 .bodyValue(subscriptionArtefact).retrieve()
-                .bodyToMono(Void.class).block();
-            return "Successfully sent";
+                .bodyToMono(Void.class)
+                .block();
         } catch (WebClientResponseException ex) {
-            log.error("Request to Publication Services {} failed due to: {}", "/" + NOTIFY_API_PATH,
-                      ex.getResponseBodyAsString()
-            );
-            return REQUEST_FAILED;
+            log.error(writeLog(
+                String.format("Deleted artefact notification to third party failed to send with error: %s",
+                              ex.getResponseBodyAsString())
+            ));
         }
     }
 
-    public String sendLocationDeletionSubscriptionEmail(List<String> emails, String locationName) {
+    public void sendLocationDeletionSubscriptionEmail(List<String> emails, String locationName) {
         LocationSubscriptionDeletion payload = formatLocationSubscriptionDeletion(emails, locationName);
         try {
             webClient.post().uri(url + "/" + NOTIFY_LOCATION_SUBSCRIPTION_PATH)
                 .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
                 .body(BodyInserters.fromValue(payload)).retrieve()
-                .bodyToMono(Void.class).block();
-            return payload.toString();
+                .bodyToMono(Void.class)
+                .block();
 
         } catch (WebClientException ex) {
-            log.error(String.format(REQUEST_FAILED_ERROR, ex.getMessage()));
+            log.error(writeLog(
+                String.format("Location deletion notification email failed to send with error: %s",
+                              ex.getMessage())
+            ));
         }
-        return REQUEST_FAILED;
     }
 
-    public String sendSystemAdminEmail(List<String> emails, String requesterName, ActionResult actionResult,
+    public void sendSystemAdminEmail(List<String> emails, String requesterName, ActionResult actionResult,
                                        String additionalDetails) {
         DeleteLocationSubscriptionAction payload =
             formatSystemAdminAction(emails, requesterName, actionResult, additionalDetails);
         try {
-            return webClient.post().uri(url + "/notify/sysadmin/update")
+            webClient.post().uri(url + "/notify/sysadmin/update")
                 .body(BodyInserters.fromValue(payload))
                 .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
-                .retrieve().bodyToMono(String.class).block();
+                .retrieve().bodyToMono(String.class)
+                .block();
 
         } catch (WebClientException ex) {
-            log.error(String.format(REQUEST_FAILED_ERROR, ex.getMessage()));
-            return "";
+            log.error(writeLog(
+                String.format("System admin notification email failed to send with error: %s",
+                              ex.getMessage())
+            ));
         }
     }
 
@@ -142,8 +147,9 @@ public class PublicationServicesService {
                 case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
                 case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
                 case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
-                default -> log.error(String.format("Search type was not one of allowed options: %s",
-                                                   subscription.getSearchType()));
+                default -> log.error(writeLog(
+                    String.format("Search type was not one of allowed options: %s", subscription.getSearchType())
+                ));
             }
         });
 

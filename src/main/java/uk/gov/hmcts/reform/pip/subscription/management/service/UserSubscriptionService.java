@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
@@ -11,7 +12,10 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRe
 
 import java.util.List;
 
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
+
 @Service
+@Slf4j
 public class UserSubscriptionService {
     @Autowired
     SubscriptionRepository repository;
@@ -36,7 +40,9 @@ public class UserSubscriptionService {
      */
     public String deleteAllByUserId(String userId) {
         repository.deleteAllByUserId(userId);
-        return String.format("All subscriptions deleted for user id %s", userId);
+        String message = String.format("All subscriptions deleted for user id %s", userId);
+        log.info(writeLog(message));
+        return message;
     }
 
     private UserSubscription collectSubscriptions(List<Subscription> subscriptions) {
