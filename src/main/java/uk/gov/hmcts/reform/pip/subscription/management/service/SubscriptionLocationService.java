@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 
@@ -50,22 +51,26 @@ public class SubscriptionLocationService {
 
     public String deleteSubscriptionByLocation(String locationId, String provenanceUserId)
         throws JsonProcessingException {
+
+        log.info(writeLog(String.format("User %s attempting to delete all subscriptions for location %s",
+                                        provenanceUserId, locationId)));
         List<Subscription> locationSubscriptions = findSubscriptionsByLocationId(locationId);
-        if (locationSubscriptions.isEmpty()) {
-            return String.format("No subscriptions found for location id %s", locationId);
-        } else {
-            List<UUID> subIds = locationSubscriptions.stream()
-                .map(Subscription::getId).toList();
-            repository.deleteByIdIn(subIds);
 
-            String locationName = dataManagementService.getCourtName(locationId);
-            notifySubscriberAboutSubscriptionDeletion(locationSubscriptions, locationName);
-            notifySystemAdminAboutSubscriptionDeletion(provenanceUserId,
-                String.format("Total %s subscription(s) for location %s",
-                              locationSubscriptions.size(), locationName));
+        List<UUID> subIds = locationSubscriptions.stream()
+            .map(Subscription::getId).toList();
+        repository.deleteByIdIn(subIds);
 
-            return String.format("Total %s subscriptions deleted for location id %s", subIds.size(), locationId);
-        }
+        log.info(writeLog(String.format("%s subscription(s) have been deleted for location %s by user %s",
+                                        subIds.size(), locationId, provenanceUserId)));
+
+        String locationName = dataManagementService.getCourtName(locationId);
+        notifySubscriberAboutSubscriptionDeletion(locationSubscriptions, locationName);
+        notifySystemAdminAboutSubscriptionDeletion(provenanceUserId,
+            String.format("Total %s subscription(s) for location %s",
+                          locationSubscriptions.size(), locationName));
+
+        return String.format("Total %s subscriptions deleted for location id %s", subIds.size(), locationId);
+
 
     }
 
