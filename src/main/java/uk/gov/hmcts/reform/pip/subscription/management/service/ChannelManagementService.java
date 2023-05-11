@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Component
@@ -39,7 +40,10 @@ public class ChannelManagementService {
                 .bodyToMono(new ParameterizedTypeReference<Map<String, List<Subscription>>>() {})
                 .block();
         } catch (WebClientException ex) {
-            log.error(String.format("Request with body failed. With error message: %s", ex.getMessage()));
+            log.error(writeLog(
+                String.format("Request to Channel Management to get channel emails failed with error message: %s",
+                              ex.getMessage())
+            ));
             return Collections.emptyMap();
         }
     }
@@ -50,9 +54,13 @@ public class ChannelManagementService {
                 .attributes(clientRegistrationId("channelManagementApi"))
                 .bodyValue(subscriptions)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, List<Subscription>>>() {}).block();
+                .bodyToMono(new ParameterizedTypeReference<Map<String, List<Subscription>>>() {})
+                .block();
         } catch (WebClientResponseException ex) {
-            log.error("Request to Channel Management {} failed due to: {}", API_PATH, ex.getResponseBodyAsString());
+            log.error(writeLog(
+                String.format("Request to Channel Management %s failed due to: %s",
+                              API_PATH, ex.getResponseBodyAsString())
+            ));
             return Collections.emptyMap();
         }
     }

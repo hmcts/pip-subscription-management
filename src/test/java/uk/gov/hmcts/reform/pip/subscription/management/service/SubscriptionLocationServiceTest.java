@@ -103,7 +103,7 @@ class SubscriptionLocationServiceTest {
             .thenReturn(mockSubscriptionList);
         when(dataManagementService.getCourtName(LOCATION_ID))
             .thenReturn(COURT_NAME);
-        when(publicationService.sendLocationDeletionSubscriptionEmail(any(), any())).thenReturn(any());
+        doNothing().when(publicationService).sendLocationDeletionSubscriptionEmail(any(), any());
         when(accountManagementService.getUserInfo(REQUESTER_NAME))
             .thenReturn(azureAccount);
 

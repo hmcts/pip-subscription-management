@@ -20,13 +20,13 @@ import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
+import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
 @Slf4j
 @Service
@@ -35,6 +35,7 @@ public class AccountManagementService {
     @Value("${service-to-service.account-management}")
     private String url;
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String IS_AUTHORISED = "account/isAuthorised";
     private static final String GET_USERS_EMAIL = "account/emails";
     private static final String ACCOUNT_MANAGEMENT_API = "accountManagementApi";
@@ -55,13 +56,15 @@ public class AccountManagementService {
             return webClient.get().uri(
                 String.format("%s/%s/%s/%s/%s", url, IS_AUTHORISED, userId, listType, sensitivity))
                 .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
-                .retrieve().bodyToMono(Boolean.class).block();
+                .retrieve().bodyToMono(Boolean.class)
+                .block();
         } catch (WebClientResponseException ex) {
             if (ex.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
-                log.info("User failed list type auth check with response: " + ex.getResponseBodyAsString());
+                log.info(writeLog("User failed list type auth check with response: "
+                                      + ex.getResponseBodyAsString()));
             } else {
-                log.error("Request to Account Management isAuthenticated failed due to: "
-                              + ex.getResponseBodyAsString());
+                log.error(writeLog("Request to Account Management isAuthenticated failed due to: "
+                              + ex.getResponseBodyAsString()));
             }
         }
         return false;
@@ -76,7 +79,10 @@ public class AccountManagementService {
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Optional<String>>>() {})
                 .block();
         } catch (WebClientException ex) {
-            log.error(String.format("Request with body failed. With error message: %s", ex.getMessage()));
+            log.error(writeLog(
+                String.format("Request to Account Management to get account e-mails failed with error message: %s",
+                              ex.getMessage())
+            ));
             return Collections.emptyMap();
         }
     }
@@ -85,9 +91,13 @@ public class AccountManagementService {
         try {
             return webClient.get().uri(url + "/account/azure/" + provenanceUserId)
                 .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
-                .retrieve().bodyToMono(AzureAccount.class).block();
+                .retrieve().bodyToMono(AzureAccount.class)
+                .block();
         } catch (WebClientException ex) {
-            log.error(String.format("Request to account management failed with error message: %s", ex.getMessage()));
+            log.error(writeLog(
+                String.format("Request to Account Management to get Azure account failed with error message: %s",
+                              ex.getMessage())
+            ));
             return new AzureAccount();
         }
     }
@@ -98,19 +108,22 @@ public class AccountManagementService {
             String result = webClient.get().uri(String.format(
                     "%s/account/all?provenances=%s&roles=%s", url, provenances, role))
                 .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
-                .retrieve().bodyToMono(String.class).block();
+                .retrieve().bodyToMono(String.class)
+                .block();
             return findUserEmails(result);
         } catch (WebClientException ex) {
-            log.error(String.format("Request to account management failed with error message: %s", ex.getMessage()));
-            return new ArrayList<>();
+            log.error(writeLog(
+                String.format("Request to Account Management to get all user accounts failed with error message: %s",
+                              ex.getMessage())
+            ));
+            return Collections.emptyList();
         }
     }
 
     private List<PiUser> findUserEmails(String jsonResponse) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        JsonNode node = new ObjectMapper().readTree(jsonResponse);
+        MAPPER.registerModule(new JavaTimeModule());
+        JsonNode node = MAPPER.readTree(jsonResponse);
         JsonNode content = node.get("content");
-        return mapper.readValue(content.toString(), new TypeReference<>(){});
+        return MAPPER.readValue(content.toString(), new TypeReference<>(){});
     }
 }
