@@ -32,6 +32,8 @@ class UserSubscriptionServiceTest {
     private static final String USER_ID_NO_SUBS = "Tina21";
     private static final String SEARCH_VALUE = "193254";
     private static final String CASE_ID = "123";
+
+    private static final String PARTY_NAMES = "Party A, Party B";
     private static final String URN = "312";
     private static final String CASE_NAME = "case-name";
     private static final Channel EMAIL = Channel.EMAIL;
@@ -86,12 +88,14 @@ class UserSubscriptionServiceTest {
         mockSubscription.setSearchType(SearchType.CASE_ID);
         mockSubscription.setCaseNumber(CASE_ID);
         mockSubscription.setCaseName(CASE_NAME);
+        mockSubscription.setPartyNames(PARTY_NAMES);
         mockSubscription.setUrn(URN);
 
         CaseSubscription expected = new CaseSubscription();
         expected.setCaseNumber(CASE_ID);
         expected.setCaseName(CASE_NAME);
         expected.setUrn(URN);
+        expected.setPartyNames(PARTY_NAMES);
         expected.setSubscriptionId(mockSubscription.getId());
         expected.setDateAdded(DATE_ADDED);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));

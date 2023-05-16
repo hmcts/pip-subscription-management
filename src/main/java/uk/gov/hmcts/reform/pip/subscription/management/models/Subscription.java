@@ -76,6 +76,9 @@ public class Subscription {
     private String caseName;
 
     @Valid
+    private String partyNames;
+
+    @Valid
     private String urn;
 
     @Valid
@@ -98,6 +101,7 @@ public class Subscription {
         this.createdDate = dto.getCreatedDate();
         this.caseNumber = dto.getCaseNumber();
         this.caseName = dto.getCaseName();
+        this.partyNames = dto.getPartyNames();
         this.urn = dto.getUrn();
         this.locationName = dto.getLocationName();
         this.lastUpdatedDate = dto.getLastUpdatedDate();
@@ -115,6 +119,7 @@ public class Subscription {
         dto.setCreatedDate(this.createdDate);
         dto.setCaseNumber(this.caseNumber);
         dto.setCaseName(this.caseName);
+        dto.setPartyNames(this.partyNames);
         dto.setUrn(this.urn);
         dto.setLocationName(this.locationName);
         dto.setListType(this.listType);
