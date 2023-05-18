@@ -523,6 +523,7 @@ class SubscriptionControllerTests {
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(SearchType.CASE_ID, caseSubscription.getSearchType(), VALIDATION_SEARCH_TYPE);
         assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
         assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
     }
@@ -551,6 +552,7 @@ class SubscriptionControllerTests {
 
         CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(SearchType.CASE_URN, caseSubscription.getSearchType(), VALIDATION_SEARCH_TYPE);
         assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
         assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
     }

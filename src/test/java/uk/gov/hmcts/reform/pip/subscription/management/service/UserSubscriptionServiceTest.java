@@ -94,6 +94,7 @@ class UserSubscriptionServiceTest {
         expected.setUrn(URN);
         expected.setSubscriptionId(mockSubscription.getId());
         expected.setDateAdded(DATE_ADDED);
+        expected.setSearchType(SearchType.CASE_ID);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
 
         assertEquals(List.of(expected), userSubscriptionService.findByUserId(USER_ID).getCaseSubscriptions(),
