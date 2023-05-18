@@ -72,6 +72,7 @@ public class UserSubscriptionService {
                     caseSubscription.setSubscriptionId(subscription.getId());
                     caseSubscription.setCaseNumber(subscription.getCaseNumber());
                     caseSubscription.setUrn(subscription.getUrn());
+                    caseSubscription.setSearchType(subscription.getSearchType());
                     caseSubscription.setDateAdded(subscription.getCreatedDate());
                     userSubscription.getCaseSubscriptions().add(caseSubscription);
                 }
