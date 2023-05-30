@@ -72,6 +72,7 @@ class SubscriptionControllerTests {
     private static final String VALIDATION_CASE_NAME = "Returned case name does not match expected case name";
     private static final String VALIDATION_CASE_NUMBER = "Returned case number does not match expected case number";
     private static final String VALIDATION_CASE_URN = "Returned URN does not match expected URN";
+    private static final String VALIDATION_PARTY_NAMES = "Returned party names do not match expected parties";
     private static final String VALIDATION_LOCATION_NAME =
         "Returned location name does not match expected location name";
     public static final String VALIDATION_BAD_REQUEST = "Incorrect response - should be 400.";
@@ -97,6 +98,7 @@ class SubscriptionControllerTests {
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
     private static final String CASE_NAME = "Tom Clancy";
+    private static final String PARTY_NAMES = "Party A, Party B";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL = "/subscription/mi-data-all";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL = "/subscription/mi-data-local";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
@@ -199,6 +201,7 @@ class SubscriptionControllerTests {
     @DisplayName("Post a new subscription and then get it from db.")
     @Test
     void postEndpoint() throws Exception {
+        SUBSCRIPTION.setPartyNames(PARTY_NAMES);
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
@@ -237,14 +240,17 @@ class SubscriptionControllerTests {
         assertNotEquals(
             returnedSubscription.getId(), 0L, "id should not equal zero"
         );
-        assertEquals(SUBSCRIPTION.getCaseName(), returnedSubscription.getCaseName(),
+        assertEquals(CASE_NAME, returnedSubscription.getCaseName(),
                      VALIDATION_CASE_NAME
         );
-        assertEquals(SUBSCRIPTION.getCaseNumber(), returnedSubscription.getCaseNumber(),
+        assertEquals(CASE_ID, returnedSubscription.getCaseNumber(),
                      VALIDATION_CASE_NUMBER
         );
-        assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
+        assertEquals(CASE_URN, returnedSubscription.getUrn(),
                      VALIDATION_CASE_URN
+        );
+        assertEquals(PARTY_NAMES, returnedSubscription.getPartyNames(),
+                     VALIDATION_PARTY_NAMES
         );
         assertEquals(LOCATION_NAME_1, returnedSubscription.getLocationName(),
                      VALIDATION_LOCATION_NAME
@@ -254,6 +260,7 @@ class SubscriptionControllerTests {
     @DisplayName("Ensure post endpoint actually posts a subscription to db")
     @Test
     void checkPostToDb() throws Exception {
+        SUBSCRIPTION.setPartyNames(PARTY_NAMES);
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
@@ -301,14 +308,17 @@ class SubscriptionControllerTests {
         assertNotEquals(
             returnedSubscription2.getId(), 0L, "id should not equal zero"
         );
-        assertEquals(SUBSCRIPTION.getCaseName(), returnedSubscription.getCaseName(),
+        assertEquals(CASE_NAME, returnedSubscription.getCaseName(),
                      VALIDATION_CASE_NAME
         );
-        assertEquals(SUBSCRIPTION.getCaseNumber(), returnedSubscription.getCaseNumber(),
+        assertEquals(CASE_ID, returnedSubscription.getCaseNumber(),
                      VALIDATION_CASE_NUMBER
         );
-        assertEquals(SUBSCRIPTION.getUrn(), returnedSubscription.getUrn(),
+        assertEquals(CASE_URN, returnedSubscription.getUrn(),
                      VALIDATION_CASE_URN
+        );
+        assertEquals(PARTY_NAMES, returnedSubscription.getPartyNames(),
+                     VALIDATION_PARTY_NAMES
         );
         assertEquals(LOCATION_NAME_1, returnedSubscription.getLocationName(),
                      VALIDATION_LOCATION_NAME
@@ -470,6 +480,37 @@ class SubscriptionControllerTests {
         assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
         assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
         assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
+    }
+
+    @Test
+    void testGetUsersSubscriptionsByUserIdWithParties() throws Exception {
+        SUBSCRIPTION.setUserId(UUID_STRING);
+        SUBSCRIPTION.setSearchType(SearchType.CASE_ID);
+        SUBSCRIPTION.setPartyNames(PARTY_NAMES);
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(CASE_ID);
+
+        mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
+
+        MvcResult response = mvc.perform(get(SUBSCRIPTION_USER_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        UserSubscription userSubscriptions =
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
+
+        assertEquals(1,
+            userSubscriptions.getLocationSubscriptions().size() + userSubscriptions
+                .getCaseSubscriptions().size(),
+            VALIDATION_SUBSCRIPTION_LIST
+        );
+
+        CaseSubscription caseSubscription = userSubscriptions.getCaseSubscriptions().get(0);
+        assertEquals(CASE_NAME, caseSubscription.getCaseName(), VALIDATION_CASE_NAME);
+        assertEquals(CASE_ID, caseSubscription.getCaseNumber(), VALIDATION_CASE_ID);
+        assertEquals(CASE_URN, caseSubscription.getUrn(), VALIDATION_CASE_URN);
+        assertEquals(PARTY_NAMES, caseSubscription.getPartyNames(), VALIDATION_PARTY_NAMES);
     }
 
     @Test
