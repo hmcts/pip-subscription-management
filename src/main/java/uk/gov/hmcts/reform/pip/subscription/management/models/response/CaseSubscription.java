@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.models.response;
 
 import lombok.Data;
+import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -12,6 +13,7 @@ public class CaseSubscription {
     private String caseName;
     private String partyNames;
     private String caseNumber;
+    private SearchType searchType;
     private String urn;
     private LocalDateTime dateAdded;
 }
