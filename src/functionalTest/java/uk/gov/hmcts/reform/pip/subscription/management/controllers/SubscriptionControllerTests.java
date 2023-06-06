@@ -82,6 +82,7 @@ class SubscriptionControllerTests {
     private static final String VALIDATION_NO_SUBSCRIPTIONS = "User has unknown subscriptions";
     public static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
+    public static final String VALIDATION_UUID = "UUID should not be null";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String RESPONSE_MATCH = "Response should match";
@@ -237,9 +238,9 @@ class SubscriptionControllerTests {
             returnedSubscription.getUserId(),
             VALIDATION_USER_ID
         );
-        assertNotEquals(
-            returnedSubscription.getId(), 0L, "id should not equal zero"
-        );
+
+        assertNotNull(returnedSubscription.getId(), VALIDATION_UUID);
+
         assertEquals(CASE_NAME, returnedSubscription.getCaseName(),
                      VALIDATION_CASE_NAME
         );
@@ -305,22 +306,21 @@ class SubscriptionControllerTests {
             returnedSubscription2.getUserId(),
             VALIDATION_USER_ID
         );
-        assertNotEquals(
-            returnedSubscription2.getId(), 0L, "id should not equal zero"
-        );
-        assertEquals(CASE_NAME, returnedSubscription.getCaseName(),
+        assertNotNull(returnedSubscription2.getId(), VALIDATION_UUID);
+
+        assertEquals(CASE_NAME, returnedSubscription2.getCaseName(),
                      VALIDATION_CASE_NAME
         );
-        assertEquals(CASE_ID, returnedSubscription.getCaseNumber(),
+        assertEquals(CASE_ID, returnedSubscription2.getCaseNumber(),
                      VALIDATION_CASE_NUMBER
         );
-        assertEquals(CASE_URN, returnedSubscription.getUrn(),
+        assertEquals(CASE_URN, returnedSubscription2.getUrn(),
                      VALIDATION_CASE_URN
         );
-        assertEquals(PARTY_NAMES, returnedSubscription.getPartyNames(),
+        assertEquals(PARTY_NAMES, returnedSubscription2.getPartyNames(),
                      VALIDATION_PARTY_NAMES
         );
-        assertEquals(LOCATION_NAME_1, returnedSubscription.getLocationName(),
+        assertEquals(LOCATION_NAME_1, returnedSubscription2.getLocationName(),
                      VALIDATION_LOCATION_NAME
         );
 
