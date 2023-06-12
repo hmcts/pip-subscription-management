@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.pip.subscription.management.controllers;
+package uk.gov.hmcts.reform.pip.subscription.management.config;
 
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.DisplayName;
@@ -8,28 +8,42 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Built-in feature which saves service's swagger specs in temporary directory.
+ * Each travis run on master should automatically save and upload (if updated) documentation.
+ */
 @SpringBootTest(classes = {Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles(profiles = "integration")
+@ActiveProfiles("functional")
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-class GetWelcomeTest {
+class SwaggerPublisherTest {
 
     @Autowired
-    private transient MockMvc mockMvc;
+    private MockMvc mvc;
 
-    @DisplayName("Should welcome upon root request with 200 response code")
+    @DisplayName("Generate swagger documentation")
     @Test
-    void welcomeRootEndpoint() throws Exception {
-        MvcResult response = mockMvc.perform(get("/")).andExpect(status().isOk()).andReturn();
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
+    void generateDocs() throws Exception {
+        byte[] specs = mvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsByteArray();
 
-        assertThat(response.getResponse().getContentAsString()).startsWith("Welcome");
+        try (OutputStream outputStream = Files.newOutputStream(Paths.get("/tmp/swagger-specs.json"))) {
+            outputStream.write(specs);
+        }
+
     }
 }
