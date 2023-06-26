@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +18,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocat
 @Tag(name = "Subscription Management Testing Support API")
 @RequestMapping("/testing-support")
 @IsAdmin
+@ConditionalOnProperty(prefix = "testingSupport", name = "enableApi", havingValue = "true")
 public class TestingSupportController {
     private static final String OK_CODE = "200";
     private static final String AUTH_ERROR_CODE = "403";
