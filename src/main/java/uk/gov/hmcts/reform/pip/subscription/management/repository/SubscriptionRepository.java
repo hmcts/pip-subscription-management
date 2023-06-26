@@ -75,6 +75,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         nativeQuery = true)
     List<Subscription> findSubscriptionsByLocationId(@Param("search_value") String searchValue);
 
+    List<Subscription> findAllByLocationNameStartingWithIgnoreCase(@Param("prefix") String prefix);
+
     @Modifying
     @javax.transaction.Transactional
     @Query(value = "REFRESH MATERIALIZED VIEW sdp_mat_view_subscription", nativeQuery = true)
