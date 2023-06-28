@@ -3,10 +3,10 @@ spring:
     allow-bean-definition-overriding: true
 
 service-to-service:
-  data-management: localhost:4550
-  account-management: localhost:6969
-  channel-management: localhost:8181
-  publication-services: localhost:8081
+  data-management: http://localhost:4550
+  account-management: http://localhost:6969
+  channel-management: http://localhost:8181
+  publication-services: http://localhost:8081
 
 dbMigration:
   runOnStartup: true

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
 /**
  * This JPA interface allows us to specify specific find methods for the database and it should
  * create the required functionality for us.
@@ -76,7 +77,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findSubscriptionsByLocationId(@Param("search_value") String searchValue);
 
     @Modifying
-    @javax.transaction.Transactional
+    @Transactional
     @Query(value = "REFRESH MATERIALIZED VIEW sdp_mat_view_subscription", nativeQuery = true)
     void refreshSubscriptionView();
 }

@@ -3,27 +3,26 @@ package uk.gov.hmcts.reform.pip.subscription.management.models;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.vladmihalcea.hibernate.type.array.ListArrayType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 @Data
 @AllArgsConstructor
@@ -31,10 +30,6 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table
 @JsonPropertyOrder({"id", "channel", "searchType", "searchValue", "userID"})
-@TypeDef(
-    name = "list-array",
-    typeClass = ListArrayType.class
-)
 public class Subscription {
 
     /**
@@ -44,7 +39,6 @@ public class Subscription {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "uuid", insertable = false, updatable = false, nullable = false)
     @Schema(hidden = true)
-    @Type(type = "org.hibernate.type.PostgresUUIDType")
     private UUID id;
 
     /**
@@ -88,7 +82,7 @@ public class Subscription {
     private LocalDateTime lastUpdatedDate;
 
     @Valid
-    @Type(type = "list-array")
+    @Type(ListArrayType.class)
     @Column(name = "list_type", columnDefinition = "text[]")
     private List<String> listType;
 
