@@ -69,10 +69,9 @@ spring:
           lob:
             non_contextual_creation: 'true'
     database: POSTGRESQL
-    generate-ddl: 'true'
     hibernate:
-      # this ensures the db persists after spring boot connection drops.
-      ddl-auto: update
+      # Updated to 'none'. This is the default, and prevents auto updates in production
+      ddl-auto: none
 
   # This is needed as locally, all tables are in a single schema. Flyway is only enabled on the clusters by default
   flyway:
