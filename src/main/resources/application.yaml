@@ -71,7 +71,7 @@ spring:
     database: POSTGRESQL
     hibernate:
       # Updated to 'none'. This is the default, and prevents auto updates in production
-      ddl-auto: none
+      ddl-auto: ${DB_UPDATE:none}
 
   # This is needed as locally, all tables are in a single schema. Flyway is only enabled on the clusters by default
   flyway:
