@@ -71,7 +71,18 @@ public class SubscriptionLocationService {
 
         return String.format("Total %s subscriptions deleted for location id %s", subIds.size(), locationId);
 
+    }
 
+    public String deleteAllSubscriptionsWithLocationNamePrefix(String prefix) {
+        List<UUID> subscriptionIds = repository.findAllByLocationNameStartingWithIgnoreCase(prefix).stream()
+            .map(Subscription::getId)
+            .toList();
+
+        if (!subscriptionIds.isEmpty()) {
+            repository.deleteByIdIn(subscriptionIds);
+        }
+        return String.format("%s subscription(s) deleted for location name starting with %s",
+                             subscriptionIds.size(), prefix);
     }
 
     private void notifySubscriberAboutSubscriptionDeletion(List<Subscription> locationSubscriptions,
