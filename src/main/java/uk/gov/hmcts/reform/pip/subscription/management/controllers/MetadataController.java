@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,7 +14,6 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.service.MetadataService;
 
 import java.util.List;
-import javax.validation.Valid;
 
 /**
  * This controller returns any metadata for subscriptions, so that everything is in a single place.
