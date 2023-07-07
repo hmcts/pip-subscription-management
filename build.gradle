@@ -194,7 +194,7 @@ dependencies {
 
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: reformLoggingVersion
   implementation group: 'com.github.hmcts.java-logging', name: 'logging-appinsights', version: reformLoggingVersion
-  implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.3'
+  implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.4'
 
   implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.2.0'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
