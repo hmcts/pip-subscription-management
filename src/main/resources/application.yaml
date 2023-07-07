@@ -94,3 +94,7 @@ dbMigration:
   # When true, the app will run DB migration on startup.
   # Otherwise, it will just check if all migrations have been applied (and fail to start if not).
   runOnStartup: ${RUN_DB_MIGRATION_ON_STARTUP:false}
+
+# Used to conditionally enable testing support API
+testingSupport:
+  enableApi: ${ENABLE_TESTING_SUPPORT_API:true}
