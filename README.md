@@ -177,7 +177,6 @@ Below is a table of currently used environment variables for starting the servic
 | INSTRUMENTATION_KEY          | This is the instrumentation key used by the app to talk to Application Insights.                                                                                                                                                                                       |No|
 | ENABLE_TESTING_SUPPORT_API     | Used to conditionally enable testing support API. Default to `false` for the production environment only.                                                                                                                                                            |No|
 
-
 ##### Additional Test secrets
 
 Secrets required for getting tests to run correctly can be found in the below table:
