@@ -198,7 +198,7 @@ dependencies {
 
   implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.2.0'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
-  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.1', {
+  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.2', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.11.0'
