@@ -16,7 +16,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -73,7 +72,7 @@ class SubscriptionServiceTest {
     private Subscription findableSubscription;
 
     @Captor
-    private ArgumentCaptor<ArrayList<UUID>> listCaptor;
+    private ArgumentCaptor<List<UUID>> listCaptor;
 
     @Mock
     DataManagementService dataManagementService;
@@ -220,9 +219,10 @@ class SubscriptionServiceTest {
         List<UUID> testIds = List.of(testId1, testId2);
         List<Subscription> subscriptions = List.of(subscription1, subscription2);
 
-        doNothing().when(subscriptionRepository).deleteByIdIn(listCaptor.capture());
         when(subscriptionRepository.findByIdIn(testIds)).thenReturn(subscriptions);
         subscriptionService.bulkDeleteSubscriptions(testIds);
+
+        verify(subscriptionRepository).deleteByIdIn(listCaptor.capture());
         assertThat(listCaptor.getValue())
             .as("Subscription IDs to delete do not match")
             .isEqualTo(testIds);
