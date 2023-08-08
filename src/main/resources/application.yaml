@@ -83,9 +83,6 @@ service-to-service:
   account-management: ${ACCOUNT_MANAGEMENT_URL:https://pip-account-management.staging.platform.hmcts.net}
   channel-management: ${CHANNEL_MANAGEMENT_URL:https://pip-channel-management.staging.platform.hmcts.net}
   publication-services: ${PUBLICATION_SERVICES_URL:https://pip-publication-services.staging.platform.hmcts.net}
-azure:
-  application-insights:
-    instrumentation-key: ${INSTRUMENTATION_KEY:00000000-0000-0000-0000-000000000000}
 springdoc:
   swagger-ui:
     path: /swagger-ui/
