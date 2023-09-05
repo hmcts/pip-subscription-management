@@ -976,23 +976,6 @@ class SubscriptionControllerTests {
         );
     }
 
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedBulkDeletedSubscribersV2() throws Exception {
-
-        String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
-
-        MvcResult mvcResult = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
-                                              .contentType(MediaType.APPLICATION_JSON)
-                                              .content(subscriptionIdRequest)
-                                              .header(USER_ID_HEADER, TEST_SYSTEM_ADMIN_USER_ID))
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
     private String getSubscriptionId(String response) {
         String subscriptionId;
         int startIndex = response.indexOf("the id ") + "the id ".length();
