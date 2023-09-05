@@ -130,9 +130,8 @@ class SubscriptionControllerTests {
     protected static final uk.gov.hmcts.reform.pip.model.subscription.Subscription SUBSCRIPTION =
         new uk.gov.hmcts.reform.pip.model.subscription.Subscription();
 
-    private static final String ACTIONING_USER_ID = "1234-1234";
-    private static final String TEST_SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
-    private static final String TEST_ADMIN_USER_ID = "b5c71829-eb3f-4eba-a87a-5160ccf44821";
+    private static final String ACTIONING_USER_ID = UUID_STRING;
+    private static final String INVALID_ACTIONING_USER_ID = UUID.randomUUID().toString();
 
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String X_PROVENANCE_USER_ID_HEADER = "x-provenance-user-id";
@@ -389,8 +388,9 @@ class SubscriptionControllerTests {
 
     @DisplayName("Delete an individual subscription")
     @Test
-    void testDeleteSubscriptionByIdReturnsOkWithSystemAdmin() throws Exception {
-        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
+    void testDeleteSubscriptionByIdReturnsOkIfUserMatched() throws Exception {
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
+                                                                                 ACTIONING_USER_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -407,7 +407,7 @@ class SubscriptionControllerTests {
         );
 
         MvcResult deleteResponse = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                                   .header(USER_ID_HEADER, TEST_SYSTEM_ADMIN_USER_ID))
+                                                   .header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -420,7 +420,7 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testDeleteSubscriptionByIdReturnsForbiddenWithAdmin() throws Exception {
+    void testDeleteSubscriptionByIdReturnsForbiddenIfUserMismatched() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID);
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
@@ -438,7 +438,7 @@ class SubscriptionControllerTests {
         );
 
         mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                                   .header(USER_ID_HEADER, TEST_ADMIN_USER_ID))
+                                                   .header(USER_ID_HEADER, INVALID_ACTIONING_USER_ID))
             .andExpect(status().isForbidden());
     }
 
@@ -447,7 +447,7 @@ class SubscriptionControllerTests {
     void failedDelete() throws Exception {
         String randomUuid = UUID_STRING;
         MvcResult response = mvc.perform(delete(SUBSCRIPTION_BASE_URL + randomUuid)
-                                             .header(USER_ID_HEADER, TEST_SYSTEM_ADMIN_USER_ID))
+                                             .header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isNotFound()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
 
@@ -884,11 +884,11 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    void testBulkDeletedSubscribersV2ReturnsOkWithSystemAdmin() throws Exception {
-        MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+    void testBulkDeletedSubscribersV2ReturnsOkIfUserMatched() throws Exception {
+        MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, ACTIONING_USER_ID))
             .andReturn();
         MvcResult locationSubscription = mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
-                                                                           UUID_STRING))
+                                                                           ACTIONING_USER_ID))
             .andReturn();
 
         String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
@@ -900,7 +900,7 @@ class SubscriptionControllerTests {
         MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
                                                    .content(subscriptionIdRequest)
-                                                   .header(USER_ID_HEADER, TEST_SYSTEM_ADMIN_USER_ID))
+                                                   .header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -924,12 +924,11 @@ class SubscriptionControllerTests {
     }
 
     @Test
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
-    void testBulkDeletedSubscribersV2ReturnsForbiddenWithAdmin() throws Exception {
+    void testBulkDeletedSubscribersV2ReturnsForbiddenIfUserMismatched() throws Exception {
         MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
             .andReturn();
         MvcResult locationSubscription = mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
-                                                                           UUID_STRING))
+                                                                           ACTIONING_USER_ID))
             .andReturn();
 
         String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
@@ -938,11 +937,15 @@ class SubscriptionControllerTests {
         String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + "\","
             + "\"" + locationSubscriptionId + CLOSING_BRACKET;
 
-        mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
+        MvcResult response = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
                                                    .content(subscriptionIdRequest)
-                                                   .header(USER_ID_HEADER, TEST_ADMIN_USER_ID))
-            .andExpect(status().isForbidden());
+                                                   .header(USER_ID_HEADER, INVALID_ACTIONING_USER_ID))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE);
     }
 
     @Test
@@ -952,12 +955,11 @@ class SubscriptionControllerTests {
         MvcResult response = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                              .contentType(MediaType.APPLICATION_JSON)
                                              .content(subscriptionIdRequest)
-                                             .header(USER_ID_HEADER, TEST_SYSTEM_ADMIN_USER_ID))
+                                             .header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isNotFound()).andReturn();
 
         assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
+                     NOT_FOUND_STATUS_CODE);
     }
 
     @Test
@@ -968,7 +970,7 @@ class SubscriptionControllerTests {
         MvcResult response = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                              .contentType(MediaType.APPLICATION_JSON)
                                              .content(subscriptionIdRequest)
-                                             .header(USER_ID_HEADER, TEST_SYSTEM_ADMIN_USER_ID))
+                                             .header(USER_ID_HEADER, ACTIONING_USER_ID))
             .andExpect(status().isNotFound()).andReturn();
 
         assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
