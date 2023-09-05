@@ -87,11 +87,28 @@ public class AccountManagementService {
         }
     }
 
-    public AzureAccount getUserInfo(String provenanceUserId) {
+    public Optional<PiUser> getUserByUserId(String userId) {
+        try {
+            return Optional.of(webClient.get().uri(url + "/account/" + userId)
+                .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
+                .retrieve()
+                .bodyToMono(PiUser.class)
+                .block());
+        } catch (WebClientException ex) {
+            log.error(writeLog(
+                String.format("Request to Account Management to get user info with ID %s failed with error message: %s",
+                              userId, ex.getMessage())
+            ));
+            return Optional.empty();
+        }
+    }
+
+    public AzureAccount getAzureAccountInfo(String provenanceUserId) {
         try {
             return webClient.get().uri(url + "/account/azure/" + provenanceUserId)
                 .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
-                .retrieve().bodyToMono(AzureAccount.class)
+                .retrieve()
+                .bodyToMono(AzureAccount.class)
                 .block();
         } catch (WebClientException ex) {
             log.error(writeLog(
@@ -108,7 +125,8 @@ public class AccountManagementService {
             String result = webClient.get().uri(String.format(
                     "%s/account/all?provenances=%s&roles=%s", url, provenances, role))
                 .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
-                .retrieve().bodyToMono(String.class)
+                .retrieve()
+                .bodyToMono(String.class)
                 .block();
             return findUserEmails(result);
         } catch (WebClientException ex) {

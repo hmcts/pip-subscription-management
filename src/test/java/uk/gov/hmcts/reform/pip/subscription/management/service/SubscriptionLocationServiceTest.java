@@ -85,7 +85,7 @@ class SubscriptionLocationServiceTest {
                 .thenReturn(mockSubscriptionList);
             when(dataManagementService.getCourtName(LOCATION_ID))
                 .thenReturn(COURT_NAME);
-            when(accountManagementService.getUserInfo(REQUESTER_NAME))
+            when(accountManagementService.getAzureAccountInfo(REQUESTER_NAME))
                 .thenReturn(azureAccount);
             when(accountManagementService.getAllAccounts(PI_AAD.toString(), SYSTEM_ADMIN.toString()))
                 .thenReturn(List.of(sysAdminUser));
@@ -139,7 +139,7 @@ class SubscriptionLocationServiceTest {
         when(dataManagementService.getCourtName(LOCATION_ID))
             .thenReturn(COURT_NAME);
         doNothing().when(publicationService).sendLocationDeletionSubscriptionEmail(any(), any());
-        when(accountManagementService.getUserInfo(REQUESTER_NAME))
+        when(accountManagementService.getAzureAccountInfo(REQUESTER_NAME))
             .thenReturn(azureAccount);
 
         doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
