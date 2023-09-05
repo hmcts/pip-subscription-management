@@ -985,7 +985,7 @@ class SubscriptionControllerTests {
         MvcResult mvcResult = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                               .contentType(MediaType.APPLICATION_JSON)
                                               .content(subscriptionIdRequest)
-                                              .header(USER_ID_HEADER, ACTIONING_USER_ID))
+                                              .header(USER_ID_HEADER, TEST_SYSTEM_ADMIN_USER_ID))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
