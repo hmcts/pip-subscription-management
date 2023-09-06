@@ -7,6 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 @Profile("functional")
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class WebClientConfigurationTest {
 
     @Bean
