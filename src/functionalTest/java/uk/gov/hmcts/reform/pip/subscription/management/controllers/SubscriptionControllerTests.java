@@ -117,6 +117,7 @@ class SubscriptionControllerTests {
 
     private static final String OPENING_BRACKET = "[\"";
     private static final String CLOSING_BRACKET = "\"]";
+    private static final String DOUBLE_QUOTE_COMMA = "\",\"";
 
     private static String rawArtefact;
 
@@ -415,7 +416,7 @@ class SubscriptionControllerTests {
         assertEquals(
             String.format("Subscription: %s was deleted", returnedSubscription.getId()),
             deleteResponse.getResponse().getContentAsString(),
-            "Responses are not equal"
+            RESPONSE_MATCH
         );
     }
 
@@ -447,7 +448,7 @@ class SubscriptionControllerTests {
         assertEquals(
             String.format("Subscription: %s was deleted", returnedSubscription.getId()),
             deleteResponse.getResponse().getContentAsString(),
-            "Responses are not equal"
+            RESPONSE_MATCH
         );
     }
 
@@ -853,8 +854,8 @@ class SubscriptionControllerTests {
         String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
         String locationSubscriptionId = getSubscriptionId(locationSubscription.getResponse().getContentAsString());
 
-        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + "\","
-            + "\"" + locationSubscriptionId + CLOSING_BRACKET;
+        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + DOUBLE_QUOTE_COMMA
+            + locationSubscriptionId + CLOSING_BRACKET;
 
 
         MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
@@ -926,8 +927,8 @@ class SubscriptionControllerTests {
         String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
         String locationSubscriptionId = getSubscriptionId(locationSubscription.getResponse().getContentAsString());
 
-        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + "\","
-            + "\"" + locationSubscriptionId + CLOSING_BRACKET;
+        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + DOUBLE_QUOTE_COMMA
+            + locationSubscriptionId + CLOSING_BRACKET;
 
         MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
@@ -966,8 +967,8 @@ class SubscriptionControllerTests {
         String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
         String locationSubscriptionId = getSubscriptionId(locationSubscription.getResponse().getContentAsString());
 
-        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + "\","
-            + "\"" + locationSubscriptionId + CLOSING_BRACKET;
+        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + DOUBLE_QUOTE_COMMA
+            + locationSubscriptionId + CLOSING_BRACKET;
 
         MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
@@ -1006,8 +1007,8 @@ class SubscriptionControllerTests {
         String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
         String locationSubscriptionId = getSubscriptionId(locationSubscription.getResponse().getContentAsString());
 
-        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + "\","
-            + "\"" + locationSubscriptionId + CLOSING_BRACKET;
+        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + DOUBLE_QUOTE_COMMA
+            + locationSubscriptionId + CLOSING_BRACKET;
 
         MvcResult response = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
@@ -1100,7 +1101,7 @@ class SubscriptionControllerTests {
         assertEquals(
             String.format("All subscriptions deleted for user id %s", returnedSubscription.getUserId()),
             deleteResponse.getResponse().getContentAsString(),
-            "Responses are not equal"
+            RESPONSE_MATCH
         );
     }
 
