@@ -29,7 +29,7 @@ class AuthorisationServiceTest {
     private static final UUID SUBSCRIPTION_ID2 = UUID.randomUUID();
     private static final UUID SUBSCRIPTION_ID3 = UUID.randomUUID();
 
-    private static final String CAN_DELETE_SUBSCRIPTION_MESSAGE = "USer should be able to delete subscription";
+    private static final String CAN_DELETE_SUBSCRIPTION_MESSAGE = "User should be able to delete subscription";
     private static final String CANNOT_DELETE_SUBSCRIPTION_MESSAGE = "User should not be able to delete subscription";
     private static final String LOG_EMPTY_MESSAGE = "Error log should be empty";
     private static final String LOG_NOT_EMPTY_MESSAGE = "Error log should not be empty";

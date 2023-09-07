@@ -114,7 +114,6 @@ public class SubscriptionController {
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscriptions with IDs {subIds} deleted")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the subscription ID: {subIds}")
     @Transactional

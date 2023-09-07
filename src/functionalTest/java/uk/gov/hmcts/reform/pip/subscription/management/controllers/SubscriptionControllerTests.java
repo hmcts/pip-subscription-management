@@ -132,6 +132,7 @@ class SubscriptionControllerTests {
 
     private static final String ACTIONING_USER_ID = UUID_STRING;
     private static final String INVALID_ACTIONING_USER_ID = UUID.randomUUID().toString();
+    private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
 
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String X_PROVENANCE_USER_ID_HEADER = "x-provenance-user-id";
@@ -386,7 +387,38 @@ class SubscriptionControllerTests {
         assertEquals(400, response.getResponse().getStatus(), VALIDATION_BAD_REQUEST);
     }
 
-    @DisplayName("Delete an individual subscription")
+    @Test
+    void testDeleteSubscriptionByIdReturnsOkIfSystemAdmin() throws Exception {
+        MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
+                                                                                 ACTIONING_USER_ID);
+
+        MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
+        assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
+
+        String subscriptionResponse = response.getResponse().getContentAsString();
+        String ourUuid =
+            Arrays.stream(subscriptionResponse.split(" ")).max(Comparator.comparingInt(String::length))
+                .orElse(null);
+
+        MvcResult getResponse = mvc.perform(getSubscriptionByUuid(ourUuid)).andReturn();
+        Subscription returnedSubscription = OBJECT_MAPPER.readValue(
+            getResponse.getResponse().getContentAsString(),
+            Subscription.class
+        );
+
+        MvcResult deleteResponse = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
+                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
+        assertEquals(
+            String.format("Subscription: %s was deleted", returnedSubscription.getId()),
+            deleteResponse.getResponse().getContentAsString(),
+            "Responses are not equal"
+        );
+    }
+
     @Test
     void testDeleteSubscriptionByIdReturnsOkIfUserMatched() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
@@ -881,6 +913,46 @@ class SubscriptionControllerTests {
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE
         );
+    }
+
+    @Test
+    void testBulkDeletedSubscribersV2ReturnsOkIfSystemAdmin() throws Exception {
+        MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, ACTIONING_USER_ID))
+            .andReturn();
+        MvcResult locationSubscription = mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
+                                                                           ACTIONING_USER_ID))
+            .andReturn();
+
+        String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
+        String locationSubscriptionId = getSubscriptionId(locationSubscription.getResponse().getContentAsString());
+
+        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + "\","
+            + "\"" + locationSubscriptionId + CLOSING_BRACKET;
+
+        MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
+                                                   .contentType(MediaType.APPLICATION_JSON)
+                                                   .content(subscriptionIdRequest)
+                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertEquals(String.format(
+                         "Subscriptions with ID %s deleted",
+                         caseSubscriptionId + ", " + locationSubscriptionId
+                     ),
+                     deleteResponse.getResponse().getContentAsString(), RESPONSE_MATCH
+        );
+
+        MvcResult getCaseSubscriptionResponse =
+            mvc.perform(getSubscriptionByUuid(caseSubscriptionId))
+                .andExpect(status().isNotFound()).andReturn();
+        assertEquals(NOT_FOUND.value(), getCaseSubscriptionResponse.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE);
+        MvcResult getLocationSubscriptionResponse =
+            mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
+                .andExpect(status().isNotFound()).andReturn();
+        assertEquals(NOT_FOUND.value(), getLocationSubscriptionResponse.getResponse().getStatus(),
+                     NOT_FOUND_STATUS_CODE);
     }
 
     @Test
