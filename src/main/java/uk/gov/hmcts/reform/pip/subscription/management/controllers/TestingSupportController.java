@@ -19,6 +19,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocat
 @RequestMapping("/testing-support")
 @IsAdmin
 @ConditionalOnProperty(prefix = "testingSupport", name = "enableApi", havingValue = "true")
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestingSupportController {
     private static final String OK_CODE = "200";
     private static final String AUTH_ERROR_CODE = "403";

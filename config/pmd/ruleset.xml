@@ -69,7 +69,7 @@
     <exclude name="UncommentedEmptyMethodBody"/>
   </rule>
   <rule ref="category/java/errorprone.xml">
-    <exclude name="BeanMembersShouldSerialize"/>
+    <exclude name="NonSerializableClass"/>
     <exclude name="UseProperClassLoader"/>
   </rule>
   <rule ref="category/java/multithreading.xml"/>
