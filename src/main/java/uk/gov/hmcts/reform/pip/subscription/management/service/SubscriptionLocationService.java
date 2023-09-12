@@ -93,7 +93,7 @@ public class SubscriptionLocationService {
 
     private void notifySystemAdminAboutSubscriptionDeletion(String provenanceUserId, String additionalDetails)
         throws JsonProcessingException {
-        AzureAccount userInfo = accountManagementService.getUserInfo(provenanceUserId);
+        AzureAccount userInfo = accountManagementService.getAzureAccountInfo(provenanceUserId);
         List<PiUser> systemAdmins = accountManagementService.getAllAccounts(PI_AAD.toString(),
                                                                             SYSTEM_ADMIN.toString());
         List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
@@ -31,32 +30,38 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 @SpringBootTest(classes = {Application.class})
 @ActiveProfiles({"test", "non-async"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
-@SuppressWarnings("PMD.LawOfDemeter")
 class AccountManagementServiceTest {
-
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectWriter OBJECT_WRITER = OBJECT_MAPPER.findAndRegisterModules()
+        .writer()
+        .withDefaultPrettyPrinter();
     private static final String LOG_MESSAGE_MATCH = "Log messages should match.";
+    private static final String VALID_ID = "1";
     private static final String INVALID_ID = "2";
 
-    @Autowired
-    private AccountManagementService accountManagementService;
-
     private static MockWebServer mockAccountManagementEndpoint;
-    private static final String TRIGGER_RECEIVED = "Trigger has been received";
     private static List<Subscription> subscriptionList;
     private final Map<String, Optional<String>> expectedMap = new ConcurrentHashMap<>();
     private String jsonResponse;
     private static final String CONTENT_TYPE = "Content-Type";
 
     private List<String> subscriptionIds;
+
+    @Autowired
+    private AccountManagementService accountManagementService;
 
     @BeforeEach
     void setup() throws IOException {
@@ -70,9 +75,7 @@ class AccountManagementServiceTest {
 
         subscriptionList = List.of(mockSubscription);
         expectedMap.put("a@b.com", Optional.empty());
-
-        ObjectWriter ow = new ObjectMapper().findAndRegisterModules().writer().withDefaultPrettyPrinter();
-        jsonResponse = ow.writeValueAsString(expectedMap);
+        jsonResponse = OBJECT_WRITER.writeValueAsString(expectedMap);
 
         subscriptionIds = subscriptionList.stream()
             .map(subscription -> subscription.getId().toString()).toList();
@@ -88,7 +91,7 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint = new MockWebServer();
         mockAccountManagementEndpoint.start(6969);
         mockAccountManagementEndpoint.enqueue(new MockResponse()
-                                  .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                                  .setHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                                   .setBody(String.valueOf(true)));
 
         assertEquals(true, accountManagementService.isUserAuthorised(
@@ -102,7 +105,7 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint = new MockWebServer();
         mockAccountManagementEndpoint.start(6969);
         mockAccountManagementEndpoint.enqueue(new MockResponse()
-                                  .setResponseCode(HttpStatus.FORBIDDEN.value()));
+                                  .setResponseCode(FORBIDDEN.value()));
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountManagementService.class)) {
             accountManagementService.isUserAuthorised(INVALID_ID, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC);
             assertEquals(1, logCaptor.getInfoLogs().size(), LOG_MESSAGE_MATCH);
@@ -118,7 +121,7 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint = new MockWebServer();
         mockAccountManagementEndpoint.start(6969);
         mockAccountManagementEndpoint.enqueue(new MockResponse()
-                                  .setResponseCode(HttpStatus.BAD_REQUEST.value()));
+                                  .setResponseCode(BAD_REQUEST.value()));
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountManagementService.class)) {
             boolean response = accountManagementService.isUserAuthorised(
                 INVALID_ID, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC);
@@ -136,7 +139,7 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint = new MockWebServer();
         mockAccountManagementEndpoint.start(6969);
         mockAccountManagementEndpoint.enqueue(new MockResponse()
-                                  .setResponseCode(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+                                  .setResponseCode(INTERNAL_SERVER_ERROR.value()));
         try (LogCaptor logCaptor = LogCaptor.forClass(AccountManagementService.class)) {
             boolean response = accountManagementService.isUserAuthorised(
                 INVALID_ID, ListType.CIVIL_DAILY_CAUSE_LIST, Sensitivity.PUBLIC);
@@ -154,16 +157,12 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint = new MockWebServer();
         mockAccountManagementEndpoint.start(6969);
         mockAccountManagementEndpoint.enqueue(new MockResponse()
-                                                  .addHeader(CONTENT_TYPE,
-                                                             ContentType.APPLICATION_JSON)
+                                                  .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
                                                   .setBody(jsonResponse));
 
-        Map<String, Optional<String>> returnedMap =
-            accountManagementService.getMappedEmails(subscriptionIds);
+        Map<String, Optional<String>> returnedMap = accountManagementService.getMappedEmails(subscriptionIds);
 
         assertEquals(expectedMap, returnedMap, "Returned map does not equal expected map");
-
-        mockAccountManagementEndpoint.shutdown();
     }
 
     @Test
@@ -172,41 +171,72 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint.start(6969);
         mockAccountManagementEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
-        Map<String, Optional<String>> returnedMap =
-            accountManagementService.getMappedEmails(subscriptionIds);
+        Map<String, Optional<String>> returnedMap = accountManagementService.getMappedEmails(subscriptionIds);
 
         assertNotNull(returnedMap, "List was null when error occurred");
-        mockAccountManagementEndpoint.shutdown();
     }
 
     @Test
-    void testGetUserInfo() throws IOException {
+    void testGetUserByUserIdSuccess() throws IOException {
+        PiUser response = new PiUser();
+        response.setUserId(VALID_ID);
+        jsonResponse = OBJECT_WRITER.writeValueAsString(Optional.of(response));
+
         mockAccountManagementEndpoint = new MockWebServer();
         mockAccountManagementEndpoint.start(6969);
-        mockAccountManagementEndpoint.enqueue(new MockResponse().setBody(TRIGGER_RECEIVED));
+        mockAccountManagementEndpoint.enqueue(new MockResponse()
+                                                  .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                                                  .setBody(jsonResponse));
 
-        AzureAccount result =
-            accountManagementService.getUserInfo(UUID.randomUUID().toString());
-
-        assertNotNull(result,
-                      "User information has not been returned from the server");
-
-        mockAccountManagementEndpoint.shutdown();
+        Optional<PiUser> result = accountManagementService.getUserByUserId(VALID_ID);
+        assertThat(result)
+            .as("Valid user should be returned")
+            .isPresent()
+            .get()
+            .extracting(u -> u.getUserId())
+            .isEqualTo(VALID_ID);
     }
 
     @Test
-    void testGetUserInfoError() throws IOException {
+    void testGetUserByUserIdError() throws IOException {
         mockAccountManagementEndpoint = new MockWebServer();
         mockAccountManagementEndpoint.start(6969);
-        mockAccountManagementEndpoint.enqueue(new MockResponse().setResponseCode(HttpStatus.BAD_REQUEST.value()));
+        mockAccountManagementEndpoint.enqueue(new MockResponse().setResponseCode(BAD_REQUEST.value()));
 
-        AzureAccount result =
-            accountManagementService.getUserInfo(UUID.randomUUID().toString());
+        Optional<PiUser> result = accountManagementService.getUserByUserId(VALID_ID);
+        assertThat(result)
+            .as("User should not be returned")
+            .isEmpty();
+    }
+
+    @Test
+    void testGetAzureAccountInfo() throws IOException {
+        AzureAccount response = new AzureAccount();
+        response.setAzureAccountId(VALID_ID);
+        jsonResponse = OBJECT_WRITER.writeValueAsString(Optional.of(response));
+
+        mockAccountManagementEndpoint = new MockWebServer();
+        mockAccountManagementEndpoint.start(6969);
+        mockAccountManagementEndpoint.enqueue(new MockResponse()
+                                                  .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                                                  .setBody(jsonResponse));
+
+        AzureAccount result = accountManagementService.getAzureAccountInfo(VALID_ID);
+
+        assertEquals(VALID_ID, result.getAzureAccountId(),
+                      "Valid user information has not been returned from the server");
+    }
+
+    @Test
+    void testGetAzureAccountInfoError() throws IOException {
+        mockAccountManagementEndpoint = new MockWebServer();
+        mockAccountManagementEndpoint.start(6969);
+        mockAccountManagementEndpoint.enqueue(new MockResponse().setResponseCode(BAD_REQUEST.value()));
+
+        AzureAccount result = accountManagementService.getAzureAccountInfo(INVALID_ID);
 
         assertNull(result.getDisplayName(),
-                   "User information has not been returned from the server");
-
-        mockAccountManagementEndpoint.shutdown();
+                   "User information should not be returned from the server");
     }
 
     @Test
@@ -216,28 +246,22 @@ class AccountManagementServiceTest {
         mockAccountManagementEndpoint.enqueue(new MockResponse()
             .setBody("{\"content\":[{\"email\":\"junaid335@yahoo.com\",\"roles\":\"SYSTEM_ADMIN\"}]}"));
 
-        List<PiUser> result =
-            accountManagementService.getAllAccounts("prov", "role");
+        List<PiUser> result = accountManagementService.getAllAccounts("prov", "role");
 
         assertFalse(result.isEmpty(),
                     "System admin users have not been returned from the server");
-
-        mockAccountManagementEndpoint.shutdown();
     }
 
     @Test
     void testGetAllAccountsError() throws IOException {
         mockAccountManagementEndpoint = new MockWebServer();
         mockAccountManagementEndpoint.start(6969);
-        mockAccountManagementEndpoint.enqueue(new MockResponse().setResponseCode(HttpStatus.BAD_REQUEST.value()));
+        mockAccountManagementEndpoint.enqueue(new MockResponse().setResponseCode(BAD_REQUEST.value()));
 
-        List<PiUser> result =
-            accountManagementService.getAllAccounts("prov", "role");
+        List<PiUser> result = accountManagementService.getAllAccounts("prov", "role");
 
         assertTrue(result.isEmpty(),
                    "System admin users have not been returned from the server");
-
-        mockAccountManagementEndpoint.shutdown();
     }
 
 }
