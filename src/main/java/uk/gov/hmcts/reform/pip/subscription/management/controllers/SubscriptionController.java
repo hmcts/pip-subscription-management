@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.service.AuthorisationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
@@ -41,8 +43,8 @@ import java.util.UUID;
 public class SubscriptionController {
 
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
-    private static final String AUTH_ERROR_CODE = "403";
     private static final String OK_CODE = "200";
+    private static final String AUTH_ERROR_CODE = "403";
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
     @Autowired
@@ -56,6 +58,9 @@ public class SubscriptionController {
 
     @Autowired
     SubscriptionLocationService subscriptionLocationService;
+
+    @Autowired
+    AuthorisationService authorisationService;
 
     @PostMapping(consumes = "application/json")
     @Operation(summary = "Endpoint to create a new unique subscription "
@@ -83,6 +88,7 @@ public class SubscriptionController {
     @Transactional
     @Operation(summary = "Endpoint to delete a given unique subscription, using subscription ID as a parameter.")
     @DeleteMapping("/{subId}")
+    @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subId)")
     public ResponseEntity<String> deleteById(@Parameter @PathVariable UUID subId,
                                              @RequestHeader("x-user-id") String actioningUserId) {
 
@@ -97,6 +103,7 @@ public class SubscriptionController {
     @Transactional
     @Operation(summary = "Delete a set of subscriptions using the subscription ID")
     @DeleteMapping("/bulk")
+    @Deprecated
     public ResponseEntity<String> bulkDeleteSubscriptions(@RequestBody List<UUID> subIds) {
 
         subscriptionService.bulkDeleteSubscriptions(subIds);
@@ -105,6 +112,22 @@ public class SubscriptionController {
                                                    .replace("]", "")));
     }
 
+    @ApiResponse(responseCode = OK_CODE, description = "Subscriptions with IDs {subIds} deleted")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
+        description = "No subscription found with the subscription ID: {subIds}")
+    @Transactional
+    @Operation(summary = "Delete a set of subscriptions using the subscription IDs")
+    @DeleteMapping("/v2/bulk")
+    @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subIds)")
+    public ResponseEntity<String> bulkDeleteSubscriptionsV2(@RequestBody List<UUID> subIds,
+                                                            @RequestHeader("x-user-id") String actioningUserId) {
+
+        subscriptionService.bulkDeleteSubscriptions(subIds);
+        return ResponseEntity.ok(String.format("Subscriptions with ID %s deleted",
+                                               subIds.toString().replace("[", "")
+                                                   .replace("]", "")));
+    }
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscription {subId} found")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)

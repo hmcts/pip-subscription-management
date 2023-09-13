@@ -7,6 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Profile({"test", "non-async"})
 @Configuration
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class WebClientConfigTest { //NOSONAR
 
     @Bean
