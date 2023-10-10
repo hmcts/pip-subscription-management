@@ -5,8 +5,18 @@
 def type = "java"
 def product = "pip"
 def component = "subscription-management"
+def kv = product + '-ss-kv'
 
-withPipeline(type, product, component) {
 
-    enableSlackNotifications('#pip-build-notices')
+withParameterizedPipeline(type, product, component, 'sbox', 'sbox') {
+
+  enableDbMigration(kv)
+  enableSlackNotifications('#pip-build-notices')
+
+  enableAksStagingDeployment()
+  disableLegacyDeployment()
+
+  def branchName = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 }
+
+
