@@ -31,7 +31,7 @@ resource "postgresql_role" "create_sdp_access" {
   skip_reassign_owned = true
   skip_drop_role      = true
 
-  count               = var.env == "sbox" || var.env == "demo" || var.env == "test" ? 0 : 1
+  count               = var.env == "sbox" || var.env == "demo" || var.env == "test" || var.env == "stg" || var.env == "ithc" ? 0 : 1
 }
 
 resource "postgresql_grant" "readonly_mv" {
@@ -44,6 +44,6 @@ resource "postgresql_grant" "readonly_mv" {
   privileges  = ["SELECT"]
   objects     = ["sdp_mat_view_subscription"]
 
-  count       = var.env == "sbox" || var.env == "demo" || var.env == "test" ? 0 : 1
+  count       = var.env == "sbox" || var.env == "demo" || var.env == "test" || var.env == "stg" || var.env == "ithc" ? 0 : 1
 }
 
