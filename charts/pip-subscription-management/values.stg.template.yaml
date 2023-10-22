@@ -4,3 +4,4 @@ java:
   ingressHost: ${SERVICE_FQDN}
   environment:
     ENABLE_TESTING_SUPPORT_API: true
+
