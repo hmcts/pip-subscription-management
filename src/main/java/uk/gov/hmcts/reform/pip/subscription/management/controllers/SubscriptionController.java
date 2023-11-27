@@ -4,11 +4,15 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -180,9 +184,16 @@ public class SubscriptionController {
                                 userId));
     }
 
-    @ApiResponse(responseCode = OK_CODE, description =
-        "Subscription Management - MI Data request (all) accepted.")
-    @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting.")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
+        + "See example for headers ", content = {
+            @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
+                    mediaType = MediaType.TEXT_PLAIN_VALUE,
+                    schema = @Schema(implementation = String.class))
+        }
+    )
+    @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting. "
+        + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-all")
     @IsAdmin
     public ResponseEntity<String> getSubscriptionDataForMiReportingAll() {
@@ -190,10 +201,16 @@ public class SubscriptionController {
             .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
     }
 
-    @ApiResponse(responseCode = OK_CODE, description =
-        "Subscription Management - MI Data request (local) accepted.")
-    @Operation(summary = "Returns a list of subscription data "
-        + "for specifically location-based subscriptions for MI reporting.")
+    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
+    @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
+        + "See example for headers ", content = {
+            @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
+                    mediaType = MediaType.TEXT_PLAIN_VALUE,
+                    schema = @Schema(implementation = String.class))
+        }
+    )
+    @Operation(summary = "Returns a list of subscription data for location-based subscriptions for MI reporting. "
+        + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-local")
     @IsAdmin
     public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
