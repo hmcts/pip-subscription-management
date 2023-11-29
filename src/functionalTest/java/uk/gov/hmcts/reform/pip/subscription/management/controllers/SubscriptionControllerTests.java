@@ -1120,7 +1120,8 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetSubscriptionDataForMiReportingAll() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
             .andExpect(status().isOk()).andReturn();
         assertThat(response.getResponse().getContentAsString()).contains(VALID_USER_ID);
@@ -1129,7 +1130,6 @@ class SubscriptionControllerTests {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetSubscriptionDataForMiReportingAllUnauthorized() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
             .andExpect(status().isForbidden())
             .andReturn();
@@ -1141,7 +1141,8 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetSubscriptionDataForMiReportingLocal() throws Exception {
-        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
             .andExpect(status().isOk()).andReturn();
         assertThat(response.getResponse().getContentAsString()).contains(VALID_USER_ID);
@@ -1150,7 +1151,6 @@ class SubscriptionControllerTests {
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetSubscriptionDataForMiReportingLocalUnauthorized() throws Exception {
-        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
             .andExpect(status().isForbidden())
             .andReturn();
