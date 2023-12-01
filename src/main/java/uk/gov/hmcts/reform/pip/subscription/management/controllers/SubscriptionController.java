@@ -204,7 +204,7 @@ public class SubscriptionController {
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
-            @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
+            @Content(examples = {@ExampleObject("id,search_value,channel,user_id,court_name,created_date")},
                     mediaType = MediaType.TEXT_PLAIN_VALUE,
                     schema = @Schema(implementation = String.class))
         }
