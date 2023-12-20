@@ -117,6 +117,9 @@ class SubscriptionControllerTests {
     private static final String OPENING_BRACKET = "[\"";
     private static final String CLOSING_BRACKET = "\"]";
     private static final String DOUBLE_QUOTE_COMMA = "\",\"";
+    private static final String EXPECTED_MI_DATA_ALL_HEADERS = "id,channel,search_type,user_id,court_name,created_date";
+    private static final String EXPECTED_MI_DATA_LOCAL_HEADERS = "id,search_value,channel,user_id,court_name,"
+        + "created_date";
 
     private static String rawArtefact;
 
@@ -390,7 +393,8 @@ class SubscriptionControllerTests {
     @Test
     void testDeleteSubscriptionByIdReturnsOkIfSystemAdmin() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
-                                                                                 ACTIONING_USER_ID);
+                                                                                 ACTIONING_USER_ID
+        );
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -422,7 +426,8 @@ class SubscriptionControllerTests {
     @Test
     void testDeleteSubscriptionByIdReturnsOkIfUserMatched() throws Exception {
         MockHttpServletRequestBuilder mappedSubscription = setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
-                                                                                 ACTIONING_USER_ID);
+                                                                                 ACTIONING_USER_ID
+        );
 
         MvcResult response = mvc.perform(mappedSubscription).andExpect(status().isCreated()).andReturn();
         assertNotNull(response.getResponse().getContentAsString(), VALIDATION_EMPTY_RESPONSE);
@@ -470,7 +475,7 @@ class SubscriptionControllerTests {
         );
 
         mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                                   .header(USER_ID_HEADER, INVALID_ACTIONING_USER_ID))
+                        .header(USER_ID_HEADER, INVALID_ACTIONING_USER_ID))
             .andExpect(status().isForbidden());
     }
 
@@ -565,7 +570,8 @@ class SubscriptionControllerTests {
         UserSubscription userSubscriptions =
             OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UserSubscription.class);
 
-        assertEquals(1,
+        assertEquals(
+            1,
             userSubscriptions.getLocationSubscriptions().size() + userSubscriptions
                 .getCaseSubscriptions().size(),
             VALIDATION_SUBSCRIPTION_LIST
@@ -881,7 +887,8 @@ class SubscriptionControllerTests {
             mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
                 .andExpect(status().isNotFound()).andReturn();
         assertEquals(NOT_FOUND.value(), getLocationSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE);
+                     NOT_FOUND_STATUS_CODE
+        );
     }
 
     @Test
@@ -920,7 +927,8 @@ class SubscriptionControllerTests {
         MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, ACTIONING_USER_ID))
             .andReturn();
         MvcResult locationSubscription = mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
-                                                                           ACTIONING_USER_ID))
+                                                                           ACTIONING_USER_ID
+            ))
             .andReturn();
 
         String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
@@ -947,12 +955,14 @@ class SubscriptionControllerTests {
             mvc.perform(getSubscriptionByUuid(caseSubscriptionId))
                 .andExpect(status().isNotFound()).andReturn();
         assertEquals(NOT_FOUND.value(), getCaseSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE);
+                     NOT_FOUND_STATUS_CODE
+        );
         MvcResult getLocationSubscriptionResponse =
             mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
                 .andExpect(status().isNotFound()).andReturn();
         assertEquals(NOT_FOUND.value(), getLocationSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE);
+                     NOT_FOUND_STATUS_CODE
+        );
     }
 
     @Test
@@ -960,7 +970,8 @@ class SubscriptionControllerTests {
         MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, ACTIONING_USER_ID))
             .andReturn();
         MvcResult locationSubscription = mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
-                                                                           ACTIONING_USER_ID))
+                                                                           ACTIONING_USER_ID
+            ))
             .andReturn();
 
         String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
@@ -987,12 +998,14 @@ class SubscriptionControllerTests {
             mvc.perform(getSubscriptionByUuid(caseSubscriptionId))
                 .andExpect(status().isNotFound()).andReturn();
         assertEquals(NOT_FOUND.value(), getCaseSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE);
+                     NOT_FOUND_STATUS_CODE
+        );
         MvcResult getLocationSubscriptionResponse =
             mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
                 .andExpect(status().isNotFound()).andReturn();
         assertEquals(NOT_FOUND.value(), getLocationSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE);
+                     NOT_FOUND_STATUS_CODE
+        );
     }
 
     @Test
@@ -1000,7 +1013,8 @@ class SubscriptionControllerTests {
         MvcResult caseSubscription = mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
             .andReturn();
         MvcResult locationSubscription = mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID,
-                                                                           ACTIONING_USER_ID))
+                                                                           ACTIONING_USER_ID
+            ))
             .andReturn();
 
         String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
@@ -1010,14 +1024,15 @@ class SubscriptionControllerTests {
             + locationSubscriptionId + CLOSING_BRACKET;
 
         MvcResult response = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
-                                                   .contentType(MediaType.APPLICATION_JSON)
-                                                   .content(subscriptionIdRequest)
-                                                   .header(USER_ID_HEADER, INVALID_ACTIONING_USER_ID))
+                                             .contentType(MediaType.APPLICATION_JSON)
+                                             .content(subscriptionIdRequest)
+                                             .header(USER_ID_HEADER, INVALID_ACTIONING_USER_ID))
             .andExpect(status().isForbidden())
             .andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE);
+                     FORBIDDEN_STATUS_CODE
+        );
     }
 
     @Test
@@ -1031,7 +1046,8 @@ class SubscriptionControllerTests {
             .andExpect(status().isNotFound()).andReturn();
 
         assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE);
+                     NOT_FOUND_STATUS_CODE
+        );
     }
 
     @Test
@@ -1120,16 +1136,20 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetSubscriptionDataForMiReportingAll() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
-        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
-            .andExpect(status().isOk()).andReturn();
-        assertThat(response.getResponse().getContentAsString()).contains(VALID_USER_ID);
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
+        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        assertEquals(EXPECTED_MI_DATA_ALL_HEADERS, response.split("\n")[0],
+                     "Should successfully retrieve MI data headers"
+        );
+        assertThat(response.contains(VALID_USER_ID));
     }
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetSubscriptionDataForMiReportingAllUnauthorized() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
             .andExpect(status().isForbidden())
             .andReturn();
@@ -1141,16 +1161,20 @@ class SubscriptionControllerTests {
 
     @Test
     void testGetSubscriptionDataForMiReportingLocal() throws Exception {
-        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
-        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
-            .andExpect(status().isOk()).andReturn();
-        assertThat(response.getResponse().getContentAsString()).contains(VALID_USER_ID);
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
+        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        assertEquals(EXPECTED_MI_DATA_LOCAL_HEADERS, response.split("\n")[0],
+                     "Should successfully retrieve MI data headers"
+        );
+        assertThat(response.contains(VALID_USER_ID));
     }
 
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetSubscriptionDataForMiReportingLocalUnauthorized() throws Exception {
-        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID));
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
             .andExpect(status().isForbidden())
             .andReturn();
