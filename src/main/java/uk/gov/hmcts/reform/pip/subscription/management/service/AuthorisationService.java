@@ -17,11 +17,15 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Service("authorisationService")
 @Slf4j
 public class AuthorisationService {
-    @Autowired
-    SubscriptionRepository repository;
+    private final SubscriptionRepository repository;
+
+    private final AccountManagementService accountManagementService;
 
     @Autowired
-    AccountManagementService accountManagementService;
+    public AuthorisationService(SubscriptionRepository repository, AccountManagementService accountManagementService) {
+        this.repository = repository;
+        this.accountManagementService = accountManagementService;
+    }
 
     public boolean userCanDeleteSubscriptions(String userId, UUID... subscriptionIds) {
         if (isSystemAdmin(userId)) {

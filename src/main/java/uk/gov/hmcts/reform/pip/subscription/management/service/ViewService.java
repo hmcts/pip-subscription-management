@@ -14,8 +14,12 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Slf4j
 public class ViewService {
 
+    private final SubscriptionRepository subscriptionRepository;
+
     @Autowired
-    SubscriptionRepository subscriptionRepository;
+    public ViewService(SubscriptionRepository subscriptionRepository) {
+        this.subscriptionRepository = subscriptionRepository;
+    }
 
     /**
      * Service method which refreshes the view.

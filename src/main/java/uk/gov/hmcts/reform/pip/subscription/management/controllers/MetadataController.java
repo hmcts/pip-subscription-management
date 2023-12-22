@@ -25,11 +25,15 @@ import java.util.List;
 @IsAdmin
 public class MetadataController {
 
-    @Autowired
-    MetadataService metadataService;
-
     private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
     private static final String AUTH_ERROR_CODE = "403";
+
+    private final MetadataService metadataService;
+
+    @Autowired
+    public MetadataController(MetadataService metadataService) {
+        this.metadataService = metadataService;
+    }
 
     @GetMapping("/channels")
     @Operation(summary = "Endpoint to retrieve the available channels as a list")

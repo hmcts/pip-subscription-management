@@ -26,17 +26,21 @@ import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 @Service
 public class SubscriptionLocationService {
 
-    @Autowired
-    SubscriptionRepository repository;
+    private final SubscriptionRepository repository;
+
+    private final DataManagementService dataManagementService;
+
+    private final AccountManagementService accountManagementService;
+
+    private final PublicationServicesService publicationServicesService;
 
     @Autowired
-    DataManagementService dataManagementService;
-
-    @Autowired
-    AccountManagementService accountManagementService;
-
-    @Autowired
-    PublicationServicesService publicationServicesService;
+    public SubscriptionLocationService(SubscriptionRepository repository, DataManagementService dataManagementService, AccountManagementService accountManagementService, PublicationServicesService publicationServicesService) {
+        this.repository = repository;
+        this.dataManagementService = dataManagementService;
+        this.accountManagementService = accountManagementService;
+        this.publicationServicesService = publicationServicesService;
+    }
 
     public List<Subscription> findSubscriptionsByLocationId(String value) {
         List<Subscription> locationSubscriptions = repository.findSubscriptionsByLocationId(value);

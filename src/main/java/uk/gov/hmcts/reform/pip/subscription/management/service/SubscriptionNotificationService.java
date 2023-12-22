@@ -30,17 +30,21 @@ public class SubscriptionNotificationService {
     private static final String CASE_NUMBER_KEY = "caseNumber";
     private static final String CASE_URN_KEY = "caseUrn";
 
-    @Autowired
-    SubscriptionRepository repository;
+    private final SubscriptionRepository repository;
+
+    private final AccountManagementService accountManagementService;
+
+    private final ChannelManagementService channelManagementService;
+
+    private final PublicationServicesService publicationServicesService;
 
     @Autowired
-    AccountManagementService accountManagementService;
-
-    @Autowired
-    ChannelManagementService channelManagementService;
-
-    @Autowired
-    PublicationServicesService publicationServicesService;
+    public SubscriptionNotificationService(SubscriptionRepository repository, AccountManagementService accountManagementService, ChannelManagementService channelManagementService, PublicationServicesService publicationServicesService) {
+        this.repository = repository;
+        this.accountManagementService = accountManagementService;
+        this.channelManagementService = channelManagementService;
+        this.publicationServicesService = publicationServicesService;
+    }
 
     /**
      * Collect all subscribers for the artefact, and handle sending of email and third party subscriptions to

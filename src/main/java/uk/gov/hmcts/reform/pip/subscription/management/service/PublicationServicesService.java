@@ -31,11 +31,15 @@ public class PublicationServicesService {
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
     private static final String PUBLICATION_SERVICE_API = "publicationServicesApi";
 
-    @Autowired
-    private WebClient webClient;
+    private final WebClient webClient;
 
     @Value("${service-to-service.publication-services}")
     private String url;
+
+    @Autowired
+    public PublicationServicesService(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     public void postSubscriptionSummaries(UUID artefactId, String email, List<Subscription> listOfSubscriptions) {
         SubscriptionsSummary payload = formatSubscriptionsSummary(artefactId, email, listOfSubscriptions);
