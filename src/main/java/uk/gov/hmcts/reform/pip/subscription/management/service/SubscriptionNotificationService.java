@@ -39,7 +39,12 @@ public class SubscriptionNotificationService {
     private final PublicationServicesService publicationServicesService;
 
     @Autowired
-    public SubscriptionNotificationService(SubscriptionRepository repository, AccountManagementService accountManagementService, ChannelManagementService channelManagementService, PublicationServicesService publicationServicesService) {
+    public SubscriptionNotificationService(
+        SubscriptionRepository repository,
+        AccountManagementService accountManagementService,
+        ChannelManagementService channelManagementService,
+        PublicationServicesService publicationServicesService
+    ) {
         this.repository = repository;
         this.accountManagementService = accountManagementService;
         this.channelManagementService = channelManagementService;

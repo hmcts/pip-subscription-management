@@ -35,7 +35,12 @@ public class SubscriptionLocationService {
     private final PublicationServicesService publicationServicesService;
 
     @Autowired
-    public SubscriptionLocationService(SubscriptionRepository repository, DataManagementService dataManagementService, AccountManagementService accountManagementService, PublicationServicesService publicationServicesService) {
+    public SubscriptionLocationService(
+        SubscriptionRepository repository,
+        DataManagementService dataManagementService,
+        AccountManagementService accountManagementService,
+        PublicationServicesService publicationServicesService
+    ) {
         this.repository = repository;
         this.dataManagementService = dataManagementService;
         this.accountManagementService = accountManagementService;
