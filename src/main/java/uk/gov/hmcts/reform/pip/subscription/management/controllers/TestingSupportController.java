@@ -24,8 +24,12 @@ public class TestingSupportController {
     private static final String OK_CODE = "200";
     private static final String AUTH_ERROR_CODE = "403";
 
+    private final SubscriptionLocationService subscriptionLocationService;
+
     @Autowired
-    SubscriptionLocationService subscriptionLocationService;
+    public TestingSupportController(SubscriptionLocationService subscriptionLocationService) {
+        this.subscriptionLocationService = subscriptionLocationService;
+    }
 
     @ApiResponse(responseCode = OK_CODE,
         description = "Subscription(s) deleted for location name starting with {locationNamePrefix}")

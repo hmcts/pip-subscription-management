@@ -25,11 +25,15 @@ public class ChannelManagementService {
     private static final String EMAIL_PATH = "channel/emails";
     private static final String API_PATH = "channel/api";
 
-    @Autowired
-    private WebClient webClient;
+    private final WebClient webClient;
 
     @Value("${service-to-service.channel-management}")
     private String url;
+
+    @Autowired
+    public ChannelManagementService(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     public Map<String, List<Subscription>> getMappedEmails(List<Subscription> listOfSubs) {
         try {

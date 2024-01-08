@@ -24,17 +24,14 @@ import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
 @Service
 public class SubscriptionService {
 
-    @Autowired
-    SubscriptionRepository repository;
+    private final SubscriptionRepository repository;
+    private final DataManagementService dataManagementService;
 
     @Autowired
-    DataManagementService dataManagementService;
-
-    @Autowired
-    AccountManagementService accountManagementService;
-
-    @Autowired
-    PublicationServicesService publicationServicesService;
+    public SubscriptionService(SubscriptionRepository repository, DataManagementService dataManagementService) {
+        this.repository = repository;
+        this.dataManagementService = dataManagementService;
+    }
 
     public Subscription createSubscription(Subscription subscription, String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION,

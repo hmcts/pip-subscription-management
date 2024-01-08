@@ -29,7 +29,6 @@ import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
-import uk.gov.hmcts.reform.pip.subscription.management.service.AuthorisationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionService;
@@ -51,20 +50,23 @@ public class SubscriptionController {
     private static final String AUTH_ERROR_CODE = "403";
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
-    @Autowired
-    SubscriptionService subscriptionService;
+    private final SubscriptionService subscriptionService;
+    private final UserSubscriptionService userSubscriptionService;
+    private final SubscriptionNotificationService subscriptionNotificationService;
+    private final SubscriptionLocationService subscriptionLocationService;
 
     @Autowired
-    UserSubscriptionService userSubscriptionService;
-
-    @Autowired
-    SubscriptionNotificationService subscriptionNotificationService;
-
-    @Autowired
-    SubscriptionLocationService subscriptionLocationService;
-
-    @Autowired
-    AuthorisationService authorisationService;
+    public SubscriptionController(
+        SubscriptionService subscriptionService,
+        UserSubscriptionService userSubscriptionService,
+        SubscriptionNotificationService subscriptionNotificationService,
+        SubscriptionLocationService subscriptionLocationService
+    ) {
+        this.subscriptionService = subscriptionService;
+        this.userSubscriptionService = userSubscriptionService;
+        this.subscriptionNotificationService = subscriptionNotificationService;
+        this.subscriptionLocationService = subscriptionLocationService;
+    }
 
     @PostMapping(consumes = "application/json")
     @Operation(summary = "Endpoint to create a new unique subscription "
