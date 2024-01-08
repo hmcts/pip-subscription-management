@@ -8,7 +8,7 @@
   - [Third Party - List Type Subscriptions](#third-party---list-type-subscription)
   - [Third Party - Artefact deletion](#third-party---artefact-deletion)
   - [Verified - Configure by List Type](#verified---configure-by-list-type)
-  - [Subscription Channels](#subscription-channel)
+  - [Subscription Channels](#subscription-channels)
 - [Roles](#roles)
 - [Architecture Diagram](#architecture-diagram)
 - [Getting Started](#getting-started)
@@ -246,8 +246,12 @@ If your debugging leads you to conclude that you need to implement a pipeline fi
 ## Creating or debugging of SQL scripts with Flyway
 Flyway is used to apply incremental schema changes (migrations) to our database.
 
+Any modifications to the database schema must be done through flyway. Changes to the models will no longer be automatically applied to the database.
+
+This behaviour can be overridden using the DB_UPDATE environment variable. This is useful for local development, but should not be used in production.
+
 ### Pipeline
-Flyway is enabled on the pipeline, but is run at startup then switched off.
+Flyway is enabled on the pipeline. It is only run on the pipeline, and not on startup. On startup, the app will validate that the flyway scripts have been applied.
 
 ### Local
 For local development, flyway is turned off by default. This is due to all tables existing within a single database locally. This can cause flyway to fail at startup due to mismatching scripts.
@@ -267,7 +271,9 @@ The client at runtime is attached as a javaagent, which allows it to send the lo
 To connect to app insights a connection string is used. This is configured to read from the KV Secret mounted inside the pod.
 
 It is possible to connect to app insights locally, although somewhat tricky. The easiest way is to get the connection string from azure, set it as an environment variable (APPLICATIONINSIGHTS_CONNECTION_STRING), and add in the javaagent as VM argument. You will also need to remove / comment out the connection string line the config.
+
 ## Security & Quality Considerations
+
 We use a few automated tools to ensure quality and security within the service. A few examples can be found below:
 
 - SonarCloud - provides automated code analysis, finding vulnerabilities, bugs and code smells. Quality gates ensure that test coverage, code style and security are maintained where possible.
