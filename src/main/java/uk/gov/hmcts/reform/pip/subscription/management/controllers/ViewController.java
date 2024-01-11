@@ -18,9 +18,12 @@ import uk.gov.hmcts.reform.pip.subscription.management.service.ViewService;
 @RequestMapping("/view")
 @IsAdmin
 public class ViewController {
+    private final ViewService viewService;
 
     @Autowired
-    ViewService viewService;
+    public ViewController(ViewService viewService) {
+        this.viewService = viewService;
+    }
 
     @ApiResponse(responseCode = "200", description = "View Refreshed")
     @ApiResponse(responseCode = "403", description = "User has not been authorised")
@@ -29,5 +32,4 @@ public class ViewController {
         viewService.refreshView();
         return ResponseEntity.ok().build();
     }
-
 }

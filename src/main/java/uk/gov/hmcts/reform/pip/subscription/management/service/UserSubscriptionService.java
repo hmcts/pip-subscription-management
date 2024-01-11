@@ -17,8 +17,12 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Service
 @Slf4j
 public class UserSubscriptionService {
+    private final SubscriptionRepository repository;
+
     @Autowired
-    SubscriptionRepository repository;
+    public UserSubscriptionService(SubscriptionRepository repository) {
+        this.repository = repository;
+    }
 
     /**
      * Find all subscriptions for a given user.

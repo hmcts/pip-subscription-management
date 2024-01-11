@@ -17,11 +17,15 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Service
 public class DataManagementService {
 
-    @Autowired
-    private WebClient webClient;
+    private final WebClient webClient;
 
     @Value("${service-to-service.data-management}")
     private String url;
+
+    @Autowired
+    public DataManagementService(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
 
     public String getCourtName(String locationId) {

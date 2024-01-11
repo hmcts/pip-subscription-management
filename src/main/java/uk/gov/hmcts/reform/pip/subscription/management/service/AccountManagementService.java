@@ -40,8 +40,12 @@ public class AccountManagementService {
     private static final String GET_USERS_EMAIL = "account/emails";
     private static final String ACCOUNT_MANAGEMENT_API = "accountManagementApi";
 
+    private final WebClient webClient;
+
     @Autowired
-    private WebClient webClient;
+    public AccountManagementService(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     /**
      * REST call to account management to check if user is authorised to see classified publication.
