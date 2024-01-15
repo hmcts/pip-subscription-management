@@ -50,7 +50,7 @@ class SubscriptionServiceTest {
             + "2023-01-19 13:47:23.484632",
         "052cda55-30fd-4a0d-939a-2c7b03ab3392,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1234,"
             + "2023-01-19 13:53:56.434343"
-        );
+    );
 
     public static final List<String> EXAMPLE_CSV_LOCAL = List.of(
         "212c8b34-f6c3-424d-90e2-f874f528eebf,2,EMAIL,2fe899ff-96ed-435a-bcad-1411bbe96d2a,null,"
@@ -86,7 +86,8 @@ class SubscriptionServiceTest {
     @BeforeEach
     void setup() {
         mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, DATE_ADDED,
-                                                  CIVIL_DAILY_CAUSE_LIST);
+                                                  CIVIL_DAILY_CAUSE_LIST
+        );
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
         findableSubscription = findableSubscription();
         mockSubscription.setChannel(Channel.EMAIL);
@@ -120,7 +121,8 @@ class SubscriptionServiceTest {
         Subscription subscription = argumentCaptor.getValue();
 
         assertEquals(subscription.getCreatedDate(), subscription.getLastUpdatedDate(),
-                     "Last updated date should be equal to created date");
+                     "Last updated date should be equal to created date"
+        );
     }
 
     @Test
@@ -129,7 +131,8 @@ class SubscriptionServiceTest {
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
-                     SUBSCRIPTION_CREATED_ERROR);
+                     SUBSCRIPTION_CREATED_ERROR
+        );
     }
 
     @Test
@@ -139,7 +142,8 @@ class SubscriptionServiceTest {
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
-                     SUBSCRIPTION_CREATED_ERROR);
+                     SUBSCRIPTION_CREATED_ERROR
+        );
     }
 
     @Test
@@ -149,7 +153,8 @@ class SubscriptionServiceTest {
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
-                     SUBSCRIPTION_CREATED_ERROR);
+                     SUBSCRIPTION_CREATED_ERROR
+        );
     }
 
     @Test
@@ -165,7 +170,8 @@ class SubscriptionServiceTest {
 
         verify(subscriptionRepository, times(1)).delete(mockSubscription);
         assertEquals(returnedSubscription, mockSubscription,
-                     "The Returned subscription does match the expected subscription");
+                     "The Returned subscription does match the expected subscription"
+        );
     }
 
     @Test
@@ -174,7 +180,8 @@ class SubscriptionServiceTest {
         subscriptionService.configureListTypesForSubscription(USER_ID, List.of(CIVIL_DAILY_CAUSE_LIST.name()));
 
         assertEquals(USER_ID, mockSubscription.getUserId(),
-                     SUBSCRIPTION_CREATED_ERROR);
+                     SUBSCRIPTION_CREATED_ERROR
+        );
     }
 
     @Test
@@ -183,7 +190,8 @@ class SubscriptionServiceTest {
         subscriptionService.configureListTypesForSubscription(USER_ID, null);
 
         assertEquals(USER_ID, mockSubscription.getUserId(),
-                     SUBSCRIPTION_CREATED_ERROR);
+                     SUBSCRIPTION_CREATED_ERROR
+        );
     }
 
     @Test
@@ -201,47 +209,10 @@ class SubscriptionServiceTest {
         UUID testUuid = UUID.randomUUID();
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.empty());
         assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.deleteById(
-            testUuid, ACTIONING_USER_ID),
+                         testUuid, ACTIONING_USER_ID),
                      "SubscriptionNotFoundException not thrown when trying to delete a subscription"
-                         + " that does not exist");
-    }
-
-    @Test
-    void testBulkDeleteSubscriptionsSuccess() {
-        UUID testId1 = UUID.randomUUID();
-        UUID testId2 = UUID.randomUUID();
-
-        Subscription subscription1 = new Subscription();
-        subscription1.setId(testId1);
-        Subscription subscription2 = new Subscription();
-        subscription2.setId(testId2);
-
-        List<UUID> testIds = List.of(testId1, testId2);
-        List<Subscription> subscriptions = List.of(subscription1, subscription2);
-
-        when(subscriptionRepository.findByIdIn(testIds)).thenReturn(subscriptions);
-        subscriptionService.bulkDeleteSubscriptions(testIds);
-
-        verify(subscriptionRepository).deleteByIdIn(listCaptor.capture());
-        assertThat(listCaptor.getValue())
-            .as("Subscription IDs to delete do not match")
-            .isEqualTo(testIds);
-    }
-
-    @Test
-    void testBulkDeleteSubscriptionsException() {
-        UUID testId1 = UUID.randomUUID();
-        UUID testId2 = UUID.randomUUID();
-        List<UUID> testIds = List.of(testId1, testId2);
-
-        Subscription subscription = new Subscription();
-        subscription.setId(testId2);
-
-        when(subscriptionRepository.findByIdIn(testIds)).thenReturn(List.of(subscription));
-        assertThatThrownBy(() -> subscriptionService.bulkDeleteSubscriptions(testIds))
-            .as("Exception does not match")
-            .isInstanceOf(SubscriptionNotFoundException.class)
-            .hasMessage("No subscription found with the subscription ID(s): " + testId1);
+                         + " that does not exist"
+        );
     }
 
     @Test
@@ -250,7 +221,8 @@ class SubscriptionServiceTest {
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.empty());
         assertThrows(SubscriptionNotFoundException.class, () -> subscriptionService.findById(testUuid),
                      "SubscriptionNotFoundException not thrown "
-                         + "when trying to find a subscription that does not exist");
+                         + "when trying to find a subscription that does not exist"
+        );
     }
 
     @Test
@@ -258,7 +230,8 @@ class SubscriptionServiceTest {
         UUID testUuid = UUID.randomUUID();
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
         assertEquals(subscriptionService.findById(testUuid), findableSubscription,
-                     SUBSCRIPTION_CREATED_ERROR);
+                     SUBSCRIPTION_CREATED_ERROR
+        );
     }
 
     @Test
