@@ -104,6 +104,7 @@ class SubscriptionControllerTest {
                      STATUS_CODE_MATCH
         );
     }
+
     @Test
     void testBulkDeleteSubscriptionsV2Success() {
         UUID testId1 = UUID.randomUUID();
