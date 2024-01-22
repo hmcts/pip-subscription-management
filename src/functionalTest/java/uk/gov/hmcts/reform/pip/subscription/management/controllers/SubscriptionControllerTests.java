@@ -106,7 +106,6 @@ class SubscriptionControllerTests {
     private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
-    private static final String DELETED_BULK_SUBSCRIPTION_PATH = "/subscription/bulk";
     private static final String DELETED_BULK_SUBSCRIPTION_V2_PATH = "/subscription/v2/bulk";
     private static final String SUBSCRIPTIONS_BY_LOCATION = "/subscription/location/";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
@@ -849,78 +848,6 @@ class SubscriptionControllerTests {
         );
     }
 
-    @Test
-    void testBuildBulkDeletedSubscribersReturnsOk() throws Exception {
-        MvcResult caseSubscription =
-            mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID)).andReturn();
-        MvcResult locationSubscription =
-            mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING)).andReturn();
-
-        String caseSubscriptionId = getSubscriptionId(caseSubscription.getResponse().getContentAsString());
-        String locationSubscriptionId = getSubscriptionId(locationSubscription.getResponse().getContentAsString());
-
-        String subscriptionIdRequest = OPENING_BRACKET + caseSubscriptionId + DOUBLE_QUOTE_COMMA
-            + locationSubscriptionId + CLOSING_BRACKET;
-
-
-        MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
-                                                   .contentType(MediaType.APPLICATION_JSON)
-                                                   .content(subscriptionIdRequest))
-            .andExpect(status().isOk()).andReturn();
-
-        assertEquals(String.format(
-                         "Subscription(s) with ID %s deleted",
-                         caseSubscriptionId + ", " + locationSubscriptionId
-                     ),
-                     deleteResponse.getResponse().getContentAsString(), RESPONSE_MATCH
-        );
-
-        MvcResult getCaseSubscriptionResponse =
-            mvc.perform(getSubscriptionByUuid(caseSubscriptionId))
-                .andExpect(status().isNotFound()).andReturn();
-        assertEquals(
-            NOT_FOUND.value(),
-            getCaseSubscriptionResponse.getResponse().getStatus(),
-            NOT_FOUND_STATUS_CODE
-        );
-        MvcResult getLocationSubscriptionResponse =
-            mvc.perform(getSubscriptionByUuid(locationSubscriptionId))
-                .andExpect(status().isNotFound()).andReturn();
-        assertEquals(NOT_FOUND.value(), getLocationSubscriptionResponse.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
-    }
-
-    @Test
-    void testBuildBulkDeletedSubscribersReturnsNotFound() throws Exception {
-
-        String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
-
-        MvcResult response = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
-                                             .contentType(MediaType.APPLICATION_JSON)
-                                             .content(subscriptionIdRequest))
-            .andExpect(status().isNotFound()).andReturn();
-
-        assertEquals(NOT_FOUND.value(), response.getResponse().getStatus(),
-                     NOT_FOUND_STATUS_CODE
-        );
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testUnauthorizedBulkDeletedSubscribers() throws Exception {
-
-        String subscriptionIdRequest = OPENING_BRACKET + UUID_STRING + CLOSING_BRACKET;
-
-        MvcResult mvcResult = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_PATH)
-                                              .contentType(MediaType.APPLICATION_JSON)
-                                              .content(subscriptionIdRequest))
-            .andExpect(status().isForbidden()).andReturn();
-
-        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
 
     @Test
     void testBulkDeletedSubscribersV2ReturnsOkIfSystemAdmin() throws Exception {

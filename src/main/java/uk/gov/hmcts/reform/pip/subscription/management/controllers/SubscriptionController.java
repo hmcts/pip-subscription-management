@@ -84,7 +84,8 @@ public class SubscriptionController {
         Subscription subscription = subscriptionService.createSubscription(new Subscription(sub), actioningUserId);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user %s",
-                                subscription.getId(), subscription.getUserId()));
+                                subscription.getId(), subscription.getUserId()
+            ));
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscription: {subId} was deleted")
@@ -102,22 +103,6 @@ public class SubscriptionController {
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
     }
 
-    @ApiResponse(responseCode = OK_CODE, description = "Subscription(s) with ID {subIds} deleted")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
-    @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
-        description = "No subscription found with the subscription IDs: {subIds}")
-    @Transactional
-    @Operation(summary = "Delete a set of subscriptions using the subscription ID")
-    @DeleteMapping("/bulk")
-    @Deprecated
-    public ResponseEntity<String> bulkDeleteSubscriptions(@RequestBody List<UUID> subIds) {
-
-        subscriptionService.bulkDeleteSubscriptions(subIds);
-        return ResponseEntity.ok(String.format("Subscription(s) with ID %s deleted",
-                                               subIds.toString().replace("[", "")
-                                                   .replace("]", "")));
-    }
-
     @ApiResponse(responseCode = OK_CODE, description = "Subscriptions with IDs {subIds} deleted")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
@@ -130,9 +115,11 @@ public class SubscriptionController {
                                                             @RequestHeader("x-user-id") String actioningUserId) {
 
         subscriptionService.bulkDeleteSubscriptions(subIds);
-        return ResponseEntity.ok(String.format("Subscriptions with ID %s deleted",
-                                               subIds.toString().replace("[", "")
-                                                   .replace("]", "")));
+        return ResponseEntity.ok(String.format(
+            "Subscriptions with ID %s deleted",
+            subIds.toString().replace("[", "")
+                .replace("]", "")
+        ));
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscription {subId} found")
@@ -179,21 +166,23 @@ public class SubscriptionController {
         "This request object has an invalid format. Please check again.")
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
-                                                    @RequestBody List<String> listType) {
+                                                                    @RequestBody List<String> listType) {
         subscriptionService.configureListTypesForSubscription(userId, listType);
         return ResponseEntity.status(HttpStatus.OK)
-            .body(String.format("Location list Type successfully updated for user %s",
-                                userId));
+            .body(String.format(
+                "Location list Type successfully updated for user %s",
+                userId
+            ));
     }
 
     @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
-                    mediaType = MediaType.TEXT_PLAIN_VALUE,
-                    schema = @Schema(implementation = String.class))
-        }
-    )
+                mediaType = MediaType.TEXT_PLAIN_VALUE,
+                schema = @Schema(implementation = String.class))
+            }
+        )
     @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting. "
         + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-all")
@@ -207,10 +196,10 @@ public class SubscriptionController {
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("id,search_value,channel,user_id,court_name,created_date")},
-                    mediaType = MediaType.TEXT_PLAIN_VALUE,
-                    schema = @Schema(implementation = String.class))
-        }
-    )
+                mediaType = MediaType.TEXT_PLAIN_VALUE,
+                schema = @Schema(implementation = String.class))
+            }
+        )
     @Operation(summary = "Returns a list of subscription data for location-based subscriptions for MI reporting. "
         + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-local")
@@ -236,7 +225,7 @@ public class SubscriptionController {
         "No subscription found with the location id {locationId}")
     @GetMapping("/location/{locationId}")
     public ResponseEntity<List<Subscription>> findSubscriptionsByLocationId(
-                                                         @PathVariable String locationId) {
+        @PathVariable String locationId) {
         return ResponseEntity.ok(subscriptionLocationService.findSubscriptionsByLocationId(locationId));
     }
 
@@ -249,7 +238,9 @@ public class SubscriptionController {
     public ResponseEntity<String> deleteSubscriptionByLocation(
         @RequestHeader("x-provenance-user-id") String provenanceUserId,
         @PathVariable Integer locationId) throws JsonProcessingException {
-        return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(locationId.toString(),
-                                                                                  provenanceUserId));
+        return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(
+            locationId.toString(),
+            provenanceUserId
+        ));
     }
 }
