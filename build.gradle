@@ -217,6 +217,11 @@ dependencies {
   implementation group: 'org.flywaydb', name: 'flyway-core', version: '10.1.0'
   implementation group: 'org.flywaydb', name: 'flyway-database-postgresql', version: '10.1.0'
 
+  // Force upgrade snakeyaml version for CVE-2022-1471
+  implementation( group: 'org.yaml', name: 'snakeyaml').version {
+    strictly("2.0")
+  }
+
   testImplementation(platform('org.junit:junit-bom:5.10.1'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', {
     exclude group: 'junit', module: 'junit'
