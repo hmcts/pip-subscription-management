@@ -1,7 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.models;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.vladmihalcea.hibernate.type.array.ListArrayType;
+import io.hypersistence.utils.hibernate.type.array.ListArrayType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
