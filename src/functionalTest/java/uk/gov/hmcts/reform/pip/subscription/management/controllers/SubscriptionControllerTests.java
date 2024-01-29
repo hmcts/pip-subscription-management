@@ -147,7 +147,7 @@ class SubscriptionControllerTests {
         SUBSCRIPTION.setSearchType(SearchType.LOCATION_ID);
         SUBSCRIPTION.setUserId(UUID_STRING);
 
-        try(InputStream is = SubscriptionControllerTests.class.getClassLoader()
+        try (InputStream is = SubscriptionControllerTests.class.getClassLoader()
                 .getResourceAsStream("mock/artefact.json")) {
             rawArtefact = new String(IOUtils.toByteArray(Objects.requireNonNull(is)));
         }
