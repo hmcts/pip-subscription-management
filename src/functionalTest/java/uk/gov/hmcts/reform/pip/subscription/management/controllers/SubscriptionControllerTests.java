@@ -30,6 +30,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationS
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -146,9 +147,10 @@ class SubscriptionControllerTests {
         SUBSCRIPTION.setSearchType(SearchType.LOCATION_ID);
         SUBSCRIPTION.setUserId(UUID_STRING);
 
-        rawArtefact = new String(IOUtils.toByteArray(
-            Objects.requireNonNull(SubscriptionControllerTests.class.getClassLoader()
-                                       .getResourceAsStream("mock/artefact.json"))));
+        try(InputStream is = SubscriptionControllerTests.class.getClassLoader()
+                .getResourceAsStream("mock/artefact.json")) {
+            rawArtefact = new String(IOUtils.toByteArray(Objects.requireNonNull(is)));
+        }
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
