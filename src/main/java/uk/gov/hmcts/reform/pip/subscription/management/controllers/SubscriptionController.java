@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,14 +41,15 @@ import java.util.UUID;
 @RestController
 @Tag(name = "Subscription Management API")
 @RequestMapping("/subscription")
+@ApiResponse(responseCode = "401", description = "Invalid access credential")
+@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Valid
 @IsAdmin
+@SecurityRequirement(name = "Bearer authentication")
 @SuppressWarnings({"PMD.TooManyMethods"})
 public class SubscriptionController {
 
-    private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
     private static final String OK_CODE = "200";
-    private static final String AUTH_ERROR_CODE = "403";
     private static final String NOT_FOUND_ERROR_CODE = "404";
 
     private final SubscriptionService subscriptionService;
@@ -76,7 +78,6 @@ public class SubscriptionController {
         + "for user: {userId}")
     @ApiResponse(responseCode = "400", description = "This subscription object has an invalid format. Please "
         + "check again.")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     public ResponseEntity<String> createSubscription(
         @RequestBody @Valid uk.gov.hmcts.reform.pip.model.subscription.Subscription sub,
         @RequestHeader("x-user-id") String actioningUserId
@@ -89,7 +90,6 @@ public class SubscriptionController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscription: {subId} was deleted")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the subscription id {subId}")
     @Transactional
@@ -104,7 +104,6 @@ public class SubscriptionController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscriptions with IDs {subIds} deleted")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the subscription ID: {subIds}")
     @Transactional
@@ -123,7 +122,6 @@ public class SubscriptionController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscription {subId} found")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the subscription id {subId}")
     @Operation(summary = "Returns the subscription object associated with a given subscription id.")
@@ -133,7 +131,6 @@ public class SubscriptionController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscriptions list for user id {userId} found")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE,
         description = "No subscription found with the user id {userId}")
     @Operation(summary = "Returns the list of relevant subscriptions associated with a given user id.")
@@ -164,7 +161,6 @@ public class SubscriptionController {
     @ApiResponse(responseCode = "201", description = "Subscription successfully updated for user: {userId}")
     @ApiResponse(responseCode = "400", description =
         "This request object has an invalid format. Please check again.")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
                                                                     @RequestBody List<String> listType) {
         subscriptionService.configureListTypesForSubscription(userId, listType);
@@ -175,7 +171,6 @@ public class SubscriptionController {
             ));
     }
 
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
@@ -192,7 +187,6 @@ public class SubscriptionController {
             .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
     }
 
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("id,search_value,channel,user_id,court_name,created_date")},
@@ -210,7 +204,6 @@ public class SubscriptionController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Deleted all subscriptions for user id {userId}")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @Operation(summary = "Deletes all subscriptions for the supplied user id")
     @Transactional
     @DeleteMapping("/user/{userId}")
@@ -220,7 +213,6 @@ public class SubscriptionController {
 
     @ApiResponse(responseCode = OK_CODE, description =
         "Subscriptions list for location id {locationId} found")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description =
         "No subscription found with the location id {locationId}")
     @GetMapping("/location/{locationId}")
@@ -230,7 +222,6 @@ public class SubscriptionController {
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Subscription for location {locationId} has been deleted")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = "User has not been authorized")
     @ApiResponse(responseCode = NOT_FOUND_ERROR_CODE, description = "No subscription found for location {locationId}")
     @Transactional
     @DeleteMapping("/location/{locationId}")

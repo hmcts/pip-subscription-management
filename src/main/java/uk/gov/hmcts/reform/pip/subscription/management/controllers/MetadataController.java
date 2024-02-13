@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +22,12 @@ import java.util.List;
 @RestController
 @Tag(name = "Subscription Metadata API")
 @RequestMapping("/meta")
+@ApiResponse(responseCode = "401", description = "Invalid access credential")
+@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Valid
 @IsAdmin
+@SecurityRequirement(name = "Bearer authentication")
 public class MetadataController {
-
-    private static final String NOT_AUTHORIZED_MESSAGE = "User has not been authorized";
-    private static final String AUTH_ERROR_CODE = "403";
-
     private final MetadataService metadataService;
 
     @Autowired
@@ -38,7 +38,6 @@ public class MetadataController {
     @GetMapping("/channels")
     @Operation(summary = "Endpoint to retrieve the available channels as a list")
     @ApiResponse(responseCode = "200", description = "List of channels returned in JSON array format")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = NOT_AUTHORIZED_MESSAGE)
     public ResponseEntity<List<Channel>> retrieveChannels() {
         return ResponseEntity.ok(metadataService.retrieveChannels());
     }
