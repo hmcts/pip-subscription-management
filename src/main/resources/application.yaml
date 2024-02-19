@@ -1,5 +1,6 @@
 server:
   port: 4550
+  shutdown: graceful
 
 management:
   endpoint:
