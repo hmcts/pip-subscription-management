@@ -26,7 +26,7 @@ import java.util.List;
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Valid
 @IsAdmin
-@SecurityRequirement(name = "Bearer authentication")
+@SecurityRequirement(name = "bearerAuth")
 public class MetadataController {
     private final MetadataService metadataService;
 
