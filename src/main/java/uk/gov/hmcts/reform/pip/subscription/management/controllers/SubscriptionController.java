@@ -45,7 +45,7 @@ import java.util.UUID;
 @ApiResponse(responseCode = "403", description = "User has not been authorized")
 @Valid
 @IsAdmin
-@SecurityRequirement(name = "Bearer authentication")
+@SecurityRequirement(name = "bearerAuth")
 @SuppressWarnings({"PMD.TooManyMethods"})
 public class SubscriptionController {
 
