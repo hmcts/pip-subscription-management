@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,12 +18,14 @@ import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocat
 @RestController
 @Tag(name = "Subscription Management Testing Support API")
 @RequestMapping("/testing-support")
+@ApiResponse(responseCode = "401", description = "Invalid access credential")
+@ApiResponse(responseCode = "403", description = "User has not been authorized")
 @IsAdmin
+@SecurityRequirement(name = "bearerAuth")
 @ConditionalOnProperty(prefix = "testingSupport", name = "enableApi", havingValue = "true")
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestingSupportController {
     private static final String OK_CODE = "200";
-    private static final String AUTH_ERROR_CODE = "403";
 
     private final SubscriptionLocationService subscriptionLocationService;
 
@@ -33,7 +36,6 @@ public class TestingSupportController {
 
     @ApiResponse(responseCode = OK_CODE,
         description = "Subscription(s) deleted for location name starting with {locationNamePrefix}")
-    @ApiResponse(responseCode = AUTH_ERROR_CODE, description = "User has not been authorized")
     @Operation(summary = "Delete all subscriptions with location name prefix")
     @DeleteMapping("/subscription/{locationNamePrefix}")
     @Transactional
