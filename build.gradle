@@ -1,7 +1,7 @@
 //This is required as flyway now has a stand alone library for each database rather than being bundled together
 buildscript {
   dependencies {
-    classpath("org.flywaydb:flyway-database-postgresql:10.7.1")
+    classpath("org.flywaydb:flyway-database-postgresql:10.9.0")
   }
 }
 
@@ -17,7 +17,7 @@ plugins {
   id 'com.github.ben-manes.versions' version '0.51.0'
   id 'io.freefair.lombok' version '8.6'
   id 'org.jetbrains.kotlin.jvm' version '1.9.23'
-  id 'org.flywaydb.flyway' version '10.7.1'
+  id 'org.flywaydb.flyway' version '10.9.0'
 }
 
 apply plugin: 'org.owasp.dependencycheck'
@@ -214,8 +214,8 @@ dependencies {
   implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.16.1'
 
   // Include Flyway for database migrations
-  implementation group: 'org.flywaydb', name: 'flyway-core', version: '10.7.1'
-  implementation group: 'org.flywaydb', name: 'flyway-database-postgresql', version: '10.7.1'
+  implementation group: 'org.flywaydb', name: 'flyway-core', version: '10.9.0'
+  implementation group: 'org.flywaydb', name: 'flyway-database-postgresql', version: '10.9.0'
 
   // Force upgrade snakeyaml version for CVE-2022-1471
   implementation( group: 'org.yaml', name: 'snakeyaml').version {
