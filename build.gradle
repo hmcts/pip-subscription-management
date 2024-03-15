@@ -204,7 +204,7 @@ dependencies {
   implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.4'
 
   implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.10.0'
-  implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.2'
+  implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.3'
   implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.20', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
