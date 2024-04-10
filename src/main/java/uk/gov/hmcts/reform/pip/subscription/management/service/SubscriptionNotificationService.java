@@ -12,7 +12,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -113,7 +112,7 @@ public class SubscriptionNotificationService {
     @SuppressWarnings("unchecked")
     private List<Subscription> extractSearchValue(Object caseObject) {
         List<Subscription> subscriptionList = new ArrayList<>();
-        Map<String, Object> caseMap = (LinkedHashMap) caseObject;
+        Map<String, Object> caseMap = (Map) caseObject;
 
         if (caseMap.containsKey(CASE_NUMBER_KEY) && caseMap.get(CASE_NUMBER_KEY) != null) {
             subscriptionList.addAll(querySubscriptionValue(CASE_ID.name(), caseMap.get(CASE_NUMBER_KEY).toString()));
