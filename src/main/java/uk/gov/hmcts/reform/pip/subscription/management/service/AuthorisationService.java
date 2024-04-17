@@ -28,10 +28,7 @@ public class AuthorisationService {
     }
 
     public boolean userCanDeleteSubscriptions(String userId, UUID... subscriptionIds) {
-        if (isSystemAdmin(userId)) {
-            return true;
-        }
-        return Arrays.stream(subscriptionIds)
+        return isSystemAdmin(userId) || Arrays.stream(subscriptionIds)
             .allMatch(id -> isSubscriptionUserMatch(id, userId));
 
     }

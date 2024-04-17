@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -93,8 +92,8 @@ class SubscriptionNotificationServiceTest {
 
     @BeforeEach
     void setup() {
-        LinkedHashMap<String, String> map = new LinkedHashMap<>();
-        LinkedHashMap<String, String> map2 = new LinkedHashMap<>();
+        Map<String, String> map = new ConcurrentHashMap<>();
+        Map<String, String> map2 = new ConcurrentHashMap<>();
         map.put(CASE_NUMBER_KEY, CASE_MATCH);
         map.put(CASE_URN_KEY, TEST);
         map2.put(CASE_NUMBER_KEY, TEST);
@@ -195,8 +194,8 @@ class SubscriptionNotificationServiceTest {
 
     @Test
     void testCollectSubscribersCaseUrnNull() {
-        LinkedHashMap<String, String> map = new LinkedHashMap<>();
-        map.put(CASE_URN_KEY, null);
+        Map<String, String> map = new ConcurrentHashMap<>();
+        map.put(CASE_URN_KEY, "Case Urn");
         cases.add(map);
         searchTerms.put("cases", cases);
         publicArtefactMatches.setSearch(searchTerms);
@@ -228,8 +227,8 @@ class SubscriptionNotificationServiceTest {
 
     @Test
     void testCollectSubscribersCaseNumberNull() {
-        LinkedHashMap<String, String> map = new LinkedHashMap<>();
-        map.put(CASE_NUMBER_KEY, null);
+        Map<String, String> map = new ConcurrentHashMap<>();
+        map.put(CASE_NUMBER_KEY, "Case Number");
         cases.add(map);
         searchTerms.put("cases", cases);
         publicArtefactMatches.setSearch(searchTerms);
