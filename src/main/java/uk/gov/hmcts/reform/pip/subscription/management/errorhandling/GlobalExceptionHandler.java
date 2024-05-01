@@ -58,10 +58,10 @@ public class GlobalExceptionHandler {
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         StringBuilder responseText = new StringBuilder("Bad Request: ");
         for (int i = 0; i < ex.getBindingResult().getErrorCount(); i++) {
-            responseText.append(ex.getFieldErrors().get(i).getField());
-            responseText.append(' ');
-            responseText.append(ex.getBindingResult().getAllErrors().get(i).getDefaultMessage());
-            responseText.append(", ");
+            responseText.append(ex.getFieldErrors().get(i).getField())
+                .append(' ')
+                .append(ex.getBindingResult().getAllErrors().get(i).getDefaultMessage())
+                .append(", ");
         }
         exceptionResponse.setMessage(responseText.substring(0, responseText.length() - 2));
         exceptionResponse.setTimestamp(LocalDateTime.now());
@@ -87,8 +87,7 @@ public class GlobalExceptionHandler {
         responseText.append("Bad Request: ").append(ex.getTargetType().getSimpleName()).append(' ')
             .append(ex.getValue()).append(" should be one of the following types: [ ");
         for (int i = 0; i < ex.getTargetType().getFields().length; i++) {
-            responseText.append(ex.getTargetType().getFields()[i].getName());
-            responseText.append(' ');
+            responseText.append(ex.getTargetType().getFields()[i].getName()).append(' ');
         }
         responseText.append(']');
         ExceptionResponse exceptionResponse = new ExceptionResponse();
