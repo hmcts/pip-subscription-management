@@ -23,8 +23,6 @@ class DataManagementServiceTest {
 
     private static final String INVALID = "test";
 
-    private static MockWebServer mockDataManagementCourtEndpoint;
-
     @Autowired
     WebClient webClient;
 
@@ -33,36 +31,41 @@ class DataManagementServiceTest {
 
     @Test
     void testGetCourt() throws IOException {
-        mockDataManagementCourtEndpoint = new MockWebServer();
-        mockDataManagementCourtEndpoint.start(4550);
-        mockDataManagementCourtEndpoint.enqueue(new MockResponse().addHeader("Content-Type",
-                                                                             ContentType.APPLICATION_JSON)
-                                                    .setBody("{\"name\": \"SJP Court\"}"));
+        try (MockWebServer mockDataManagementCourtEndpoint = new MockWebServer()) {
+            mockDataManagementCourtEndpoint.start(4550);
+            mockDataManagementCourtEndpoint.enqueue(new MockResponse().addHeader(
+                    "Content-Type",
+                    ContentType.APPLICATION_JSON
+                )
+                                                        .setBody("{\"name\": \"SJP Court\"}"));
 
-        String courtName = dataManagementService.getCourtName("1");
-        assertEquals("SJP Court", courtName, "Court name does not match returned value");
-        mockDataManagementCourtEndpoint.shutdown();
+            String courtName = dataManagementService.getCourtName("1");
+            assertEquals("SJP Court", courtName, "Court name does not match returned value");
+            mockDataManagementCourtEndpoint.shutdown();
+        }
     }
 
     @Test
     void testNullCourt() throws IOException {
-        mockDataManagementCourtEndpoint = new MockWebServer();
-        mockDataManagementCourtEndpoint.start(4550);
-        mockDataManagementCourtEndpoint.enqueue(new MockResponse());
+        try (MockWebServer mockDataManagementCourtEndpoint = new MockWebServer()) {
+            mockDataManagementCourtEndpoint.start(4550);
+            mockDataManagementCourtEndpoint.enqueue(new MockResponse());
 
-        String courtName = dataManagementService.getCourtName("1");
-        assertNull(courtName, "Court return is null");
-        mockDataManagementCourtEndpoint.shutdown();
+            String courtName = dataManagementService.getCourtName("1");
+            assertNull(courtName, "Court return is null");
+            mockDataManagementCourtEndpoint.shutdown();
+        }
     }
 
     @Test
     void testGetCourtThrows() throws IOException {
-        mockDataManagementCourtEndpoint = new MockWebServer();
-        mockDataManagementCourtEndpoint.start(4550);
-        mockDataManagementCourtEndpoint.enqueue(new MockResponse().setResponseCode(404));
-        String courtName = dataManagementService.getCourtName(INVALID);
-        assertNull(courtName, "Court name not null when error occured");
-        mockDataManagementCourtEndpoint.shutdown();
+        try (MockWebServer mockDataManagementCourtEndpoint = new MockWebServer()) {
+            mockDataManagementCourtEndpoint.start(4550);
+            mockDataManagementCourtEndpoint.enqueue(new MockResponse().setResponseCode(404));
+            String courtName = dataManagementService.getCourtName(INVALID);
+            assertNull(courtName, "Court name not null when error occured");
+            mockDataManagementCourtEndpoint.shutdown();
+        }
     }
 
 }
