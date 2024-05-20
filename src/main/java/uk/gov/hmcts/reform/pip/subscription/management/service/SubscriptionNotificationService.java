@@ -139,10 +139,8 @@ public class SubscriptionNotificationService {
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
                                                                Channel.API_COURTEL.notificationRoute);
 
-        channelManagementService.getMappedEmails(emailList).forEach((email, listOfSubscriptions) -> {
-            log.info(writeLog("Summary being sent to publication services for id " + artefactId));
-            publicationServicesService.postSubscriptionSummaries(artefactId, email, listOfSubscriptions);
-        });
+        log.info(writeLog("Summary being sent to publication services for id " + artefactId));
+        publicationServicesService.postSubscriptionSummaries(artefactId, channelManagementService.getMappedEmails(emailList));
 
         channelManagementService.getMappedApis(apiList)
             .forEach((api, subscriptions) ->

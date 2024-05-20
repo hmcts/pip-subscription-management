@@ -13,11 +13,13 @@ import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.model.system.admin.DeleteLocationSubscriptionAction;
+import uk.gov.hmcts.reform.pip.subscription.management.models.BulkSubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummaryDetails;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
@@ -26,7 +28,7 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 @Slf4j
 @Component
 public class PublicationServicesService {
-    private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/subscription";
+    private static final String NOTIFY_SUBSCRIPTION_PATH = "notify/v2/subscription";
     private static final String NOTIFY_API_PATH = "notify/api";
     private static final String NOTIFY_LOCATION_SUBSCRIPTION_PATH = "notify/location-subscription-delete";
     private static final String PUBLICATION_SERVICE_API = "publicationServicesApi";
@@ -41,8 +43,8 @@ public class PublicationServicesService {
         this.webClient = webClient;
     }
 
-    public void postSubscriptionSummaries(UUID artefactId, String email, List<Subscription> listOfSubscriptions) {
-        SubscriptionsSummary payload = formatSubscriptionsSummary(artefactId, email, listOfSubscriptions);
+    public void postSubscriptionSummaries(UUID artefactId, Map<String, List<Subscription>> subscriptions) {
+        BulkSubscriptionsSummary payload = formatSubscriptionsSummary(artefactId, subscriptions);
         try {
             webClient.post().uri(url + "/" + NOTIFY_SUBSCRIPTION_PATH)
                 .attributes(clientRegistrationId(PUBLICATION_SERVICE_API))
@@ -137,32 +139,36 @@ public class PublicationServicesService {
      * Process data to form a subscriptions summary model which can be sent to publication services.
      *
      * @param artefactId The artefact id associated with the list of subscriptions
-     * @param email The email of the user associated with the list of subscriptions
-     * @param listOfSubscriptions The list of subscriptions to format
+     * @param subscriptions A map containing each email which matches the criteria, alongside the subscriptions.
      * @return A subscriptions summary model
      */
-    private SubscriptionsSummary formatSubscriptionsSummary(UUID artefactId, String email,
-                                                            List<Subscription> listOfSubscriptions) {
+    private BulkSubscriptionsSummary formatSubscriptionsSummary(UUID artefactId,
+                                                            Map<String, List<Subscription>> subscriptions) {
 
-        SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
+        BulkSubscriptionsSummary bulkSubscriptionsSummary = new BulkSubscriptionsSummary();
+        bulkSubscriptionsSummary.setArtefactId(artefactId);
 
-        listOfSubscriptions.forEach(subscription -> {
-            switch (subscription.getSearchType()) {
-                case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
-                case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
-                case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
-                default -> log.error(writeLog(
-                    String.format("Search type was not one of allowed options: %s", subscription.getSearchType())
-                ));
-            }
+        subscriptions.forEach((email, listOfSubscriptions) -> {
+          SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
+          listOfSubscriptions.forEach(subscription -> {
+              switch (subscription.getSearchType()) {
+                  case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
+                  case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
+                  case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
+                  default -> log.error(writeLog(
+                      String.format("Search type was not one of allowed options: %s", subscription.getSearchType())
+                  ));
+              }
+          });
+
+          SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
+          subscriptionsSummary.setEmail(email);
+          subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
+
+          bulkSubscriptionsSummary.addSubscriptionEmail(subscriptionsSummary);
         });
 
-        SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
-        subscriptionsSummary.setArtefactId(artefactId);
-        subscriptionsSummary.setEmail(email);
-        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
-
-        return subscriptionsSummary;
+        return bulkSubscriptionsSummary;
     }
 
     private LocationSubscriptionDeletion formatLocationSubscriptionDeletion(
