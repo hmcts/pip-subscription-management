@@ -4,6 +4,7 @@ import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,8 +31,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -373,13 +376,46 @@ class SubscriptionNotificationServiceTest {
         when(channelManagementService.getMappedEmails(List.of(returnedSubscription)))
             .thenReturn(returnedMappedEmails);
 
-        doNothing().when(publicationServicesService).postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
-                                                                               returnedMappedEmails);
-
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectSubscribers(classifiedArtefactMatches);
+            assertTrue(logCaptor.getInfoLogs().get(0).contains(SUBSCRIBER_NOTIFICATION_LOG), LOG_MESSAGE_MATCH);
             assertTrue(logCaptor.getErrorLogs().isEmpty(), LOG_MESSAGE_MATCH);
         }
+    }
+
+    @Test
+    void testNoValidSubscriptionsDoesNotCallPostSubscriptionSummaries() {
+        returnedSubscription.setChannel(Channel.EMAIL);
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST))
+            .thenReturn(List.of(returnedSubscription));
+        when(channelManagementService.getMappedEmails(any())).thenReturn(new ConcurrentHashMap<>());
+
+        subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
+        verify(publicationServicesService, never()).postSubscriptionSummaries(any(), any());
+    }
+
+    @Test
+    void testMultipleSubscriptionsIsPassedToPostSubscriptionSummaries() {
+        returnedSubscription.setChannel(Channel.EMAIL);
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST))
+            .thenReturn(List.of(returnedSubscription, returnedSubscription));
+
+        returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
+        returnedMappedEmails.put("SecondUserEmail", List.of(returnedSubscription));
+
+        when(channelManagementService.getMappedEmails(any())).thenReturn(returnedMappedEmails);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, List<Subscription>>> argument = ArgumentCaptor.forClass(Map.class);
+        doNothing().when(publicationServicesService).postSubscriptionSummaries(
+            eq(publicArtefactMatches.getArtefactId()), argument.capture());
+
+        subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
+
+        Map<String, List<Subscription>> capturedMap = argument.getValue();
+        assertEquals(2, capturedMap.size(), "The size of the captured map is incorrect");
     }
 
     @Test
