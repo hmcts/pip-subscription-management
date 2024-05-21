@@ -149,23 +149,23 @@ public class PublicationServicesService {
         bulkSubscriptionsSummary.setArtefactId(artefactId);
 
         subscriptions.forEach((email, listOfSubscriptions) -> {
-          SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
-          listOfSubscriptions.forEach(subscription -> {
-              switch (subscription.getSearchType()) {
-                  case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
-                  case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
-                  case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
-                  default -> log.error(writeLog(
-                      String.format("Search type was not one of allowed options: %s", subscription.getSearchType())
-                  ));
-              }
-          });
+            SubscriptionsSummaryDetails subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
+            listOfSubscriptions.forEach(subscription -> {
+                switch (subscription.getSearchType()) {
+                    case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(subscription.getSearchValue());
+                    case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(subscription.getSearchValue());
+                    case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(subscription.getSearchValue());
+                    default -> log.error(writeLog(
+                        String.format("Search type was not one of allowed options: %s", subscription.getSearchType())
+                    ));
+                }
+            });
 
-          SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
-          subscriptionsSummary.setEmail(email);
-          subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
+            SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
+            subscriptionsSummary.setEmail(email);
+            subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
 
-          bulkSubscriptionsSummary.addSubscriptionEmail(subscriptionsSummary);
+            bulkSubscriptionsSummary.addSubscriptionEmail(subscriptionsSummary);
         });
 
         return bulkSubscriptionsSummary;

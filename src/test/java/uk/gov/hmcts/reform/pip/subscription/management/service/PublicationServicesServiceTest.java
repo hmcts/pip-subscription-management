@@ -26,7 +26,9 @@ import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSumma
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -45,6 +47,8 @@ class PublicationServicesServiceTest {
     PublicationServicesService publicationServicesService;
 
     private static final String TEST_ID = "123";
+    private static final UUID ARTEFACT_ID = UUID.randomUUID();
+    private static final String EMAIL = "a@b.com";
     private static final String EMPTY_LOG_EMPTY_MESSAGE = "Error log not empty";
     private static final String EMPTY_LOG_MATCH_MESSAGE = "Error log does not match";
     private static final String TEST_API_DESTINATION = "http://www.abc.com";
@@ -59,7 +63,6 @@ class PublicationServicesServiceTest {
     @BeforeEach
     void setup() throws IOException {
         subscriptionsSummary.setEmail("a@b.com");
-        subscriptionsSummary.setArtefactId(UUID.randomUUID());
 
         subscriptionsSummaryDetails = new SubscriptionsSummaryDetails();
 
@@ -77,35 +80,30 @@ class PublicationServicesServiceTest {
     @ParameterizedTest
     @EnumSource(value = SearchType.class, names = {"LOCATION_ID", "CASE_URN", "CASE_ID"})
     void testPostSubscriptionSummaries(SearchType searchType) {
-        switch (searchType) {
-            case LOCATION_ID -> subscriptionsSummaryDetails.addToLocationId(TEST_ID);
-            case CASE_URN -> subscriptionsSummaryDetails.addToCaseUrn(TEST_ID);
-            case CASE_ID -> subscriptionsSummaryDetails.addToCaseNumber(TEST_ID);
-            default -> { }
-        }
-
-        subscriptionsSummary.setSubscriptions(subscriptionsSummaryDetails);
-
         subscription.setSearchType(searchType);
+        Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
+        subscriptionsMap.put(EMAIL, List.of(subscription));
+
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                         .addHeader(CONTENT_TYPE,
                                                                    ContentType.APPLICATION_JSON)
                                                         .setResponseCode(200));
 
-        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
-                                                             subscriptionsSummary.getEmail(),
-                                                             List.of(subscription));
+        publicationServicesService.postSubscriptionSummaries(ARTEFACT_ID,
+                                                             subscriptionsMap);
         assertTrue(logCaptor.getErrorLogs().isEmpty(), EMPTY_LOG_EMPTY_MESSAGE);
 
     }
 
     @Test
     void testPostSubscriptionSummariesThrows() {
+        Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
+        subscriptionsMap.put(EMAIL, List.of(subscription));
+
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setResponseCode(404));
 
-        publicationServicesService.postSubscriptionSummaries(subscriptionsSummary.getArtefactId(),
-                                                             subscriptionsSummary.getEmail(),
-                                                             List.of(subscription));
+        publicationServicesService.postSubscriptionSummaries(ARTEFACT_ID,
+                                                             subscriptionsMap);
 
         assertTrue(
             logCaptor.getErrorLogs().get(0).contains("Subscription email failed to send with error"),
