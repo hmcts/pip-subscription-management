@@ -68,7 +68,7 @@ class SubscriptionLocationServiceTest {
     void setup() {
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
         mockSubscriptionIds = mockSubscriptionList.stream()
-            .map(subscription -> subscription.getId()).toList();
+            .map(Subscription::getId).toList();
 
         azureAccount = new AzureAccount();
         azureAccount.setDisplayName("ReqName");
