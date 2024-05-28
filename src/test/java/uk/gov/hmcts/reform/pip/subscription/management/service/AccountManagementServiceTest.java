@@ -53,7 +53,6 @@ class AccountManagementServiceTest {
     private static final String INVALID_ID = "2";
 
     private static MockWebServer mockAccountManagementEndpoint;
-    private static List<Subscription> subscriptionList;
     private final Map<String, Optional<String>> expectedMap = new ConcurrentHashMap<>();
     private String jsonResponse;
     private static final String CONTENT_TYPE = "Content-Type";
@@ -73,7 +72,7 @@ class AccountManagementServiceTest {
         mockSubscription.setCaseNumber("1");
         mockSubscription.setId(UUID.randomUUID());
 
-        subscriptionList = List.of(mockSubscription);
+        List<Subscription> subscriptionList = List.of(mockSubscription);
         expectedMap.put("a@b.com", Optional.empty());
         jsonResponse = OBJECT_WRITER.writeValueAsString(expectedMap);
 
