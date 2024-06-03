@@ -31,22 +31,22 @@ public class SubscriptionNotificationService {
 
     private final SubscriptionRepository repository;
 
-    private final AccountManagementService accountManagementService;
+    private final SubscriptionChannelService subscriptionChannelService;
 
-    private final ChannelManagementService channelManagementService;
+    private final AccountManagementService accountManagementService;
 
     private final PublicationServicesService publicationServicesService;
 
     @Autowired
     public SubscriptionNotificationService(
         SubscriptionRepository repository,
+        SubscriptionChannelService subscriptionChannelService,
         AccountManagementService accountManagementService,
-        ChannelManagementService channelManagementService,
         PublicationServicesService publicationServicesService
     ) {
         this.repository = repository;
+        this.subscriptionChannelService = subscriptionChannelService;
         this.accountManagementService = accountManagementService;
-        this.channelManagementService = channelManagementService;
         this.publicationServicesService = publicationServicesService;
     }
 
@@ -139,12 +139,12 @@ public class SubscriptionNotificationService {
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptionsList,
                                                                Channel.API_COURTEL.notificationRoute);
 
-        channelManagementService.getMappedEmails(emailList).forEach((email, listOfSubscriptions) -> {
+        subscriptionChannelService.buildEmailSubscriptions(emailList).forEach((email, listOfSubscriptions) -> {
             log.info(writeLog("Summary being sent to publication services for id " + artefactId));
             publicationServicesService.postSubscriptionSummaries(artefactId, email, listOfSubscriptions);
         });
 
-        channelManagementService.getMappedApis(apiList)
+        subscriptionChannelService.buildApiSubscriptions(apiList)
             .forEach((api, subscriptions) ->
                          publicationServicesService.sendThirdPartyList(new ThirdPartySubscription(api, artefactId)));
         log.info(writeLog(String.format("Collected %s api subscribers", apiList.size())));
@@ -172,7 +172,7 @@ public class SubscriptionNotificationService {
     private void handleDeletedArtefactSending(List<Subscription> subscriptions, Artefact artefactBeingDeleted) {
         List<Subscription> apiList = sortSubscriptionByChannel(subscriptions,
                                                                Channel.API_COURTEL.notificationRoute);
-        channelManagementService.getMappedApis(apiList)
+        subscriptionChannelService.buildApiSubscriptions(apiList)
             .forEach((api, subscription) -> publicationServicesService.sendEmptyArtefact(
                 new ThirdPartySubscriptionArtefact(api, artefactBeingDeleted)
             ));
