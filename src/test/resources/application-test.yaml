@@ -5,7 +5,6 @@ spring:
 service-to-service:
   data-management: http://localhost:4550
   account-management: http://localhost:6969
-  channel-management: http://localhost:8181
   publication-services: http://localhost:8081
 
 dbMigration:
