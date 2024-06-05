@@ -82,10 +82,10 @@ class SubscriptionNotificationServiceTest {
     SubscriptionRepository subscriptionRepository;
 
     @Mock
-    AccountManagementService accountManagementService;
+    SubscriptionChannelService subscriptionChannelService;
 
     @Mock
-    ChannelManagementService channelManagementService;
+    AccountManagementService accountManagementService;
 
     @Mock
     PublicationServicesService publicationServicesService;
@@ -136,7 +136,7 @@ class SubscriptionNotificationServiceTest {
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
                                                                            MAGISTRATES_PUBLIC_LIST))
             .thenReturn(List.of(returnedSubscription));
-        when(channelManagementService.getMappedEmails(any())).thenReturn(returnedMappedEmails);
+        when(subscriptionChannelService.buildEmailSubscriptions(any())).thenReturn(returnedMappedEmails);
         doNothing().when(publicationServicesService).postSubscriptionSummaries(any(), any());
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
@@ -155,7 +155,8 @@ class SubscriptionNotificationServiceTest {
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
                                                                            MAGISTRATES_PUBLIC_LIST))
             .thenReturn(List.of(returnedSubscription));
-        when(channelManagementService.getMappedEmails(any())).thenReturn(returnedMappedEmails);
+
+        when(subscriptionChannelService.buildEmailSubscriptions(any())).thenReturn(returnedMappedEmails);
         doNothing().when(publicationServicesService).postSubscriptionSummaries(any(), any());
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
@@ -180,7 +181,8 @@ class SubscriptionNotificationServiceTest {
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
 
-        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+        when(subscriptionChannelService.buildEmailSubscriptions(List.of(mockSubscription)))
+            .thenReturn(returnedMappedEmails);
 
         doNothing().when(publicationServicesService).postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
                                                                                returnedMappedEmails);
@@ -212,7 +214,8 @@ class SubscriptionNotificationServiceTest {
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
 
-        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+        when(subscriptionChannelService.buildEmailSubscriptions(List.of(mockSubscription)))
+            .thenReturn(returnedMappedEmails);
 
         doNothing().when(publicationServicesService).postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
                                                                                returnedMappedEmails);
@@ -244,7 +247,8 @@ class SubscriptionNotificationServiceTest {
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
 
-        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+        when(subscriptionChannelService.buildEmailSubscriptions(List.of(mockSubscription)))
+            .thenReturn(returnedMappedEmails);
 
         doNothing().when(publicationServicesService).postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
                                                                                returnedMappedEmails);
@@ -271,7 +275,8 @@ class SubscriptionNotificationServiceTest {
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
 
-        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+        when(subscriptionChannelService.buildEmailSubscriptions(List.of(mockSubscription)))
+            .thenReturn(returnedMappedEmails);
 
         doNothing().when(publicationServicesService).postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
                                                                                returnedMappedEmails);
@@ -298,7 +303,8 @@ class SubscriptionNotificationServiceTest {
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
 
-        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+        when(subscriptionChannelService.buildEmailSubscriptions(List.of(mockSubscription)))
+            .thenReturn(returnedMappedEmails);
 
         doNothing().when(publicationServicesService).postSubscriptionSummaries(publicArtefactMatches.getArtefactId(),
                                                                                returnedMappedEmails);
@@ -318,7 +324,9 @@ class SubscriptionNotificationServiceTest {
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
         when(subscriptionRepository.findSubscriptionsBySearchValue(LIST_TYPE_SEARCH, MAGISTRATES_PUBLIC_LIST))
             .thenReturn(List.of(mockSubscription));
-        when(channelManagementService.getMappedEmails(List.of(mockSubscription))).thenReturn(returnedMappedEmails);
+
+        when(subscriptionChannelService.buildEmailSubscriptions(List.of(mockSubscription)))
+            .thenReturn(returnedMappedEmails);
         doNothing().when(publicationServicesService).postSubscriptionSummaries(any(), any());
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
@@ -338,7 +346,7 @@ class SubscriptionNotificationServiceTest {
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
                                                                            MAGISTRATES_PUBLIC_LIST))
             .thenReturn(List.of(mockSubscription));
-        when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
+        when(subscriptionChannelService.buildApiSubscriptions(List.of(mockSubscription))).thenReturn(returnedMap);
         doNothing().when(publicationServicesService).sendThirdPartyList(any(ThirdPartySubscription.class));
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
@@ -373,7 +381,7 @@ class SubscriptionNotificationServiceTest {
             .thenReturn(false);
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
-        when(channelManagementService.getMappedEmails(List.of(returnedSubscription)))
+        when(subscriptionChannelService.buildEmailSubscriptions(List.of(returnedSubscription)))
             .thenReturn(returnedMappedEmails);
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
@@ -389,7 +397,7 @@ class SubscriptionNotificationServiceTest {
         when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
                                                                            MAGISTRATES_PUBLIC_LIST))
             .thenReturn(List.of(returnedSubscription));
-        when(channelManagementService.getMappedEmails(any())).thenReturn(new ConcurrentHashMap<>());
+        when(subscriptionChannelService.buildEmailSubscriptions(any())).thenReturn(new ConcurrentHashMap<>());
 
         subscriptionNotificationService.collectSubscribers(publicArtefactMatches);
         verify(publicationServicesService, never()).postSubscriptionSummaries(any(), any());
@@ -405,7 +413,7 @@ class SubscriptionNotificationServiceTest {
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
         returnedMappedEmails.put("SecondUserEmail", List.of(returnedSubscription));
 
-        when(channelManagementService.getMappedEmails(any())).thenReturn(returnedMappedEmails);
+        when(subscriptionChannelService.buildEmailSubscriptions(any())).thenReturn(returnedMappedEmails);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, List<Subscription>>> argument = ArgumentCaptor.forClass(Map.class);
@@ -425,7 +433,7 @@ class SubscriptionNotificationServiceTest {
         when(subscriptionRepository.findSubscriptionsBySearchValue(LIST_TYPE_SEARCH,
                                                                    publicArtefactMatches.getListType().name()))
             .thenReturn(List.of(mockSubscription));
-        when(channelManagementService.getMappedApis(List.of(mockSubscription))).thenReturn(returnedMap);
+        when(subscriptionChannelService.buildApiSubscriptions(List.of(mockSubscription))).thenReturn(returnedMap);
         doNothing().when(publicationServicesService).sendEmptyArtefact(any(ThirdPartySubscriptionArtefact.class));
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionNotificationService.class)) {
             subscriptionNotificationService.collectThirdPartyForDeletion(publicArtefactMatches);
