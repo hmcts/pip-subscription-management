@@ -17,10 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
+
 
 @Slf4j
 @Service
@@ -103,8 +106,10 @@ public class SubscriptionLocationService {
     private void notifySystemAdminAboutSubscriptionDeletion(String provenanceUserId, String additionalDetails)
         throws JsonProcessingException {
         AzureAccount userInfo = accountManagementService.getAzureAccountInfo(provenanceUserId);
-        List<PiUser> systemAdmins = accountManagementService.getAllAccounts(PI_AAD.toString(),
+        List<PiUser> systemAdminsAad = accountManagementService.getAllAccounts(PI_AAD.toString(),
                                                                             SYSTEM_ADMIN.toString());
+        List<PiUser> systemAdminsSso = accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString());
+        List<PiUser> systemAdmins = Stream.concat(systemAdminsAad.stream(), systemAdminsSso.stream()).toList();
         List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();
         publicationServicesService.sendSystemAdminEmail(systemAdminEmails, userInfo.getDisplayName(),
                                                         ActionResult.SUCCEEDED, additionalDetails);
