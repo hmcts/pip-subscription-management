@@ -32,6 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
 
 @ActiveProfiles("non-async")
@@ -78,8 +79,12 @@ class SubscriptionLocationServiceTest {
     void testDeleteSubscriptionByLocation() throws JsonProcessingException {
 
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionLocationService.class)) {
-            PiUser sysAdminUser = new PiUser();
-            sysAdminUser.setEmail(EMAIL_ADDRESS);
+            PiUser sysAdminUser1 = new PiUser();
+            sysAdminUser1.setEmail(EMAIL_ADDRESS);
+            sysAdminUser1.setUserProvenance(PI_AAD);
+            PiUser sysAdminUser2 = new PiUser();
+            sysAdminUser2.setEmail(EMAIL_ADDRESS);
+            sysAdminUser2.setUserProvenance(SSO);
 
             when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
                 .thenReturn(mockSubscriptionList);
@@ -88,7 +93,9 @@ class SubscriptionLocationServiceTest {
             when(accountManagementService.getAzureAccountInfo(REQUESTER_NAME))
                 .thenReturn(azureAccount);
             when(accountManagementService.getAllAccounts(PI_AAD.toString(), SYSTEM_ADMIN.toString()))
-                .thenReturn(List.of(sysAdminUser));
+                .thenReturn(List.of(sysAdminUser1));
+            when(accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString()))
+                .thenReturn(List.of(sysAdminUser2));
 
             doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
 
