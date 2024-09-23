@@ -1,12 +1,13 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -25,12 +26,16 @@ import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
 public class SubscriptionService {
 
     private final SubscriptionRepository repository;
+
+    private final SubscriptionListTypeRepository subscriptionListTypeRepository;
     private final DataManagementService dataManagementService;
 
     @Autowired
-    public SubscriptionService(SubscriptionRepository repository, DataManagementService dataManagementService) {
+    public SubscriptionService(SubscriptionRepository repository, DataManagementService dataManagementService,
+                               SubscriptionListTypeRepository subscriptionListTypeRepository) {
         this.repository = repository;
         this.dataManagementService = dataManagementService;
+        this.subscriptionListTypeRepository = subscriptionListTypeRepository;
     }
 
     public Subscription createSubscription(Subscription subscription, String actioningUserId) {
@@ -47,11 +52,12 @@ public class SubscriptionService {
         return repository.save(subscription);
     }
 
-    public void configureListTypesForSubscription(String userId, List<String> listType) {
-        log.info(writeLog(userId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
-
-        repository.updateLocationSubscriptions(userId,
-            listType == null ? "" : StringUtils.join(listType, ','));
+    public void configureListTypesForSubscription(SubscriptionListType subscriptionListType,
+                                                  String actioningUserId) {
+        log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
+        //DELETE EXISTING LIST TYPE CONFIG FOR A USER
+        duplicateListTypeHandler(subscriptionListType);
+        subscriptionListTypeRepository.save(subscriptionListType);
     }
 
     public void deleteById(UUID id, String actioningUserId) {
@@ -114,6 +120,15 @@ public class SubscriptionService {
                 repository.delete(existingSub);
             }
         });
+    }
+
+    private void duplicateListTypeHandler(SubscriptionListType subscriptionListType) {
+        subscriptionListTypeRepository.findByUserId(subscriptionListType.getUserId())
+            .forEach(existingSub -> {
+                if (existingSub.getLocationId().equals(subscriptionListType.getLocationId())) {
+                    subscriptionListTypeRepository.delete(existingSub);
+                }
+            });
     }
 
     public String getAllSubscriptionsDataForMiReporting() {

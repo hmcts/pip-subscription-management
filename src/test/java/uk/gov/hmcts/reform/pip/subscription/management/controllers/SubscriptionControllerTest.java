@@ -14,6 +14,7 @@ import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
@@ -41,6 +42,7 @@ class SubscriptionControllerTest {
     private static final String STATUS_CODE_MATCH = "Status codes should match";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
+    private static final List<String> LIST_LANGUAGE = Arrays.asList("ENGLISH");
     private static final String LOCATION_ID = "1";
     private static final String ACTIONING_USER_ID = "1234-1234";
     private static final String REQUESTER_NAME = "ReqName";
@@ -62,12 +64,17 @@ class SubscriptionControllerTest {
 
     UserSubscription userSubscription;
 
+    SubscriptionListType subscriptionListType;
+
     @BeforeEach
     void setup() {
         mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now(),
                                                                     ListType.CIVIL_DAILY_CAUSE_LIST
         );
         userSubscription = new UserSubscription();
+        subscriptionListType = new SubscriptionListType(USER_ID, Integer.valueOf(LOCATION_ID),
+                                                        LIST_TYPES, LIST_LANGUAGE);
+
     }
 
     @Test
@@ -187,7 +194,7 @@ class SubscriptionControllerTest {
 
     @Test
     void testConfigureListTypesForSubscription() {
-        doNothing().when(subscriptionService).configureListTypesForSubscription(USER_ID, LIST_TYPES);
+        doNothing().when(subscriptionService).configureListTypesForSubscription(subscriptionListType, USER_ID);
 
         assertEquals(
             new ResponseEntity<>(
@@ -197,7 +204,7 @@ class SubscriptionControllerTest {
                 ),
                 HttpStatus.OK
             ),
-            subscriptionController.configureListTypesForSubscription(USER_ID, LIST_TYPES),
+            subscriptionController.configureListTypesForSubscription(USER_ID, subscriptionListType),
             "Returned subscription does not match expected subscription"
         );
     }

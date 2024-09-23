@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
@@ -37,6 +38,8 @@ import uk.gov.hmcts.reform.pip.subscription.management.service.UserSubscriptionS
 
 import java.util.List;
 import java.util.UUID;
+
+import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
 
 @RestController
 @Tag(name = "Subscription Management API")
@@ -83,6 +86,12 @@ public class SubscriptionController {
         @RequestHeader("x-user-id") String actioningUserId
     ) {
         Subscription subscription = subscriptionService.createSubscription(new Subscription(sub), actioningUserId);
+        // IF LIST SUBSCRIPTION, ADD LIST AND LANGUAGE TYPE
+        if (subscription.getSearchType().equals(LOCATION_ID)) {
+            SubscriptionListType subscriptionListType = new SubscriptionListType(sub.getUserId(),
+                  Integer.valueOf(sub.getSearchValue()), sub.getListType(), sub.getListLanguage());
+            subscriptionService.configureListTypesForSubscription(subscriptionListType, actioningUserId);
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user %s",
                                 subscription.getId(), subscription.getUserId()
@@ -162,8 +171,8 @@ public class SubscriptionController {
     @ApiResponse(responseCode = "400", description =
         "This request object has an invalid format. Please check again.")
     public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
-                                                                    @RequestBody List<String> listType) {
-        subscriptionService.configureListTypesForSubscription(userId, listType);
+            @RequestBody SubscriptionListType subscriptionListType) {
+        subscriptionService.configureListTypesForSubscription(subscriptionListType, userId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(String.format(
                 "Location list Type successfully updated for user %s",

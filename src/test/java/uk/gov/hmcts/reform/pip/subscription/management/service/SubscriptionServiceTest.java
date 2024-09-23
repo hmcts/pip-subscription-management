@@ -13,6 +13,8 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.time.LocalDateTime;
@@ -23,7 +25,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -41,6 +42,7 @@ class SubscriptionServiceTest {
     private static final String SEARCH_VALUE = "193254";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final String ACTIONING_USER_ID = "1234-1234";
+    private static final Integer LOCATION_ID = 1;
 
     public static final List<String> EXAMPLE_CSV_ALL = List.of(
         "a01d52c0-5c95-4f75-8994-a1c42cb45aaa,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1245,"
@@ -69,6 +71,7 @@ class SubscriptionServiceTest {
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
     private Subscription findableSubscription;
+    private SubscriptionListType mockSubscriptionListType;
 
     @Captor
     private ArgumentCaptor<List<UUID>> listCaptor;
@@ -78,6 +81,9 @@ class SubscriptionServiceTest {
 
     @Mock
     SubscriptionRepository subscriptionRepository;
+
+    @Mock
+    SubscriptionListTypeRepository subscriptionListTypeRepository;
 
     @InjectMocks
     SubscriptionService subscriptionService;
@@ -90,6 +96,9 @@ class SubscriptionServiceTest {
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
         findableSubscription = findableSubscription();
         mockSubscription.setChannel(Channel.EMAIL);
+        mockSubscriptionListType = new SubscriptionListType(USER_ID, LOCATION_ID,
+                                                            List.of(CIVIL_DAILY_CAUSE_LIST.name()),
+                                                            List.of("ENGLISH"));
     }
 
     @Test
@@ -175,8 +184,8 @@ class SubscriptionServiceTest {
 
     @Test
     void testConfigureListTypesForLocationSubscription() {
-        doNothing().when(subscriptionRepository).updateLocationSubscriptions(any(), any());
-        subscriptionService.configureListTypesForSubscription(USER_ID, List.of(CIVIL_DAILY_CAUSE_LIST.name()));
+        when(subscriptionListTypeRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscriptionListType));
+        subscriptionService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);
 
         assertEquals(USER_ID, mockSubscription.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR
@@ -185,8 +194,8 @@ class SubscriptionServiceTest {
 
     @Test
     void testConfigureEmptyListTypesForLocationSubscription() {
-        doNothing().when(subscriptionRepository).updateLocationSubscriptions(USER_ID, "");
-        subscriptionService.configureListTypesForSubscription(USER_ID, null);
+        when(subscriptionListTypeRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscriptionListType));
+        subscriptionService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);
 
         assertEquals(USER_ID, mockSubscription.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR
