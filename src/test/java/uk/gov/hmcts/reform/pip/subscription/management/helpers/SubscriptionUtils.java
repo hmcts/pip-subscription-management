@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.subscription.management.helpers;
 
-import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
@@ -17,7 +16,7 @@ public final class SubscriptionUtils {
     }
 
     public static Subscription createMockSubscription(String userId, String locationId, Channel channel,
-                                                      LocalDateTime createdDate, ListType listType) {
+                                                      LocalDateTime createdDate) {
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID());
         subscription.setUserId(userId);
@@ -26,7 +25,6 @@ public final class SubscriptionUtils {
         subscription.setId(UUID.randomUUID());
         subscription.setCreatedDate(createdDate);
         subscription.setSearchType(SearchType.LOCATION_ID);
-        subscription.setListType(List.of(listType.toString()));
 
         return subscription;
     }
@@ -49,9 +47,9 @@ public final class SubscriptionUtils {
         );
 
         for (int i = 0; i < 8; i++) {
-            Subscription subscription = createMockSubscription(mockData.get(i), String.format("court-%s", i),
+            Subscription subscription = createMockSubscription(mockData.get(i), String.format("%s", i),
                                                                i < 3 ? Channel.API_COURTEL : Channel.EMAIL,
-                                                               createdDate, ListType.CIVIL_DAILY_CAUSE_LIST);
+                                                               createdDate);
             subscription.setChannel(i < 3 ? Channel.API_COURTEL : Channel.EMAIL);
             subscription.setCaseName("test name");
             subscription.setUrn("321" + i);

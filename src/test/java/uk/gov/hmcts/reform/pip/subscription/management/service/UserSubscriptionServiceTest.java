@@ -11,16 +11,20 @@ import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.ListTypeSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscription;
@@ -39,23 +43,31 @@ class UserSubscriptionServiceTest {
     private static final Channel EMAIL = Channel.EMAIL;
     private static final String COURT_NAME = "test court name";
     private static final String LIST_NAME = ListType.CIVIL_DAILY_CAUSE_LIST.name();
+
+    private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
 
+    private SubscriptionListType mockSubscriptionListType;
+
     @Mock
     SubscriptionRepository subscriptionRepository;
+
+    @Mock
+    SubscriptionListTypeRepository subscriptionListTypeRepository;
 
     @InjectMocks
     UserSubscriptionService userSubscriptionService;
 
     @BeforeEach
     void setup() {
-        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, DATE_ADDED,
-                                                  ListType.CIVIL_DAILY_CAUSE_LIST);
+        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, DATE_ADDED);
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
         mockSubscription.setChannel(Channel.EMAIL);
+        mockSubscriptionListType = new SubscriptionListType();
+        mockSubscriptionListType.setListType(LIST_TYPES);
     }
 
     @Test
@@ -69,6 +81,9 @@ class UserSubscriptionServiceTest {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
         mockSubscription.setLocationName("Test court");
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+        when(subscriptionListTypeRepository
+                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+            .thenReturn(mockSubscriptionListType);
         LocationSubscription expected = new LocationSubscription();
         expected.setSubscriptionId(mockSubscription.getId());
         expected.setLocationName("Test court");
@@ -108,6 +123,9 @@ class UserSubscriptionServiceTest {
     @Test
     void testFindByUserIdLength() {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
+        when(subscriptionListTypeRepository
+                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+            .thenReturn(mockSubscriptionListType);
         UserSubscription result = userSubscriptionService.findByUserId(USER_ID);
         assertEquals(6, result.getCaseSubscriptions().size(),
                      "Should add all CaseSubscriptions to UserSubscriptions");
@@ -117,6 +135,9 @@ class UserSubscriptionServiceTest {
     @Test
     void testFindByUserId() {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
+        when(subscriptionListTypeRepository
+                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+                    .thenReturn(mockSubscriptionListType);
         UserSubscription result = userSubscriptionService.findByUserId(USER_ID);
         for (int i = 0; i < 6; i++) {
             assertEquals(CASE_ID + i, result.getCaseSubscriptions().get(i).getCaseNumber(),
@@ -129,6 +150,9 @@ class UserSubscriptionServiceTest {
     @Test
     void testFindByUserIdCreatedDates() {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
+        when(subscriptionListTypeRepository
+                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+            .thenReturn(mockSubscriptionListType);
         UserSubscription result = userSubscriptionService.findByUserId(USER_ID);
         for (int i = 0; i < 6; i++) {
             assertEquals(DATE_ADDED, result.getCaseSubscriptions().get(i).getDateAdded(),
@@ -141,6 +165,9 @@ class UserSubscriptionServiceTest {
     void testFindByUserIdAssignsIdForCourt() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
+        when(subscriptionListTypeRepository
+                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+            .thenReturn(mockSubscriptionListType);
 
         assertEquals(mockSubscription.getId(),
                      userSubscriptionService.findByUserId(USER_ID)

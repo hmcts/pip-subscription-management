@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
@@ -23,6 +24,7 @@ import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
  */
 @Slf4j
 @Service
+@SuppressWarnings("PMD.TooManyMethods")
 public class SubscriptionService {
 
     private final SubscriptionRepository repository;
@@ -52,12 +54,21 @@ public class SubscriptionService {
         return repository.save(subscription);
     }
 
-    public void configureListTypesForSubscription(SubscriptionListType subscriptionListType,
+    public void addListTypesForSubscription(SubscriptionListType subscriptionListType,
                                                   String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
         //DELETE EXISTING LIST TYPE CONFIG FOR A USER
         duplicateListTypeHandler(subscriptionListType);
         subscriptionListTypeRepository.save(subscriptionListType);
+    }
+
+    public void configureListTypesForSubscription(SubscriptionListType subscriptionListType,
+                                                  String actioningUserId) {
+        log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
+
+        repository.updateLocationSubscriptions(subscriptionListType.getUserId(),
+            subscriptionListType.getListType() == null ? "" :
+                StringUtils.join(subscriptionListType.getListType(), ','));
     }
 
     public void deleteById(UUID id, String actioningUserId) {

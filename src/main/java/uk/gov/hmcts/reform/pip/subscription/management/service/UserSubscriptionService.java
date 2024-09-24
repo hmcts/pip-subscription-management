@@ -4,10 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.ListTypeSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.List;
@@ -19,9 +21,13 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 public class UserSubscriptionService {
     private final SubscriptionRepository repository;
 
+    private final SubscriptionListTypeRepository subscriptionListTypeRepository;
+
     @Autowired
-    public UserSubscriptionService(SubscriptionRepository repository) {
+    public UserSubscriptionService(SubscriptionRepository repository,
+                                   SubscriptionListTypeRepository subscriptionListTypeRepository) {
         this.repository = repository;
+        this.subscriptionListTypeRepository = subscriptionListTypeRepository;
     }
 
     /**
@@ -58,7 +64,11 @@ public class UserSubscriptionService {
                     locationSubscription.setSubscriptionId(subscription.getId());
                     locationSubscription.setLocationName(subscription.getLocationName());
                     locationSubscription.setLocationId(subscription.getSearchValue());
-                    locationSubscription.setListType(subscription.getListType());
+                    SubscriptionListType subscriptionListType = subscriptionListTypeRepository
+                        .findSubscriptionListTypeByLocationIdAndUserId(Integer.parseInt(subscription.getSearchValue()),
+                                                                       subscription.getUserId());
+                    locationSubscription.setListType(subscriptionListType.getListType());
+                    locationSubscription.setListLanguage(subscriptionListType.getListLanguage());
                     locationSubscription.setDateAdded(subscription.getCreatedDate());
                     userSubscription.getLocationSubscriptions().add(locationSubscription);
                 }

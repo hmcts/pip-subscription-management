@@ -86,11 +86,12 @@ public class SubscriptionController {
         @RequestHeader("x-user-id") String actioningUserId
     ) {
         Subscription subscription = subscriptionService.createSubscription(new Subscription(sub), actioningUserId);
-        // IF LIST SUBSCRIPTION, ADD LIST AND LANGUAGE TYPE
+        // IF COURT LIST SUBSCRIPTION, ADD LIST AND LANGUAGE TYPE
         if (subscription.getSearchType().equals(LOCATION_ID)) {
             SubscriptionListType subscriptionListType = new SubscriptionListType(sub.getUserId(),
-                  Integer.valueOf(sub.getSearchValue()), sub.getListType(), sub.getListLanguage());
-            subscriptionService.configureListTypesForSubscription(subscriptionListType, actioningUserId);
+                  Integer.valueOf(sub.getSearchValue()), sub.getListType(), sub.getListLanguage(),
+                    sub.getCreatedDate());
+            subscriptionService.addListTypesForSubscription(subscriptionListType, actioningUserId);
         }
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user %s",

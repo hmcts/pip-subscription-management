@@ -13,5 +13,6 @@ public class LocationSubscription {
     private String locationName;
     private String locationId;
     private List<String> listType;
+    private List<String> listLanguage;
     private LocalDateTime dateAdded;
 }

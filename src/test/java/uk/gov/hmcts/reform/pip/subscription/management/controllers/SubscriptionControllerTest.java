@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
@@ -68,19 +69,42 @@ class SubscriptionControllerTest {
 
     @BeforeEach
     void setup() {
-        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now(),
-                                                                    ListType.CIVIL_DAILY_CAUSE_LIST
-        );
+        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
         userSubscription = new UserSubscription();
-        subscriptionListType = new SubscriptionListType(USER_ID, Integer.valueOf(LOCATION_ID),
-                                                        LIST_TYPES, LIST_LANGUAGE);
+        subscriptionListType = new SubscriptionListType(USER_ID, Integer.parseInt(SEARCH_VALUE),
+            LIST_TYPES, LIST_LANGUAGE, mockSubscription.getCreatedDate());
 
     }
 
     @Test
-    void testCreateSubscription() {
+    void testCreateCourtSubscription() {
         when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
             .thenReturn(mockSubscription);
+        doNothing().when(subscriptionService).addListTypesForSubscription(subscriptionListType, ACTIONING_USER_ID);
+
+        uk.gov.hmcts.reform.pip.model.subscription.Subscription modelSubscription = mockSubscription.toDto();
+        modelSubscription.setListType(LIST_TYPES);
+        modelSubscription.setListLanguage(LIST_LANGUAGE);
+        modelSubscription.setCreatedDate(modelSubscription.getCreatedDate());
+
+        assertEquals(
+            new ResponseEntity<>(
+                String.format("Subscription created with the id %s for user %s",
+                              mockSubscription.getId(), mockSubscription.getUserId()
+                ),
+                HttpStatus.CREATED
+            ),
+            subscriptionController.createSubscription(modelSubscription, ACTIONING_USER_ID),
+            "Returned subscription does not match expected subscription"
+        );
+    }
+
+    @Test
+    void testCreateCaseSubscription() {
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
+            .thenReturn(mockSubscription);
+
         assertEquals(
             new ResponseEntity<>(
                 String.format("Subscription created with the id %s for user %s",

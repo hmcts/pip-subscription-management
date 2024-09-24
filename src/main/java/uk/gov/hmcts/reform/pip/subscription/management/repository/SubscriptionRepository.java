@@ -58,15 +58,18 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     void updateLocationSubscriptions(@Param("user_id") String userId,
                                      @Param("list_type") String listType);
 
-    @Query(value = "SELECT * FROM Subscription "
-        + "WHERE search_type = :search_type "
+    @Query(value = "SELECT s.* FROM Subscription s "
+        + "INNER JOIN subscription_list_type sl "
+        + "ON s.search_value = CAST(sl.location_id AS TEXT) "
+        + "WHERE search_type = :'LOCATION_ID' "
         + "AND search_value = :search_value "
-        + "AND :search_type = 'LOCATION_ID' "
-        + "AND (ARRAY_LENGTH(list_type, 1) IS NULL OR (list_type && string_to_array(:list_type, ',')))",
+        + "AND (ARRAY_LENGTH(sl.list_type, 1) IS NULL OR (sl.list_type && string_to_array(:list_type, ','))) "
+        + "AND (ARRAY_LENGTH(sl.list_language, 1) IS NULL "
+        + "OR (sl.list_language && string_to_array(:list_language, ',')))",
         nativeQuery = true)
-    List<Subscription> findSubscriptionsByLocationSearchValue(@Param("search_type") String searchType,
-                                                              @Param("search_value") String searchValue,
-                                                              @Param("list_type") String listType);
+    List<Subscription> findSubscriptionsByLocationSearchValue(@Param("search_value") String searchValue,
+                                                              @Param("list_type") String listType,
+                                                              @Param("list_language") String listLanguage);
 
     void deleteAllByUserId(String userId);
 
