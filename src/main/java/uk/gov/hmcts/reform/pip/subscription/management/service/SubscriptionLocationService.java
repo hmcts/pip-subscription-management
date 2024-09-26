@@ -9,6 +9,8 @@ import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -31,6 +33,8 @@ public class SubscriptionLocationService {
 
     private final SubscriptionRepository repository;
 
+    private final SubscriptionListTypeRepository subscriptionListTypeRepository;
+
     private final DataManagementService dataManagementService;
 
     private final AccountManagementService accountManagementService;
@@ -42,12 +46,14 @@ public class SubscriptionLocationService {
         SubscriptionRepository repository,
         DataManagementService dataManagementService,
         AccountManagementService accountManagementService,
-        PublicationServicesService publicationServicesService
+        PublicationServicesService publicationServicesService,
+        SubscriptionListTypeRepository subscriptionListTypeRepository
     ) {
         this.repository = repository;
         this.dataManagementService = dataManagementService;
         this.accountManagementService = accountManagementService;
         this.publicationServicesService = publicationServicesService;
+        this.subscriptionListTypeRepository = subscriptionListTypeRepository;
     }
 
     public List<Subscription> findSubscriptionsByLocationId(String value) {
@@ -72,6 +78,16 @@ public class SubscriptionLocationService {
             .map(Subscription::getId).toList();
         repository.deleteByIdIn(subIds);
 
+        //DELETE DATA FROM SUBSCRIPTION LIST TYPE TABLE AS WELL.
+        List<SubscriptionListType> subscriptionListTypes = subscriptionListTypeRepository
+            .findSubscriptionListTypeByLocationId(Integer.parseInt(locationId));
+
+        if (subscriptionListTypes != null) {
+            List<UUID> subListTypeIds = subscriptionListTypes.stream()
+                .map(SubscriptionListType::getId).toList();
+
+            subscriptionListTypeRepository.deleteByIdIn(subListTypeIds);
+        }
         log.info(writeLog(String.format("%s subscription(s) have been deleted for location %s by user %s",
                                         subIds.size(), locationId, provenanceUserId)));
 

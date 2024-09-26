@@ -74,6 +74,8 @@ public final class SubscriptionUtils {
         Subscription subscription = new Subscription();
         subscription.setUserId("Ralph");
         subscription.setId(UUID.randomUUID());
+        subscription.setSearchType(SearchType.LOCATION_ID);
+        subscription.setSearchValue("1");
         return subscription;
     }
 

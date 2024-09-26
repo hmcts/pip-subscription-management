@@ -13,6 +13,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionLi
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
@@ -49,6 +50,7 @@ public class UserSubscriptionService {
      * @return A confirmation message.
      */
     public String deleteAllByUserId(String userId) {
+        subscriptionListTypeRepository.deleteAllByUserId(userId);
         repository.deleteAllByUserId(userId);
         String message = String.format("All subscriptions deleted for user id %s", userId);
         log.info(writeLog(message));
@@ -64,11 +66,13 @@ public class UserSubscriptionService {
                     locationSubscription.setSubscriptionId(subscription.getId());
                     locationSubscription.setLocationName(subscription.getLocationName());
                     locationSubscription.setLocationId(subscription.getSearchValue());
-                    SubscriptionListType subscriptionListType = subscriptionListTypeRepository
+                    Optional<SubscriptionListType> subscriptionListType = subscriptionListTypeRepository
                         .findSubscriptionListTypeByLocationIdAndUserId(Integer.parseInt(subscription.getSearchValue()),
                                                                        subscription.getUserId());
-                    locationSubscription.setListType(subscriptionListType.getListType());
-                    locationSubscription.setListLanguage(subscriptionListType.getListLanguage());
+                    if (subscriptionListType.isPresent()) {
+                        locationSubscription.setListType(subscriptionListType.get().getListType());
+                        locationSubscription.setListLanguage(subscriptionListType.get().getListLanguage());
+                    }
                     locationSubscription.setDateAdded(subscription.getCreatedDate());
                     userSubscription.getLocationSubscriptions().add(locationSubscription);
                 }

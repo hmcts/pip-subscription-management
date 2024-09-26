@@ -15,7 +15,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,18 +55,12 @@ public class SubscriptionListType {
     @Column(name = "list_language", columnDefinition = "text[]")
     private List<String> listLanguage;
 
-    @Valid
-    @NotNull
-    private LocalDateTime createdDate;
-
     public SubscriptionListType(String userId, Integer locationId,
-                                List<String> listType, List<String> listLanguage,
-                                LocalDateTime createdDate) {
+                                List<String> listType, List<String> listLanguage) {
         this.userId = userId;
         this.locationId = locationId;
         this.listType = listType;
         this.listLanguage = listLanguage;
-        this.createdDate = createdDate;
 
     }
 }

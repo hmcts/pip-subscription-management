@@ -72,7 +72,7 @@ class SubscriptionControllerTest {
         mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
         userSubscription = new UserSubscription();
         subscriptionListType = new SubscriptionListType(USER_ID, Integer.parseInt(SEARCH_VALUE),
-            LIST_TYPES, LIST_LANGUAGE, mockSubscription.getCreatedDate());
+            LIST_TYPES, LIST_LANGUAGE);
 
     }
 

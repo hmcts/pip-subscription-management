@@ -13,9 +13,12 @@ import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +36,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
+import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAUSE_LIST;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
 
 @ActiveProfiles("non-async")
@@ -44,10 +48,13 @@ class SubscriptionLocationServiceTest {
     private static final String REQUESTER_NAME = "ReqName";
     private static final String EMAIL_ADDRESS = "test@test.com";
     private static final String LOCATION_ID = "1";
+    private static final String USER_ID = "Ralph21";
     private static final String LOCATION_NAME_PREFIX = "TEST_PIP_1234_";
 
     private List<Subscription> mockSubscriptionList;
     private List<UUID> mockSubscriptionIds;
+    private List<SubscriptionListType> mockSubscriptionListType;
+    private List<UUID> mockSubscriptionListTypeIds;
     AzureAccount azureAccount;
 
     @Mock
@@ -62,6 +69,9 @@ class SubscriptionLocationServiceTest {
     @Mock
     SubscriptionRepository subscriptionRepository;
 
+    @Mock
+    SubscriptionListTypeRepository subscriptionListTypeRepository;
+
     @InjectMocks
     SubscriptionLocationService subscriptionLocationService;
 
@@ -70,6 +80,12 @@ class SubscriptionLocationServiceTest {
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
         mockSubscriptionIds = mockSubscriptionList.stream()
             .map(Subscription::getId).toList();
+
+        mockSubscriptionListType = new ArrayList<>();
+        mockSubscriptionListType.add(new SubscriptionListType(USER_ID, Integer.parseInt(LOCATION_ID),
+            List.of(CIVIL_DAILY_CAUSE_LIST.name()), List.of("ENGLISH")));
+        mockSubscriptionListTypeIds = mockSubscriptionListType.stream()
+            .map(SubscriptionListType::getId).toList();
 
         azureAccount = new AzureAccount();
         azureAccount.setDisplayName("ReqName");
@@ -88,6 +104,8 @@ class SubscriptionLocationServiceTest {
 
             when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
                 .thenReturn(mockSubscriptionList);
+            when(subscriptionListTypeRepository.findSubscriptionListTypeByLocationId(Integer.parseInt(LOCATION_ID)))
+                .thenReturn(mockSubscriptionListType);
             when(dataManagementService.getCourtName(LOCATION_ID))
                 .thenReturn(COURT_NAME);
             when(accountManagementService.getAzureAccountInfo(REQUESTER_NAME))
@@ -98,6 +116,7 @@ class SubscriptionLocationServiceTest {
                 .thenReturn(List.of(sysAdminUser2));
 
             doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
+            doNothing().when(subscriptionListTypeRepository).deleteByIdIn(mockSubscriptionListTypeIds);
 
             assertEquals(
                 "The subscription for given location is not deleted",
@@ -143,6 +162,8 @@ class SubscriptionLocationServiceTest {
 
         when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
             .thenReturn(mockSubscriptionList);
+        when(subscriptionListTypeRepository.findSubscriptionListTypeByLocationId(Integer.parseInt(LOCATION_ID)))
+            .thenReturn(mockSubscriptionListType);
         when(dataManagementService.getCourtName(LOCATION_ID))
             .thenReturn(COURT_NAME);
         doNothing().when(publicationService).sendLocationDeletionSubscriptionEmail(any(), any());
@@ -150,6 +171,7 @@ class SubscriptionLocationServiceTest {
             .thenReturn(azureAccount);
 
         doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
+        doNothing().when(subscriptionListTypeRepository).deleteByIdIn(mockSubscriptionListTypeIds);
 
         assertEquals("The subscription for given location is not deleted",
                      "Total 8 subscriptions deleted for location id 1",

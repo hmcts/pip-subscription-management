@@ -22,6 +22,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRe
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -83,7 +84,7 @@ class UserSubscriptionServiceTest {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
         when(subscriptionListTypeRepository
                  .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
-            .thenReturn(mockSubscriptionListType);
+            .thenReturn(Optional.of(mockSubscriptionListType));
         LocationSubscription expected = new LocationSubscription();
         expected.setSubscriptionId(mockSubscription.getId());
         expected.setLocationName("Test court");
@@ -125,7 +126,7 @@ class UserSubscriptionServiceTest {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         when(subscriptionListTypeRepository
                  .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
-            .thenReturn(mockSubscriptionListType);
+            .thenReturn(Optional.of(mockSubscriptionListType));
         UserSubscription result = userSubscriptionService.findByUserId(USER_ID);
         assertEquals(6, result.getCaseSubscriptions().size(),
                      "Should add all CaseSubscriptions to UserSubscriptions");
@@ -137,7 +138,7 @@ class UserSubscriptionServiceTest {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         when(subscriptionListTypeRepository
                  .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
-                    .thenReturn(mockSubscriptionListType);
+                    .thenReturn(Optional.of(mockSubscriptionListType));
         UserSubscription result = userSubscriptionService.findByUserId(USER_ID);
         for (int i = 0; i < 6; i++) {
             assertEquals(CASE_ID + i, result.getCaseSubscriptions().get(i).getCaseNumber(),
@@ -152,7 +153,7 @@ class UserSubscriptionServiceTest {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         when(subscriptionListTypeRepository
                  .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
-            .thenReturn(mockSubscriptionListType);
+            .thenReturn(Optional.of(mockSubscriptionListType));
         UserSubscription result = userSubscriptionService.findByUserId(USER_ID);
         for (int i = 0; i < 6; i++) {
             assertEquals(DATE_ADDED, result.getCaseSubscriptions().get(i).getDateAdded(),
@@ -167,7 +168,7 @@ class UserSubscriptionServiceTest {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
         when(subscriptionListTypeRepository
                  .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
-            .thenReturn(mockSubscriptionListType);
+            .thenReturn(Optional.of(mockSubscriptionListType));
 
         assertEquals(mockSubscription.getId(),
                      userSubscriptionService.findByUserId(USER_ID)

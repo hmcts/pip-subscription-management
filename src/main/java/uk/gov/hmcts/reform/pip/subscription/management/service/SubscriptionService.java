@@ -81,6 +81,16 @@ public class SubscriptionService {
             ));
         }
 
+        if (subscription.get().getSearchType().equals(LOCATION_ID)) {
+            Optional<SubscriptionListType> subscriptionListTypes =
+                subscriptionListTypeRepository.findSubscriptionListTypeByLocationIdAndUserId(
+                    Integer.parseInt(subscription.get().getSearchValue()), subscription.get().getUserId());
+
+            if (subscriptionListTypes.isPresent()) {
+                subscriptionListTypeRepository.delete(subscriptionListTypes.get());
+            }
+        }
+
         log.info(writeLog(actioningUserId, UserActions.DELETE_SUBSCRIPTION,
                           id.toString()));
 
@@ -96,6 +106,15 @@ public class SubscriptionService {
                                      .toList());
             throw new SubscriptionNotFoundException("No subscription found with the subscription ID(s): "
                     + missingIds.toString().replace("[", "").replace("]", ""));
+        }
+
+        List<SubscriptionListType> subscriptionListTypes =
+            subscriptionListTypeRepository.findByUserId(subscriptions.get(0).getUserId());
+        if (subscriptionListTypes != null) {
+            List<UUID> subListTypeIds = subscriptionListTypes.stream()
+                .map(SubscriptionListType::getId).toList();
+
+            subscriptionListTypeRepository.deleteByIdIn(subListTypeIds);
         }
 
         repository.deleteByIdIn(ids);

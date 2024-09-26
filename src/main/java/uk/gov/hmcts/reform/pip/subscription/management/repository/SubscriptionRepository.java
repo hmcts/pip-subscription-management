@@ -49,22 +49,21 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE Subscription "
+    @Query(value = "UPDATE Subscription_List_Type "
         + "SET list_type = string_to_array(:list_type, ','),"
-        + "last_updated_date = now() "
-        + "WHERE user_id = :user_id "
-        + "AND search_type = 'LOCATION_ID'",
+        + "created_date = now() "
+        + "WHERE user_id = :user_id",
         nativeQuery = true)
     void updateLocationSubscriptions(@Param("user_id") String userId,
                                      @Param("list_type") String listType);
 
     @Query(value = "SELECT s.* FROM Subscription s "
-        + "INNER JOIN subscription_list_type sl "
+        + "INNER JOIN Subscription_List_Type sl "
         + "ON s.search_value = CAST(sl.location_id AS TEXT) "
         + "WHERE search_type = :'LOCATION_ID' "
         + "AND search_value = :search_value "
-        + "AND (ARRAY_LENGTH(sl.list_type, 1) IS NULL OR (sl.list_type && string_to_array(:list_type, ','))) "
-        + "AND (ARRAY_LENGTH(sl.list_language, 1) IS NULL "
+        + "AND sl.list_type && string_to_array(:list_type, ',')) "
+        + "AND (ARRAY_LENGTH(sl.list_language, 1) IS NOT NULL "
         + "OR (sl.list_language && string_to_array(:list_language, ',')))",
         nativeQuery = true)
     List<Subscription> findSubscriptionsByLocationSearchValue(@Param("search_value") String searchValue,

@@ -97,8 +97,7 @@ class SubscriptionServiceTest {
         mockSubscription.setChannel(Channel.EMAIL);
         mockSubscriptionListType = new SubscriptionListType(USER_ID, LOCATION_ID,
                                                             List.of(CIVIL_DAILY_CAUSE_LIST.name()),
-                                                            List.of("ENGLISH"),
-                                                            mockSubscription.getCreatedDate());
+                                                            List.of("ENGLISH"));
     }
 
     @Test
@@ -219,6 +218,8 @@ class SubscriptionServiceTest {
         ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
         doNothing().when(subscriptionRepository).deleteById(captor.capture());
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
+        when(subscriptionListTypeRepository.findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+            .thenReturn(Optional.of(mockSubscriptionListType));
         subscriptionService.deleteById(testUuid, ACTIONING_USER_ID);
         assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
     }
