@@ -50,7 +50,7 @@ public class UserSubscriptionService {
      * @return A confirmation message.
      */
     public String deleteAllByUserId(String userId) {
-        subscriptionListTypeRepository.deleteAllByUserId(userId);
+        subscriptionListTypeRepository.deleteByUserId(userId);
         repository.deleteAllByUserId(userId);
         String message = String.format("All subscriptions deleted for user id %s", userId);
         log.info(writeLog(message));
@@ -67,8 +67,7 @@ public class UserSubscriptionService {
                     locationSubscription.setLocationName(subscription.getLocationName());
                     locationSubscription.setLocationId(subscription.getSearchValue());
                     Optional<SubscriptionListType> subscriptionListType = subscriptionListTypeRepository
-                        .findSubscriptionListTypeByLocationIdAndUserId(Integer.parseInt(subscription.getSearchValue()),
-                                                                       subscription.getUserId());
+                        .findByUserId(subscription.getUserId());
                     if (subscriptionListType.isPresent()) {
                         locationSubscription.setListType(subscriptionListType.get().getListType());
                         locationSubscription.setListLanguage(subscriptionListType.get().getListLanguage());

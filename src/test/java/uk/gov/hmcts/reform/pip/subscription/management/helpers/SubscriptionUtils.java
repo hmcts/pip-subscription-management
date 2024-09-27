@@ -3,12 +3,15 @@ package uk.gov.hmcts.reform.pip.subscription.management.helpers;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAUSE_LIST;
 
 public final class SubscriptionUtils {
 
@@ -77,6 +80,15 @@ public final class SubscriptionUtils {
         subscription.setSearchType(SearchType.LOCATION_ID);
         subscription.setSearchValue("1");
         return subscription;
+    }
+
+    public static List<SubscriptionListType> createMockSubscriptionListType(String userId) {
+        List<SubscriptionListType> subscriptionListTypes = new ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            subscriptionListTypes.add(new SubscriptionListType(userId,
+                List.of(CIVIL_DAILY_CAUSE_LIST.name()), List.of("ENGLISH")));
+        }
+        return subscriptionListTypes;
     }
 
 }

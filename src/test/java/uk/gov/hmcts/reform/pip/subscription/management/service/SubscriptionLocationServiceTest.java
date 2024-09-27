@@ -18,9 +18,9 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionLi
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,8 +36,8 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
 import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
-import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAUSE_LIST;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
+import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionListType;
 
 @ActiveProfiles("non-async")
 @ExtendWith({MockitoExtension.class})
@@ -81,11 +81,10 @@ class SubscriptionLocationServiceTest {
         mockSubscriptionIds = mockSubscriptionList.stream()
             .map(Subscription::getId).toList();
 
-        mockSubscriptionListType = new ArrayList<>();
-        mockSubscriptionListType.add(new SubscriptionListType(USER_ID, Integer.parseInt(LOCATION_ID),
-            List.of(CIVIL_DAILY_CAUSE_LIST.name()), List.of("ENGLISH")));
+        mockSubscriptionListType = createMockSubscriptionListType(USER_ID);
         mockSubscriptionListTypeIds = mockSubscriptionListType.stream()
             .map(SubscriptionListType::getId).toList();
+
 
         azureAccount = new AzureAccount();
         azureAccount.setDisplayName("ReqName");
@@ -104,8 +103,8 @@ class SubscriptionLocationServiceTest {
 
             when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
                 .thenReturn(mockSubscriptionList);
-            when(subscriptionListTypeRepository.findSubscriptionListTypeByLocationId(Integer.parseInt(LOCATION_ID)))
-                .thenReturn(mockSubscriptionListType);
+            when(subscriptionListTypeRepository.findByUserId(any()))
+                .thenReturn(Optional.of(mockSubscriptionListType.get(0)));
             when(dataManagementService.getCourtName(LOCATION_ID))
                 .thenReturn(COURT_NAME);
             when(accountManagementService.getAzureAccountInfo(REQUESTER_NAME))
@@ -162,8 +161,8 @@ class SubscriptionLocationServiceTest {
 
         when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
             .thenReturn(mockSubscriptionList);
-        when(subscriptionListTypeRepository.findSubscriptionListTypeByLocationId(Integer.parseInt(LOCATION_ID)))
-            .thenReturn(mockSubscriptionListType);
+        when(subscriptionListTypeRepository.findByUserId(any()))
+            .thenReturn(Optional.of(mockSubscriptionListType.get(0)));
         when(dataManagementService.getCourtName(LOCATION_ID))
             .thenReturn(COURT_NAME);
         doNothing().when(publicationService).sendLocationDeletionSubscriptionEmail(any(), any());

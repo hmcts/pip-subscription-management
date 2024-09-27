@@ -42,10 +42,6 @@ public class SubscriptionListType {
     private String userId;
 
     @Valid
-    @NotNull
-    private Integer locationId;
-
-    @Valid
     @Type(ListArrayType.class)
     @Column(name = "list_type", columnDefinition = "text[]")
     private List<String> listType;
@@ -55,10 +51,9 @@ public class SubscriptionListType {
     @Column(name = "list_language", columnDefinition = "text[]")
     private List<String> listLanguage;
 
-    public SubscriptionListType(String userId, Integer locationId,
-                                List<String> listType, List<String> listLanguage) {
+    public SubscriptionListType(String userId, List<String> listType,
+                                List<String> listLanguage) {
         this.userId = userId;
-        this.locationId = locationId;
         this.listType = listType;
         this.listLanguage = listLanguage;
 

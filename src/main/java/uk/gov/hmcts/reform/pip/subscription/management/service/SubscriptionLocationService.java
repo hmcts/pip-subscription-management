@@ -79,15 +79,8 @@ public class SubscriptionLocationService {
         repository.deleteByIdIn(subIds);
 
         //DELETE DATA FROM SUBSCRIPTION LIST TYPE TABLE AS WELL.
-        List<SubscriptionListType> subscriptionListTypes = subscriptionListTypeRepository
-            .findSubscriptionListTypeByLocationId(Integer.parseInt(locationId));
+        this.deleteAllSubscriptionListTypeForLocation(locationSubscriptions);
 
-        if (subscriptionListTypes != null) {
-            List<UUID> subListTypeIds = subscriptionListTypes.stream()
-                .map(SubscriptionListType::getId).toList();
-
-            subscriptionListTypeRepository.deleteByIdIn(subListTypeIds);
-        }
         log.info(writeLog(String.format("%s subscription(s) have been deleted for location %s by user %s",
                                         subIds.size(), locationId, provenanceUserId)));
 
@@ -99,6 +92,29 @@ public class SubscriptionLocationService {
 
         return String.format("Total %s subscriptions deleted for location id %s", subIds.size(), locationId);
 
+    }
+
+    private void deleteAllSubscriptionListTypeForLocation(List<Subscription> locationSubscriptions) {
+        List<String> uniqueUsers = locationSubscriptions.stream()
+            .map(Subscription::getUserId).distinct().toList();
+        List<UUID> subscriptionListTypesIds = new ArrayList<>();
+        int minNoOfSubscriptions = 1;
+
+        if (!uniqueUsers.isEmpty()) {
+
+            for (String userId : uniqueUsers) {
+                List<Subscription> userLocationSubscriptions = repository.findLocationSubscriptionsByUserId(userId);
+                if (userLocationSubscriptions.size() <= minNoOfSubscriptions) {
+                    Optional<SubscriptionListType> subscriptionListType =
+                        subscriptionListTypeRepository.findByUserId(userId);
+                    subscriptionListType.ifPresent(listType -> subscriptionListTypesIds.add(listType.getId()));
+                }
+
+            }
+            if (!subscriptionListTypesIds.isEmpty()) {
+                subscriptionListTypeRepository.deleteByIdIn(subscriptionListTypesIds);
+            }
+        }
     }
 
     public String deleteAllSubscriptionsWithLocationNamePrefix(String prefix) {

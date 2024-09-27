@@ -78,6 +78,12 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         nativeQuery = true)
     List<Subscription> findSubscriptionsByLocationId(@Param("search_value") String searchValue);
 
+    @Query(value = "SELECT * FROM Subscription "
+        + "WHERE user_id = :user_id "
+        + "AND search_type = 'LOCATION_ID'",
+        nativeQuery = true)
+    List<Subscription> findLocationSubscriptionsByUserId(@Param("user_id") String userId);
+
     List<Subscription> findAllByLocationNameStartingWithIgnoreCase(@Param("prefix") String prefix);
 
     @Modifying

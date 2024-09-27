@@ -83,7 +83,7 @@ class UserSubscriptionServiceTest {
         mockSubscription.setLocationName("Test court");
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
         when(subscriptionListTypeRepository
-                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+                 .findByUserId(any()))
             .thenReturn(Optional.of(mockSubscriptionListType));
         LocationSubscription expected = new LocationSubscription();
         expected.setSubscriptionId(mockSubscription.getId());
@@ -125,7 +125,7 @@ class UserSubscriptionServiceTest {
     void testFindByUserIdLength() {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         when(subscriptionListTypeRepository
-                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+                 .findByUserId(any()))
             .thenReturn(Optional.of(mockSubscriptionListType));
         UserSubscription result = userSubscriptionService.findByUserId(USER_ID);
         assertEquals(6, result.getCaseSubscriptions().size(),
@@ -137,7 +137,7 @@ class UserSubscriptionServiceTest {
     void testFindByUserId() {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         when(subscriptionListTypeRepository
-                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+                 .findByUserId(any()))
                     .thenReturn(Optional.of(mockSubscriptionListType));
         UserSubscription result = userSubscriptionService.findByUserId(USER_ID);
         for (int i = 0; i < 6; i++) {
@@ -152,7 +152,7 @@ class UserSubscriptionServiceTest {
     void testFindByUserIdCreatedDates() {
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(mockSubscriptionList);
         when(subscriptionListTypeRepository
-                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+                 .findByUserId(any()))
             .thenReturn(Optional.of(mockSubscriptionListType));
         UserSubscription result = userSubscriptionService.findByUserId(USER_ID);
         for (int i = 0; i < 6; i++) {
@@ -167,7 +167,7 @@ class UserSubscriptionServiceTest {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
         when(subscriptionRepository.findByUserId(USER_ID)).thenReturn(List.of(mockSubscription));
         when(subscriptionListTypeRepository
-                 .findSubscriptionListTypeByLocationIdAndUserId(any(), any()))
+                 .findByUserId(any()))
             .thenReturn(Optional.of(mockSubscriptionListType));
 
         assertEquals(mockSubscription.getId(),

@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionLi
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -73,7 +74,6 @@ public class SubscriptionService {
 
     public void deleteById(UUID id, String actioningUserId) {
         Optional<Subscription> subscription = repository.findById(id);
-
         if (subscription.isEmpty()) {
             throw new SubscriptionNotFoundException(String.format(
                 "No subscription found with the subscription id %s",
@@ -81,13 +81,17 @@ public class SubscriptionService {
             ));
         }
 
+        int minNoOfSubscriptions = 1;
         if (subscription.get().getSearchType().equals(LOCATION_ID)) {
             Optional<SubscriptionListType> subscriptionListTypes =
-                subscriptionListTypeRepository.findSubscriptionListTypeByLocationIdAndUserId(
-                    Integer.parseInt(subscription.get().getSearchValue()), subscription.get().getUserId());
-
-            if (subscriptionListTypes.isPresent()) {
-                subscriptionListTypeRepository.delete(subscriptionListTypes.get());
+                subscriptionListTypeRepository.findByUserId(subscription.get().getUserId());
+            List<Subscription> userSubscriptions = repository.findLocationSubscriptionsByUserId(
+                subscription.get().getUserId());
+            //FIND ALL THE LOCATION SUBSCRIPTION FOR THE USER AND CHECK IF MORE THAN ONE LOCATION SUBSCRIPTION EXISTS
+            //DO NOT DELETE RECORD FROM SUBSCRIPTION LIST TYPE BECAUSE ONE RECORD IS LINKED WITH ALL THE LOCATION
+            //SUBSCRIPTIONS
+            if (userSubscriptions.size() <= minNoOfSubscriptions) {
+                subscriptionListTypes.ifPresent(subscriptionListTypeRepository::delete);
             }
         }
 
@@ -108,13 +112,23 @@ public class SubscriptionService {
                     + missingIds.toString().replace("[", "").replace("]", ""));
         }
 
-        List<SubscriptionListType> subscriptionListTypes =
-            subscriptionListTypeRepository.findByUserId(subscriptions.get(0).getUserId());
-        if (subscriptionListTypes != null) {
-            List<UUID> subListTypeIds = subscriptionListTypes.stream()
-                .map(SubscriptionListType::getId).toList();
+        //FIND ALL THE LOCATION SUBSCRIPTION FOR THE USER AND CHECK IF MORE THAN ONE LOCATION SUBSCRIPTION EXISTS
+        //DO NOT DELETE RECORD FROM SUBSCRIPTION LIST TYPE BECAUSE ONE RECORD IS LINKED WITH ALL THE LOCATION
+        //SUBSCRIPTIONS
+        List<Subscription> bulkDeleteLocationSubscriptions = subscriptions.stream()
+            .filter(s -> s.getSearchType()
+            .equals(LOCATION_ID)).toList();
 
-            subscriptionListTypeRepository.deleteByIdIn(subListTypeIds);
+        List<Subscription> userLocationSubscriptions = repository
+            .findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId());
+
+        if (!userLocationSubscriptions.isEmpty()
+            && bulkDeleteLocationSubscriptions.size()
+            == repository.findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId()).size()) {
+            Optional<SubscriptionListType> subscriptionListTypes =
+                subscriptionListTypeRepository.findByUserId(subscriptions.get(0).getUserId());
+            subscriptionListTypes.ifPresent(subscriptionListType -> subscriptionListTypeRepository
+                .deleteByUserId(subscriptionListType.getUserId()));
         }
 
         repository.deleteByIdIn(ids);
@@ -153,12 +167,20 @@ public class SubscriptionService {
     }
 
     private void duplicateListTypeHandler(SubscriptionListType subscriptionListType) {
-        subscriptionListTypeRepository.findByUserId(subscriptionListType.getUserId())
-            .forEach(existingSub -> {
-                if (existingSub.getLocationId().equals(subscriptionListType.getLocationId())) {
-                    subscriptionListTypeRepository.delete(existingSub);
-                }
-            });
+        Optional<SubscriptionListType> alreadyExistsSubListType =
+            subscriptionListTypeRepository.findByUserId(subscriptionListType.getUserId());
+        if (alreadyExistsSubListType.isPresent()) {
+            this.appendListTypesToExistingRecord(subscriptionListType, alreadyExistsSubListType.get());
+            subscriptionListTypeRepository.deleteByUserId(subscriptionListType.getUserId());
+        }
+    }
+
+    private void appendListTypesToExistingRecord(SubscriptionListType subscriptionListType,
+                                                                 SubscriptionListType alreadyExistsSubListType) {
+        List<String> listTypes = subscriptionListType.getListType();
+        listTypes.addAll(alreadyExistsSubListType.getListType());
+        List<String> uniqueListTypes = new ArrayList<>(new HashSet<>(listTypes));
+        subscriptionListType.setListType(uniqueListTypes);
     }
 
     public String getAllSubscriptionsDataForMiReporting() {

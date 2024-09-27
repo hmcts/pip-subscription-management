@@ -89,7 +89,7 @@ public class SubscriptionController {
         // IF COURT LIST SUBSCRIPTION, ADD LIST AND LANGUAGE TYPE
         if (subscription.getSearchType().equals(LOCATION_ID)) {
             SubscriptionListType subscriptionListType = new SubscriptionListType(sub.getUserId(),
-                  Integer.valueOf(sub.getSearchValue()), sub.getListType(), sub.getListLanguage());
+                  sub.getListType(), sub.getListLanguage());
             subscriptionService.addListTypesForSubscription(subscriptionListType, actioningUserId);
         }
         return ResponseEntity.status(HttpStatus.CREATED)
