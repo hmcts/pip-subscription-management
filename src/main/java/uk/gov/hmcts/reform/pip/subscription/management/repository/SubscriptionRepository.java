@@ -47,16 +47,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         + "FROM Subscription WHERE search_type ='LOCATION_ID'", nativeQuery = true)
     List<String> getLocalSubsDataForMi();
 
-    @Transactional
-    @Modifying
-    @Query(value = "UPDATE Subscription_List_Type "
-        + "SET list_type = string_to_array(:list_type, ','),"
-        + "created_date = now() "
-        + "WHERE user_id = :user_id",
-        nativeQuery = true)
-    void updateLocationSubscriptions(@Param("user_id") String userId,
-                                     @Param("list_type") String listType);
-
     @Query(value = "SELECT s.* FROM Subscription s "
         + "INNER JOIN Subscription_List_Type sl "
         + "ON s.search_value = CAST(sl.location_id AS TEXT) "

@@ -180,7 +180,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testConfigureListTypesForLocationSubscription() {
-        doNothing().when(subscriptionRepository).updateLocationSubscriptions(any(), any());
+        doNothing().when(subscriptionListTypeRepository).updateLocationSubscriptions(any(), any());
         subscriptionService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);
 
         assertEquals(USER_ID, mockSubscription.getUserId(),
@@ -190,7 +190,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testConfigureEmptyListTypesForLocationSubscription() {
-        doNothing().when(subscriptionRepository)
+        doNothing().when(subscriptionListTypeRepository)
             .updateLocationSubscriptions(USER_ID, "");
         mockSubscriptionListType.setListType(new ArrayList<>());
         subscriptionService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);

@@ -67,7 +67,7 @@ public class SubscriptionService {
                                                   String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
 
-        repository.updateLocationSubscriptions(subscriptionListType.getUserId(),
+        subscriptionListTypeRepository.updateLocationSubscriptions(subscriptionListType.getUserId(),
             subscriptionListType.getListType() == null ? "" :
                 StringUtils.join(subscriptionListType.getListType(), ','));
     }
