@@ -83,8 +83,6 @@ class SubscriptionControllerTest {
             .thenReturn(mockSubscription);
 
         uk.gov.hmcts.reform.pip.model.subscription.Subscription modelSubscription = mockSubscription.toDto();
-        modelSubscription.setListType(LIST_TYPES);
-        modelSubscription.setListLanguage(LIST_LANGUAGE);
         modelSubscription.setCreatedDate(modelSubscription.getCreatedDate());
 
         assertEquals(
