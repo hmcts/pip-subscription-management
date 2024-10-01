@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
@@ -69,10 +68,10 @@ public class SubscriptionService {
                                                   String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
 
+        Optional<SubscriptionListType> existingSubscriptionListType = subscriptionListTypeRepository
+            .findByUserId(subscriptionListType.getUserId());
+        existingSubscriptionListType.ifPresent(listType -> subscriptionListType.setId(listType.getId()));
         subscriptionListTypeRepository.save(subscriptionListType);
-        subscriptionListTypeRepository.updateLocationSubscriptions(subscriptionListType.getUserId(),
-            subscriptionListType.getListType() == null ? "" :
-                StringUtils.join(subscriptionListType.getListType(), ','));
     }
 
     public void deleteById(UUID id, String actioningUserId) {
