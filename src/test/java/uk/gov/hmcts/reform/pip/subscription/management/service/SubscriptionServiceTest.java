@@ -81,6 +81,9 @@ class SubscriptionServiceTest {
     DataManagementService dataManagementService;
 
     @Mock
+    SubscriptionLocationService subscriptionLocationService;
+
+    @Mock
     SubscriptionRepository subscriptionRepository;
 
     @Mock
@@ -217,8 +220,7 @@ class SubscriptionServiceTest {
         ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
         doNothing().when(subscriptionRepository).deleteById(captor.capture());
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
-        when(subscriptionListTypeRepository.findByUserId(any()))
-            .thenReturn(Optional.of(mockSubscriptionListType));
+        doNothing().when(subscriptionLocationService).deleteSubscriptionListTypeByUser(any());
         subscriptionService.deleteById(testUuid, ACTIONING_USER_ID);
         assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
     }

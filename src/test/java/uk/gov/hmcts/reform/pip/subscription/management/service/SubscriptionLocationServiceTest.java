@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
@@ -115,7 +116,6 @@ class SubscriptionLocationServiceTest {
                 .thenReturn(List.of(sysAdminUser2));
 
             doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
-            doNothing().when(subscriptionListTypeRepository).deleteByIdIn(mockSubscriptionListTypeIds);
 
             assertEquals(
                 "The subscription for given location is not deleted",
@@ -170,7 +170,6 @@ class SubscriptionLocationServiceTest {
             .thenReturn(azureAccount);
 
         doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
-        doNothing().when(subscriptionListTypeRepository).deleteByIdIn(mockSubscriptionListTypeIds);
 
         assertEquals("The subscription for given location is not deleted",
                      "Total 8 subscriptions deleted for location id 1",
@@ -210,5 +209,29 @@ class SubscriptionLocationServiceTest {
             .isEqualTo("0 subscription(s) deleted for location name starting with " + LOCATION_NAME_PREFIX);
 
         verify(subscriptionRepository, never()).deleteByIdIn(anyList());
+    }
+
+    @Test
+    void testDeleteSubscriptionListTypeByUser() {
+        when(subscriptionRepository.findLocationSubscriptionsByUserId(USER_ID))
+            .thenReturn(Collections.emptyList());
+        when(subscriptionListTypeRepository.findByUserId(USER_ID))
+            .thenReturn(Optional.of(mockSubscriptionListType.get(0)));
+
+        subscriptionLocationService.deleteSubscriptionListTypeByUser(USER_ID);
+
+        verify(subscriptionListTypeRepository, times(1))
+            .delete(mockSubscriptionListType.get(0));
+    }
+
+    @Test
+    void testDeleteSubscriptionListTypeByUserWitLocationSub() {
+        when(subscriptionRepository.findLocationSubscriptionsByUserId(USER_ID))
+            .thenReturn(mockSubscriptionList);
+
+        subscriptionLocationService.deleteSubscriptionListTypeByUser(USER_ID);
+
+        verify(subscriptionListTypeRepository, never())
+            .delete(any());
     }
 }

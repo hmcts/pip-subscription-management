@@ -76,7 +76,7 @@ class SubscriptionControllerTest {
     }
 
     @Test
-    void testCreateCourtSubscription() {
+    void testLocationSubscription() {
         when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
             .thenReturn(mockSubscription);
         doNothing().when(subscriptionService).addListTypesForSubscription(subscriptionListType, ACTIONING_USER_ID);

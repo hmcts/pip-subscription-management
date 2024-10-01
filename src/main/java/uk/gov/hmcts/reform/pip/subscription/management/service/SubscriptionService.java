@@ -33,12 +33,16 @@ public class SubscriptionService {
     private final SubscriptionListTypeRepository subscriptionListTypeRepository;
     private final DataManagementService dataManagementService;
 
+    private final SubscriptionLocationService subscriptionLocationService;
+
     @Autowired
     public SubscriptionService(SubscriptionRepository repository, DataManagementService dataManagementService,
-                               SubscriptionListTypeRepository subscriptionListTypeRepository) {
+                               SubscriptionListTypeRepository subscriptionListTypeRepository,
+                               SubscriptionLocationService subscriptionLocationService) {
         this.repository = repository;
         this.dataManagementService = dataManagementService;
         this.subscriptionListTypeRepository = subscriptionListTypeRepository;
+        this.subscriptionLocationService = subscriptionLocationService;
     }
 
     public Subscription createSubscription(Subscription subscription, String actioningUserId) {
@@ -58,15 +62,15 @@ public class SubscriptionService {
     public void addListTypesForSubscription(SubscriptionListType subscriptionListType,
                                                   String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
-        //DELETE EXISTING LIST TYPE CONFIG FOR A USER
+        //CREATE A RECORD IF LIST TYPE DOES NOT EXIST, IF EXISTS, UPDATE THE RECORD.
         duplicateListTypeHandler(subscriptionListType);
-        subscriptionListTypeRepository.save(subscriptionListType);
     }
 
     public void configureListTypesForSubscription(SubscriptionListType subscriptionListType,
                                                   String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
 
+        subscriptionListTypeRepository.save(subscriptionListType);
         subscriptionListTypeRepository.updateLocationSubscriptions(subscriptionListType.getUserId(),
             subscriptionListType.getListType() == null ? "" :
                 StringUtils.join(subscriptionListType.getListType(), ','));
@@ -81,24 +85,15 @@ public class SubscriptionService {
             ));
         }
 
-        int minNoOfSubscriptions = 1;
+        repository.deleteById(id);
+
         if (subscription.get().getSearchType().equals(LOCATION_ID)) {
-            Optional<SubscriptionListType> subscriptionListTypes =
-                subscriptionListTypeRepository.findByUserId(subscription.get().getUserId());
-            List<Subscription> userSubscriptions = repository.findLocationSubscriptionsByUserId(
-                subscription.get().getUserId());
-            //FIND ALL THE LOCATION SUBSCRIPTION FOR THE USER AND CHECK IF MORE THAN ONE LOCATION SUBSCRIPTION EXISTS
-            //DO NOT DELETE RECORD FROM SUBSCRIPTION LIST TYPE BECAUSE ONE RECORD IS LINKED WITH ALL THE LOCATION
-            //SUBSCRIPTIONS
-            if (userSubscriptions.size() <= minNoOfSubscriptions) {
-                subscriptionListTypes.ifPresent(subscriptionListTypeRepository::delete);
-            }
+            subscriptionLocationService
+                .deleteSubscriptionListTypeByUser(subscription.get().getUserId());
         }
 
         log.info(writeLog(actioningUserId, UserActions.DELETE_SUBSCRIPTION,
                           id.toString()));
-
-        repository.deleteById(id);
     }
 
     public void bulkDeleteSubscriptions(List<UUID> ids) {
@@ -169,10 +164,12 @@ public class SubscriptionService {
     private void duplicateListTypeHandler(SubscriptionListType subscriptionListType) {
         Optional<SubscriptionListType> alreadyExistsSubListType =
             subscriptionListTypeRepository.findByUserId(subscriptionListType.getUserId());
-        if (alreadyExistsSubListType.isPresent()) {
-            this.appendListTypesToExistingRecord(subscriptionListType, alreadyExistsSubListType.get());
-            subscriptionListTypeRepository.deleteByUserId(subscriptionListType.getUserId());
-        }
+
+        alreadyExistsSubListType.ifPresent(listType -> this.appendListTypesToExistingRecord(
+            subscriptionListType,
+            listType
+        ));
+        subscriptionListTypeRepository.save(subscriptionListType);
     }
 
     private void appendListTypesToExistingRecord(SubscriptionListType subscriptionListType,

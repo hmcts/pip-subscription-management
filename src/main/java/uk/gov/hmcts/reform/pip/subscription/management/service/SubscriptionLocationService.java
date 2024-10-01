@@ -97,23 +97,23 @@ public class SubscriptionLocationService {
     private void deleteAllSubscriptionListTypeForLocation(List<Subscription> locationSubscriptions) {
         List<String> uniqueUsers = locationSubscriptions.stream()
             .map(Subscription::getUserId).distinct().toList();
-        List<UUID> subscriptionListTypesIds = new ArrayList<>();
-        int minNoOfSubscriptions = 1;
 
         if (!uniqueUsers.isEmpty()) {
 
             for (String userId : uniqueUsers) {
-                List<Subscription> userLocationSubscriptions = repository.findLocationSubscriptionsByUserId(userId);
-                if (userLocationSubscriptions.size() <= minNoOfSubscriptions) {
-                    Optional<SubscriptionListType> subscriptionListType =
-                        subscriptionListTypeRepository.findByUserId(userId);
-                    subscriptionListType.ifPresent(listType -> subscriptionListTypesIds.add(listType.getId()));
-                }
+                this.deleteSubscriptionListTypeByUser(userId);
+            }
+        }
+    }
 
-            }
-            if (!subscriptionListTypesIds.isEmpty()) {
-                subscriptionListTypeRepository.deleteByIdIn(subscriptionListTypesIds);
-            }
+    public void deleteSubscriptionListTypeByUser(String userId) {
+        List<Subscription> userLocationSubscriptions =
+            repository.findLocationSubscriptionsByUserId(userId);
+
+        if (userLocationSubscriptions.isEmpty()) {
+            Optional<SubscriptionListType> subscriptionListType =
+                subscriptionListTypeRepository.findByUserId(userId);
+            subscriptionListType.ifPresent(subscriptionListTypeRepository::delete);
         }
     }
 
