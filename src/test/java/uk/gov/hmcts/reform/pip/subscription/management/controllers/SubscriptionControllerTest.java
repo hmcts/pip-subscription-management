@@ -41,6 +41,8 @@ class SubscriptionControllerTest {
     private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
+    private static final String RETURNED_SUBSCRIPTION_NOT_MATCHED =
+        "Returned subscription does not match expected subscription";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
     private static final List<String> LIST_LANGUAGE = Arrays.asList("ENGLISH");
@@ -79,7 +81,6 @@ class SubscriptionControllerTest {
     void testLocationSubscription() {
         when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
             .thenReturn(mockSubscription);
-        doNothing().when(subscriptionService).addListTypesForSubscription(subscriptionListType, ACTIONING_USER_ID);
 
         uk.gov.hmcts.reform.pip.model.subscription.Subscription modelSubscription = mockSubscription.toDto();
         modelSubscription.setListType(LIST_TYPES);
@@ -94,7 +95,7 @@ class SubscriptionControllerTest {
                 HttpStatus.CREATED
             ),
             subscriptionController.createSubscription(modelSubscription, ACTIONING_USER_ID),
-            "Returned subscription does not match expected subscription"
+                RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
@@ -112,7 +113,7 @@ class SubscriptionControllerTest {
                 HttpStatus.CREATED
             ),
             subscriptionController.createSubscription(mockSubscription.toDto(), ACTIONING_USER_ID),
-            "Returned subscription does not match expected subscription"
+                RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
@@ -216,6 +217,23 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    void testAddListTypesForSubscription() {
+        doNothing().when(subscriptionService).addListTypesForSubscription(subscriptionListType, USER_ID);
+
+        assertEquals(
+            new ResponseEntity<>(
+                String.format(
+                    "Location list Type successfully added for user %s",
+                    USER_ID
+                ),
+                HttpStatus.OK
+            ),
+            subscriptionController.addListTypesForSubscription(USER_ID, subscriptionListType),
+                RETURNED_SUBSCRIPTION_NOT_MATCHED
+        );
+    }
+
+    @Test
     void testConfigureListTypesForSubscription() {
         doNothing().when(subscriptionService).configureListTypesForSubscription(subscriptionListType, USER_ID);
 
@@ -228,7 +246,7 @@ class SubscriptionControllerTest {
                 HttpStatus.OK
             ),
             subscriptionController.configureListTypesForSubscription(USER_ID, subscriptionListType),
-            "Returned subscription does not match expected subscription"
+                RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 

@@ -39,8 +39,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.service.UserSubscriptionS
 import java.util.List;
 import java.util.UUID;
 
-import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
-
 @RestController
 @Tag(name = "Subscription Management API")
 @RequestMapping("/subscription")
@@ -86,12 +84,6 @@ public class SubscriptionController {
         @RequestHeader("x-user-id") String actioningUserId
     ) {
         Subscription subscription = subscriptionService.createSubscription(new Subscription(sub), actioningUserId);
-        // IF COURT LIST SUBSCRIPTION, ADD LIST AND LANGUAGE TYPE
-        if (subscription.getSearchType().equals(LOCATION_ID)) {
-            SubscriptionListType subscriptionListType = new SubscriptionListType(sub.getUserId(),
-                  sub.getListType(), sub.getListLanguage());
-            subscriptionService.addListTypesForSubscription(subscriptionListType, actioningUserId);
-        }
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format("Subscription created with the id %s for user %s",
                                 subscription.getId(), subscription.getUserId()
@@ -163,6 +155,21 @@ public class SubscriptionController {
         subscriptionNotificationService.collectThirdPartyForDeletion(artefact);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(
             "Deleted artefact third party subscriber notification request has been accepted");
+    }
+
+    @PostMapping("/add-list-types/{userId}")
+    @Operation(summary = "Endpoint to add list type for existing subscription")
+    @ApiResponse(responseCode = "201", description = "Subscription successfully updated for user: {userId}")
+    @ApiResponse(responseCode = "400", description =
+        "This request object has an invalid format. Please check again.")
+    public ResponseEntity<String> addListTypesForSubscription(@PathVariable String userId,
+            @RequestBody SubscriptionListType subscriptionListType) {
+        subscriptionService.addListTypesForSubscription(subscriptionListType, userId);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(String.format(
+                "Location list Type successfully added for user %s",
+                userId
+            ));
     }
 
     @PutMapping("/configure-list-types/{userId}")

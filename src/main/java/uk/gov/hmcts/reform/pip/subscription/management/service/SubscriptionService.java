@@ -12,7 +12,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionLi
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,8 +61,8 @@ public class SubscriptionService {
     public void addListTypesForSubscription(SubscriptionListType subscriptionListType,
                                                   String actioningUserId) {
         log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
-        //CREATE A RECORD IF LIST TYPE DOES NOT EXIST, IF EXISTS, UPDATE THE RECORD.
-        duplicateListTypeHandler(subscriptionListType);
+        subscriptionListTypeRepository.deleteByUserId(subscriptionListType.getUserId());
+        subscriptionListTypeRepository.save(subscriptionListType);
     }
 
     public void configureListTypesForSubscription(SubscriptionListType subscriptionListType,
@@ -159,25 +158,6 @@ public class SubscriptionService {
                 repository.delete(existingSub);
             }
         });
-    }
-
-    private void duplicateListTypeHandler(SubscriptionListType subscriptionListType) {
-        Optional<SubscriptionListType> alreadyExistsSubListType =
-            subscriptionListTypeRepository.findByUserId(subscriptionListType.getUserId());
-
-        alreadyExistsSubListType.ifPresent(listType -> this.appendListTypesToExistingRecord(
-            subscriptionListType,
-            listType
-        ));
-        subscriptionListTypeRepository.save(subscriptionListType);
-    }
-
-    private void appendListTypesToExistingRecord(SubscriptionListType subscriptionListType,
-                                                                 SubscriptionListType alreadyExistsSubListType) {
-        List<String> listTypes = subscriptionListType.getListType();
-        listTypes.addAll(alreadyExistsSubListType.getListType());
-        List<String> uniqueListTypes = new ArrayList<>(new HashSet<>(listTypes));
-        subscriptionListType.setListType(uniqueListTypes);
     }
 
     public String getAllSubscriptionsDataForMiReporting() {
