@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.models;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.hypersistence.utils.hibernate.type.array.ListArrayType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,12 +15,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -81,11 +78,6 @@ public class Subscription {
     @Valid
     private LocalDateTime lastUpdatedDate;
 
-    @Valid
-    @Type(ListArrayType.class)
-    @Column(name = "list_type", columnDefinition = "text[]")
-    private List<String> listType;
-
     public Subscription(uk.gov.hmcts.reform.pip.model.subscription.Subscription dto) {
         this.id = dto.getId();
         this.userId = dto.getUserId();
@@ -99,7 +91,6 @@ public class Subscription {
         this.urn = dto.getUrn();
         this.locationName = dto.getLocationName();
         this.lastUpdatedDate = dto.getLastUpdatedDate();
-        this.listType = dto.getListType();
     }
 
     public uk.gov.hmcts.reform.pip.model.subscription.Subscription toDto() {
@@ -116,7 +107,6 @@ public class Subscription {
         dto.setPartyNames(this.partyNames);
         dto.setUrn(this.urn);
         dto.setLocationName(this.locationName);
-        dto.setListType(this.listType);
         dto.setLastUpdatedDate(this.lastUpdatedDate);
         return dto;
     }

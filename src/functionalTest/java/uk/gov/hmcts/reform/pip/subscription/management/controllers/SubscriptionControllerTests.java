@@ -19,7 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
@@ -190,12 +189,11 @@ class SubscriptionControllerTests {
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
                                                                               SearchType searchType,
-                                                                              String userId, ListType listType)
+                                                                              String userId)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
         SUBSCRIPTION.setSearchType(searchType);
-        SUBSCRIPTION.setListType(List.of(listType.name()));
         return setupMockSubscription(searchValue);
     }
 
@@ -746,8 +744,7 @@ class SubscriptionControllerTests {
     @Test
     void testBuildCourtSubscribersListReturnsAccepted() throws Exception {
         mvc.perform(setupMockSubscriptionWithListType(LOCATION_ID, SearchType.LOCATION_ID,
-                                                      VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST
-        ));
+                                                      VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
