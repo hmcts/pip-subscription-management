@@ -49,10 +49,10 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     @Query(value = "SELECT s.* FROM Subscription s "
         + "INNER JOIN Subscription_List_Type sl "
-        + "ON s.search_value = CAST(sl.location_id AS TEXT) "
-        + "WHERE search_type = 'LOCATION_ID' "
-        + "AND search_value = :search_value "
-        + "AND sl.list_type && string_to_array(:list_type, ',')) "
+        + "ON s.user_id = sl.user_id "
+        + "WHERE s.search_type = 'LOCATION_ID' "
+        + "AND s.search_value = :search_value "
+        + "AND (sl.list_type && string_to_array(:list_type, ',')) "
         + "AND (ARRAY_LENGTH(sl.list_language, 1) IS NOT NULL "
         + "OR (sl.list_language && string_to_array(:list_language, ',')))",
         nativeQuery = true)
