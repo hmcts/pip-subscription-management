@@ -94,6 +94,9 @@ class SubscriptionControllerTests {
     private static final String RAW_JSON_MISSING_CHANNEL =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
 
+    private static final String RAW_JSON_ADD_UPDATE_LIST_TYPE =
+        "{\"listType\": [\"FAMILY_DAILY_CAUSE_LIST\"], \"listLanguage\": [\"ENGLISH\"],\"userId\": \"3\"}";
+
     private static final String LOCATION_ID = "9";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
@@ -104,12 +107,12 @@ class SubscriptionControllerTests {
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL = "/subscription/mi-data-local";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
+    private static final String ADD_LIST_TYPE_PATH = "/subscription/add-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final String DELETED_BULK_SUBSCRIPTION_V2_PATH = "/subscription/v2/bulk";
     private static final String SUBSCRIPTIONS_BY_LOCATION = "/subscription/location/";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
-    private static final String UPDATED_LIST_TYPE = "[\"CIVIL_DAILY_CAUSE_LIST\"]";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
@@ -802,12 +805,43 @@ class SubscriptionControllerTests {
     }
 
     @Test
+    void testAddListTypesForSubscription() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ADD_LIST_TYPE_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
+        MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
+
+        assertEquals(String.format(
+                         "Location list Type successfully added for user %s",
+                         VALID_USER_ID
+                     ),
+                     result.getResponse().getContentAsString(), RESPONSE_MATCH
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedAddListTypesForSubscription() throws Exception {
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ADD_LIST_TYPE_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
+        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
     void testConfigureListTypesForSubscription() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(UPDATED_LIST_TYPE);
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
         MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
 
         assertEquals(String.format(
@@ -825,7 +859,7 @@ class SubscriptionControllerTests {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(UPDATED_LIST_TYPE);
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
         MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
