@@ -47,26 +47,17 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         + "FROM Subscription WHERE search_type ='LOCATION_ID'", nativeQuery = true)
     List<String> getLocalSubsDataForMi();
 
-    @Transactional
-    @Modifying
-    @Query(value = "UPDATE Subscription "
-        + "SET list_type = string_to_array(:list_type, ','),"
-        + "last_updated_date = now() "
-        + "WHERE user_id = :user_id "
-        + "AND search_type = 'LOCATION_ID'",
+    @Query(value = "SELECT s.* FROM Subscription s "
+        + "INNER JOIN Subscription_List_Type sl "
+        + "ON s.user_id = sl.user_id "
+        + "WHERE s.search_type = 'LOCATION_ID' "
+        + "AND s.search_value = :search_value "
+        + "AND sl.list_type && string_to_array(:list_type, ',') "
+        + "AND sl.list_language && string_to_array(:list_language, ',')",
         nativeQuery = true)
-    void updateLocationSubscriptions(@Param("user_id") String userId,
-                                     @Param("list_type") String listType);
-
-    @Query(value = "SELECT * FROM Subscription "
-        + "WHERE search_type = :search_type "
-        + "AND search_value = :search_value "
-        + "AND :search_type = 'LOCATION_ID' "
-        + "AND (ARRAY_LENGTH(list_type, 1) IS NULL OR (list_type && string_to_array(:list_type, ',')))",
-        nativeQuery = true)
-    List<Subscription> findSubscriptionsByLocationSearchValue(@Param("search_type") String searchType,
-                                                              @Param("search_value") String searchValue,
-                                                              @Param("list_type") String listType);
+    List<Subscription> findSubscriptionsByLocationSearchValue(@Param("search_value") String searchValue,
+                                                              @Param("list_type") String listType,
+                                                              @Param("list_language") String listLanguage);
 
     void deleteAllByUserId(String userId);
 
@@ -75,6 +66,12 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         + "AND search_type = 'LOCATION_ID'",
         nativeQuery = true)
     List<Subscription> findSubscriptionsByLocationId(@Param("search_value") String searchValue);
+
+    @Query(value = "SELECT * FROM Subscription "
+        + "WHERE user_id = :user_id "
+        + "AND search_type = 'LOCATION_ID'",
+        nativeQuery = true)
+    List<Subscription> findLocationSubscriptionsByUserId(@Param("user_id") String userId);
 
     List<Subscription> findAllByLocationNameStartingWithIgnoreCase(@Param("prefix") String prefix);
 
