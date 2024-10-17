@@ -52,9 +52,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
         + "ON s.user_id = sl.user_id "
         + "WHERE s.search_type = 'LOCATION_ID' "
         + "AND s.search_value = :search_value "
-        + "AND (sl.list_type && string_to_array(:list_type, ',')) "
-        + "AND (ARRAY_LENGTH(sl.list_language, 1) IS NOT NULL "
-        + "AND (sl.list_language && string_to_array(:list_language, ',')))",
+        + "AND sl.list_type && string_to_array(:list_type, ',') "
+        + "AND sl.list_language && string_to_array(:list_language, ',')",
         nativeQuery = true)
     List<Subscription> findSubscriptionsByLocationSearchValue(@Param("search_value") String searchValue,
                                                               @Param("list_type") String listType,
