@@ -135,7 +135,7 @@ class SubscriptionControllerTests {
 
     private static final String ACTIONING_USER_ID = UUID_STRING;
     private static final String INVALID_ACTIONING_USER_ID = UUID.randomUUID().toString();
-    private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
+    private static final String SYSTEM_ADMIN_USER_ID = "a9a54cca-1656-4645-9483-f3e70b65659b";
 
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String X_PROVENANCE_USER_ID_HEADER = "x-provenance-user-id";
