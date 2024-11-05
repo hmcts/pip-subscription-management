@@ -85,7 +85,7 @@ class TestingSupportControllerTests {
 
     @Test
     @WithMockUser(username = "unauthorized_isAuthorized", authorities = {"APPROLE_unknown.authorized"})
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
+    @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
     void testUnauthorisedTestingSupportDeleteSubscriptions() throws Exception {
         mockMvc.perform(delete(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME_PREFIX))
             .andExpect(status().isForbidden());
