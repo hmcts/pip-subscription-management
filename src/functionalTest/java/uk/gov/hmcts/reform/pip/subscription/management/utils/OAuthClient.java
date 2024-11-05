@@ -21,10 +21,6 @@ public class OAuthClient {
     private String tenantId;
 
     public String generateAccessToken() {
-        return generateAccessToken(clientId, clientSecret, scope);
-    }
-
-    public String generateAccessToken(String clientId, String clientSecret, String scope) {
         String token = given()
             .relaxedHTTPSValidation()
             .header("content-type", "application/x-www-form-urlencoded")

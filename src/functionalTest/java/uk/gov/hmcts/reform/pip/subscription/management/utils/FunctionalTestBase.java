@@ -20,7 +20,6 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class FunctionalTestBase {
-
     protected static final String CONTENT_TYPE_VALUE = "application/json";
 
     @Autowired
@@ -35,15 +34,6 @@ public class FunctionalTestBase {
     void setUp() {
         RestAssured.baseURI = testUrl;
         accessToken = authClient.generateAccessToken();
-    }
-
-    protected Response doGetRequest(final String path, final Map<String, String> additionalHeaders) {
-        return given()
-            .relaxedHTTPSValidation()
-            .headers(getRequestHeaders(additionalHeaders))
-            .when()
-            .get(path)
-            .thenReturn();
     }
 
     protected Response doPostRequest(final String path, final Map<String, String> additionalHeaders,

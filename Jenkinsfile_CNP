@@ -25,8 +25,8 @@ def setupTestSecrets() {
       secret('app-tenant', 'TENANT_ID'),
       secret('b2c-test-system-admin-account-provenance-id', 'SYSTEM_ADMIN_PROVENANCE_ID'),
 
-      secret('app-pip-account-management-id', 'CLIENT_ID_FT'),
-      secret('app-pip-account-management-pwd', 'CLIENT_SECRET_FT'),
+      secret('app-pip-data-management-id', 'CLIENT_ID_FT'),
+      secret('app-pip-data-management-pwd', 'CLIENT_SECRET_FT'),
     ]) {
     env.CLIENT_ID = "${CLIENT_ID}"
     env.CLIENT_SECRET = "${CLIENT_SECRET}"

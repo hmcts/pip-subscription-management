@@ -4,21 +4,22 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
-import uk.gov.hmcts.reform.pip.subscription.management.utils.DataManagementApi;
 import uk.gov.hmcts.reform.pip.subscription.management.utils.FunctionalTestBase;
 import uk.gov.hmcts.reform.pip.subscription.management.utils.OAuthClient;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,48 +29,49 @@ import static uk.gov.hmcts.reform.pip.subscription.management.utils.TestUtil.ran
 
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles(profiles = "functional")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(classes = {OAuthClient.class})
 class SubscriptionTest extends FunctionalTestBase {
-    private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
     private static final String CREATE_SUBSCRIPTION_URL = "/subscription";
+    private static final String DELETE_SUBSCRIPTION_BY_LOCATION_URL = "/subscription/location/";
     private static final String LOCATION_ID = randomLocationId();
-    private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
-    private static final String ACTIONING_USER_ID = "1234";
-    Map<String, String> authorisationHeaders = Map.of(
-        AUTHORIZATION, BEARER + accessToken);
-
-    @Autowired
-    private DataManagementApi dataManagementApi;
+    private static final String LOCATION_NAME = "TestLocation";
+    private static final String ACTIONING_USER_ID = UUID.randomUUID().toString();
+    private Map<String, String> authorisationHeaders;
 
     @BeforeAll
     public void setup() {
-        dataManagementApi.testingSupportCreateLocation(LOCATION_ID, LOCATION_NAME);
+        authorisationHeaders = Map.of(AUTHORIZATION, BEARER + accessToken);
     }
 
     @AfterAll
     public void shutdown() {
-        doDeleteRequest(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME, authorisationHeaders);
-        dataManagementApi.testingSupportDeleteLocation(LOCATION_NAME);
+        Map<String, String> headers = new ConcurrentHashMap<>();
+        headers.putAll(authorisationHeaders);
+        headers.put("x-provenance-user-id", ACTIONING_USER_ID);
+        doDeleteRequest(DELETE_SUBSCRIPTION_BY_LOCATION_URL + LOCATION_ID, headers);
     }
 
     @Test
     void shouldBeAbleToCreateASubscription() {
-        Map<String, String> headers = Map.of(
-            AUTHORIZATION, BEARER + accessToken,
-            "x-user-id", ACTIONING_USER_ID
-        );
+        Map<String, String> headers = new ConcurrentHashMap<>();
+        headers.putAll(authorisationHeaders);
+        headers.put("x-user-id", ACTIONING_USER_ID);
 
+        Response response = doPostRequest(CREATE_SUBSCRIPTION_URL, headers, createTestSubscription());
+        assertThat(response.getStatusCode()).isEqualTo(CREATED.value());
+    }
+
+    private Subscription createTestSubscription() {
         Subscription subscription = new Subscription();
-        subscription.setUserId("123");
+        subscription.setUserId(ACTIONING_USER_ID);
         subscription.setSearchType(SearchType.LOCATION_ID);
+        subscription.setSearchValue(LOCATION_ID);
         subscription.setChannel(Channel.EMAIL);
         subscription.setCreatedDate(LocalDateTime.now());
         subscription.setLocationName(LOCATION_NAME);
         subscription.setLastUpdatedDate(LocalDateTime.now());
         subscription.setListType(Collections.emptyList());
-
-        Response response = doPostRequest(CREATE_SUBSCRIPTION_URL, headers, subscription);
-
-        assertThat(response.getStatusCode()).isEqualTo(CREATED.value());
+        return subscription;
     }
 }
