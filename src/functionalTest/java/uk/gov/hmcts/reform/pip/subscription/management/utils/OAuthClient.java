@@ -7,7 +7,6 @@ import static io.restassured.RestAssured.given;
 
 @Component
 public class OAuthClient {
-
     @Value("${CLIENT_ID_FT}")
     private String clientId;
 

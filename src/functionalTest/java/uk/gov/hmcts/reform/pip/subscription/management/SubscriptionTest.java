@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpStatus.CREATED;
-import static uk.gov.hmcts.reform.pip.subscription.management.utils.TestUtil.BEARER;
 import static uk.gov.hmcts.reform.pip.subscription.management.utils.TestUtil.randomLocationId;
 
 @ExtendWith(SpringExtension.class)
@@ -36,7 +35,8 @@ class SubscriptionTest extends FunctionalTestBase {
     private static final String DELETE_SUBSCRIPTION_BY_LOCATION_URL = "/subscription/location/";
     private static final String LOCATION_ID = randomLocationId();
     private static final String LOCATION_NAME = "TestLocation";
-    private static final String ACTIONING_USER_ID = UUID.randomUUID().toString();
+    private static final String USER_ID = UUID.randomUUID().toString();
+    private static final String BEARER = "Bearer ";
     private Map<String, String> authorisationHeaders;
 
     @BeforeAll
@@ -48,7 +48,7 @@ class SubscriptionTest extends FunctionalTestBase {
     public void shutdown() {
         Map<String, String> headers = new ConcurrentHashMap<>();
         headers.putAll(authorisationHeaders);
-        headers.put("x-provenance-user-id", ACTIONING_USER_ID);
+        headers.put("x-provenance-user-id", USER_ID);
         doDeleteRequest(DELETE_SUBSCRIPTION_BY_LOCATION_URL + LOCATION_ID, headers);
     }
 
@@ -56,7 +56,7 @@ class SubscriptionTest extends FunctionalTestBase {
     void shouldBeAbleToCreateASubscription() {
         Map<String, String> headers = new ConcurrentHashMap<>();
         headers.putAll(authorisationHeaders);
-        headers.put("x-user-id", ACTIONING_USER_ID);
+        headers.put("x-user-id", USER_ID);
 
         Response response = doPostRequest(CREATE_SUBSCRIPTION_URL, headers, createTestSubscription());
         assertThat(response.getStatusCode()).isEqualTo(CREATED.value());
@@ -64,7 +64,7 @@ class SubscriptionTest extends FunctionalTestBase {
 
     private Subscription createTestSubscription() {
         Subscription subscription = new Subscription();
-        subscription.setUserId(ACTIONING_USER_ID);
+        subscription.setUserId(USER_ID);
         subscription.setSearchType(SearchType.LOCATION_ID);
         subscription.setSearchValue(LOCATION_ID);
         subscription.setChannel(Channel.EMAIL);

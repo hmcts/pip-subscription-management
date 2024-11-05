@@ -4,7 +4,6 @@ import java.util.Random;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public final class TestUtil {
-    public static final String BEARER = "Bearer ";
 
     private TestUtil() {
     }
