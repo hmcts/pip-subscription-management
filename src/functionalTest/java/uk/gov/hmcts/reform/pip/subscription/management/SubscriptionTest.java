@@ -32,7 +32,7 @@ import static uk.gov.hmcts.reform.pip.subscription.management.utils.TestUtil.ran
 @SpringBootTest(classes = {OAuthClient.class})
 class SubscriptionTest extends FunctionalTestBase {
     private static final String CREATE_SUBSCRIPTION_URL = "/subscription";
-    private static final String DELETE_SUBSCRIPTION_BY_LOCATION_URL = "/subscription/location/";
+    private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
     private static final String LOCATION_ID = randomLocationId();
     private static final String LOCATION_NAME = "TestLocation";
     private static final String USER_ID = UUID.randomUUID().toString();
@@ -46,10 +46,7 @@ class SubscriptionTest extends FunctionalTestBase {
 
     @AfterAll
     public void shutdown() {
-        Map<String, String> headers = new ConcurrentHashMap<>();
-        headers.putAll(authorisationHeaders);
-        headers.put("x-provenance-user-id", USER_ID);
-        doDeleteRequest(DELETE_SUBSCRIPTION_BY_LOCATION_URL + LOCATION_ID, headers);
+        doDeleteRequest(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME, authorisationHeaders);
     }
 
     @Test
