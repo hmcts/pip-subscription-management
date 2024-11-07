@@ -74,7 +74,6 @@ spring:
   flyway:
     enabled: ${ENABLE_FLYWAY:false}
 
-system-admin-provenance-id: ${SYSTEM_ADMIN_PROVENANCE_ID}
 service-to-service:
   data-management: ${DATA_MANAGEMENT_URL:https://pip-data-management.staging.platform.hmcts.net}
   account-management: ${ACCOUNT_MANAGEMENT_URL:https://pip-account-management.staging.platform.hmcts.net}

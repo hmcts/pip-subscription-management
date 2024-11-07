@@ -184,6 +184,7 @@ Secrets required for getting tests to run correctly can be found in the below ta
 | Variable                   | Description                                   |
 |:---------------------------|:----------------------------------------------|
 | SYSTEM_ADMIN_PROVENANCE_ID | Provenance ID for the test system admin user. |
+| SYSTEM_ADMIN_USER_ID       | User ID for the test system admin user.       |
 
 #### Application.yaml files
 The service can also be adapted using the yaml files found in the following locations:
