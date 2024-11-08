@@ -1,13 +1,1 @@
-spring:
-  flyway:
-    enabled: true
-  jpa:
-    hibernate:
-      # Set to update for functional tests, so it creates the environment in H2
-      ddl-auto: update
-
-dbMigration:
-  runOnStartup: true
-
-system-admin-provenance-id: ${SYSTEM_ADMIN_PROVENANCE_ID}
-system-admin-user-id: ${SYSTEM_ADMIN_USER_ID}
+test-url: ${TEST_URL:http://localhost:4550}

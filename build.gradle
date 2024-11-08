@@ -36,6 +36,15 @@ java {
 }
 
 sourceSets {
+  integrationTest {
+    java {
+      compileClasspath += main.output
+      runtimeClasspath += main.output
+      srcDir file('src/integrationTest/java')
+    }
+    resources.srcDir file('src/integrationTest/resources')
+  }
+
   functionalTest {
     java {
       compileClasspath += main.output
@@ -56,6 +65,9 @@ sourceSets {
 }
 
 configurations {
+  integrationTestImplementation.extendsFrom testImplementation
+  integrationTestRuntimeOnly.extendsFrom runtimeOnly
+
   functionalTestImplementation.extendsFrom testImplementation
   functionalTestRuntimeOnly.extendsFrom runtimeOnly
 
@@ -103,6 +115,13 @@ task migratePostgresDatabase(type: org.flywaydb.gradle.task.FlywayMigrateTask) {
   }
 }
 
+task integration(type: Test) {
+  description = "Runs integration tests"
+  group = "Verification"
+  testClassesDirs = sourceSets.integrationTest.output.classesDirs
+  classpath = sourceSets.integrationTest.runtimeClasspath
+}
+
 task functional(type: Test) {
   description = "Runs functional tests"
   group = "Verification"
@@ -124,7 +143,7 @@ checkstyle {
 
 pmd {
   toolVersion = "7.7.0"
-  sourceSets = [sourceSets.main, sourceSets.test, sourceSets.functionalTest, sourceSets.smokeTest]
+  sourceSets = [sourceSets.main, sourceSets.test, sourceSets.integrationTest, sourceSets.functionalTest, sourceSets.smokeTest]
   reportsDir = file("${layout.buildDirectory.get()}/reports/pmd")
   ruleSetFiles = files("config/pmd/ruleset.xml")
 }
@@ -134,7 +153,7 @@ jacoco {
 }
 
 jacocoTestReport {
-  executionData(test)
+  executionData(test, integration)
   reports {
     xml.required = true
     csv.required = false
@@ -210,7 +229,7 @@ dependencies {
 
   implementation group: 'com.azure.spring', name: 'spring-cloud-azure-starter-active-directory', version: '5.17.1'
   implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.4'
-  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.32', {
+  implementation group: 'com.github.hmcts', name: 'pip-data-models', version: '2.1.31', {
     exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
   }
   implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.12.0'
@@ -240,6 +259,8 @@ dependencies {
   testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.12.0'
   testImplementation group: 'org.springframework.security', name: 'spring-security-test'
   testImplementation group: 'com.github.hmcts', name: 'fortify-client', version: '1.4.5', classifier: 'all'
+
+  functionalTestImplementation group: 'io.rest-assured', name: 'rest-assured'
 }
 
 task fortifyScan(type: JavaExec)  {
@@ -257,6 +278,10 @@ bootJar {
 }
 
 // Gradle 7.x issue, workaround from: https://github.com/gradle/gradle/issues/17236#issuecomment-894768083
+rootProject.tasks.named("processIntegrationTestResources") {
+  duplicatesStrategy = 'include'
+}
+
 rootProject.tasks.named("processSmokeTestResources") {
   duplicatesStrategy = 'include'
 }

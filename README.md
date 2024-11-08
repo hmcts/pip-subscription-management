@@ -181,10 +181,20 @@ Below is a table of currently used environment variables for starting the servic
 
 Secrets required for getting tests to run correctly can be found in the below table:
 
-| Variable                   | Description                                   |
-|:---------------------------|:----------------------------------------------|
-| SYSTEM_ADMIN_PROVENANCE_ID | Provenance ID for the test system admin user. |
-| SYSTEM_ADMIN_USER_ID       | User ID for the test system admin user.       |
+
+| Variable                    | Description                                                                                                                                                    |
+|:----------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| CLIENT_ID                   | Unique ID for the application within Azure AD. Used to identify the application during authentication.                                                         |
+| CLIENT_SECRET               | Secret key for authentication requests to the service.                                                                                                         |
+| DATA_MANAGEMENT_AZ_API      | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-data-management service.      |
+| ACCOUNT_MANAGEMENT_AZ_API   | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-account-management service.   |
+| PUBLICATION_SERVICES_AZ_API | Used as part of the `scope` parameter when requesting a token from Azure. Used for service-to-service communication with the pip-publication-services service. |
+| TENANT_ID                   | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.                                  |
+| SYSTEM_ADMIN_PROVENANCE_ID  | Provenance ID for the test system admin user.                                                                                                                  |
+| SYSTEM_ADMIN_USER_ID        | User ID for the test system admin user.                                                                                                                        |
+| CLIENT_ID_FT                | Client ID of external service used for authentication with subscription-management application in the functional tests.                                        |
+| CLIENT_SECRET_FT            | Client secret of external service.used for authentication with subscription-management application in the functional tests.                                    |
+
 
 #### Application.yaml files
 The service can also be adapted using the yaml files found in the following locations:
