@@ -129,14 +129,15 @@ class SubscriptionControllerTests {
     @Value("${system-admin-provenance-id}")
     private String systemAdminProvenanceId;
 
+    @Value("${system-admin-user-id}")
+    private String systemAdminUserId;
+
     protected static final String SUBSCRIPTION_PATH = "/subscription";
     protected static final uk.gov.hmcts.reform.pip.model.subscription.Subscription SUBSCRIPTION =
         new uk.gov.hmcts.reform.pip.model.subscription.Subscription();
 
     private static final String ACTIONING_USER_ID = UUID_STRING;
     private static final String INVALID_ACTIONING_USER_ID = UUID.randomUUID().toString();
-    private static final String SYSTEM_ADMIN_USER_ID = "a9a54cca-1656-4645-9483-f3e70b65659b";
-
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String X_PROVENANCE_USER_ID_HEADER = "x-provenance-user-id";
 
@@ -412,7 +413,7 @@ class SubscriptionControllerTests {
         );
 
         MvcResult deleteResponse = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -869,7 +870,7 @@ class SubscriptionControllerTests {
         MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
                                                    .content(subscriptionIdRequest)
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk())
             .andReturn();
 
