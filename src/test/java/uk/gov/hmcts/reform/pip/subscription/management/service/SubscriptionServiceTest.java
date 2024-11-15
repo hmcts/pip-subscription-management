@@ -11,6 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
+import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportAll;
+import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportLocal;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
@@ -20,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_AND_FAMILY_DAILY_CAUSE_LIST;
 import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAUSE_LIST;
+import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_ID;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscription;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.findableSubscription;
@@ -41,25 +43,10 @@ class SubscriptionServiceTest {
     private static final String SEARCH_VALUE = "193254";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final String ACTIONING_USER_ID = "1234-1234";
-
-    public static final List<String> EXAMPLE_CSV_ALL = List.of(
-        "a01d52c0-5c95-4f75-8994-a1c42cb45aaa,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1245,"
-            + "2023-01-19 13:45:50.873778",
-        "370963e2-9d2f-423e-b6a1-3f1f8905cdf0,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1234,"
-            + "2023-01-19 13:47:23.484632",
-        "052cda55-30fd-4a0d-939a-2c7b03ab3392,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1234,"
-            + "2023-01-19 13:53:56.434343"
-    );
-
-    public static final List<String> EXAMPLE_CSV_LOCAL = List.of(
-        "212c8b34-f6c3-424d-90e2-f874f528eebf,2,EMAIL,2fe899ff-96ed-435a-bcad-1411bbe96d2a,null,"
-            + "2023-01-19 13:45:50.873778",
-        "f4a0cb33-f211-4b46-8bdb-6320f6382a29,1234,API,2fe899ff-96ed-435a-bcad-1411bbe96d2a,null,"
-            + "2023-01-19 13:47:23.484632",
-        "34edfcde-4546-46b8-98e6-2717da3185e8,3,API,2fe899ff-96ed-435a-bcad-1411bbe96d2a,Oxford Combined Court Centre,"
-            + "2023-01-19 13:53:56.434343"
-    );
-
+    private static final UUID ID = UUID.randomUUID();
+    private static final SearchType SEARCH_TYPE = CASE_ID;
+    private static final String LOCATION_NAME = "Location";
+    private static final LocalDateTime CREATED_DATE = LocalDateTime.of(2022,1, 19, 13, 45, 50);
     private static final String COURT_NAME = "test court name";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
 
@@ -101,7 +88,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testCreateSubscription() {
-        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setSearchType(CASE_ID);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
                      SUBSCRIPTION_CREATED_ERROR
@@ -112,7 +99,7 @@ class SubscriptionServiceTest {
     void testLastUpdatedDateIsSet() {
         ArgumentCaptor<Subscription> argumentCaptor = ArgumentCaptor.forClass(Subscription.class);
 
-        mockSubscription.setSearchType(SearchType.CASE_ID);
+        mockSubscription.setSearchType(CASE_ID);
         when(subscriptionRepository.save(argumentCaptor.capture())).thenReturn(mockSubscription);
 
         subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID);
@@ -235,47 +222,24 @@ class SubscriptionServiceTest {
 
     @Test
     void testMiServiceLocal() {
-        when(subscriptionRepository.getLocalSubsDataForMi()).thenReturn(EXAMPLE_CSV_LOCAL);
-        String testString = subscriptionService.getLocalSubscriptionsDataForMiReporting();
-        String[] splitLineString = testString.split("\r\n|\r|\n");
-        long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
+        MiReportLocal miRecord = new MiReportLocal(ID, SEARCH_VALUE, EMAIL, USER_ID, LOCATION_NAME, CREATED_DATE);
+        List<MiReportLocal> miData = List.of(miRecord, miRecord);
 
-        assertThat(testString)
-            .as("Json parsing has probably failed")
-            .contains("Oxford")
-            .hasLineCount(4);
+        when(subscriptionRepository.getLocalSubsDataForMi()).thenReturn(miData);
+        List<MiReportLocal> miReportData = subscriptionService.getLocalSubscriptionsDataForMiReporting();
 
-        assertThat(splitLineString[0])
-            .as("Header row does not match")
-            .isEqualTo("id,search_value,channel,user_id,court_name,created_date");
-
-        assertThat(splitLineString)
-            .as("Wrong comma count compared to header row!")
-            .allSatisfy(
-                e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
-
+        assertEquals(miData, miReportData, "Returned data does not match expected data");
     }
 
     @Test
     void testMiServiceAll() {
-        when(subscriptionRepository.getAllSubsDataForMi()).thenReturn(EXAMPLE_CSV_ALL);
-        String testString = subscriptionService.getAllSubscriptionsDataForMiReporting();
-        String[] splitLineString = testString.split("\r\n|\r|\n");
-        long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
+        MiReportAll miRecord = new MiReportAll(ID, EMAIL, SEARCH_TYPE, USER_ID, LOCATION_NAME, CREATED_DATE);
+        List<MiReportAll> miData = List.of(miRecord, miRecord);
 
-        assertThat(testString)
-            .as("Json parsing has probably failed")
-            .contains("CASE_ID")
-            .hasLineCount(4);
+        when(subscriptionRepository.getAllSubsDataForMi()).thenReturn(miData);
+        List<MiReportAll> miReportData = subscriptionService.getAllSubscriptionsDataForMiReporting();
 
-        assertThat(splitLineString[0])
-            .as("Header row does not match")
-            .isEqualTo("id,channel,search_type,user_id,court_name,created_date");
-
-        assertThat(splitLineString)
-            .as("Wrong comma count compared to header row!")
-            .allSatisfy(
-                e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
+        assertEquals(miData, miReportData, "Returned data does not match expected data");
     }
 }
 
