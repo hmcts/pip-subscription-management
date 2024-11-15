@@ -1085,19 +1085,6 @@ class SubscriptionControllerTests {
         );
     }
 
-//    @Test
-//    void testGetSubscriptionDataForMiReportingLocal() throws Exception {
-//        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
-//            .andExpect(status().isCreated());
-//        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
-//            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-//
-//        assertEquals(EXPECTED_MI_DATA_LOCAL_HEADERS, response.split("\n")[0],
-//                     "Should successfully retrieve MI data headers"
-//        );
-//        assertThat(response.contains(VALID_USER_ID));
-//    }
-
     @Test
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetSubscriptionDataForMiReportingLocalUnauthorized() throws Exception {
