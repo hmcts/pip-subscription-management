@@ -50,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("functional")
+@ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
@@ -129,14 +129,15 @@ class SubscriptionControllerTests {
     @Value("${system-admin-provenance-id}")
     private String systemAdminProvenanceId;
 
+    @Value("${system-admin-user-id}")
+    private String systemAdminUserId;
+
     protected static final String SUBSCRIPTION_PATH = "/subscription";
     protected static final uk.gov.hmcts.reform.pip.model.subscription.Subscription SUBSCRIPTION =
         new uk.gov.hmcts.reform.pip.model.subscription.Subscription();
 
     private static final String ACTIONING_USER_ID = UUID_STRING;
     private static final String INVALID_ACTIONING_USER_ID = UUID.randomUUID().toString();
-    private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
-
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String X_PROVENANCE_USER_ID_HEADER = "x-provenance-user-id";
 
@@ -412,7 +413,7 @@ class SubscriptionControllerTests {
         );
 
         MvcResult deleteResponse = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -869,7 +870,7 @@ class SubscriptionControllerTests {
         MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
                                                    .content(subscriptionIdRequest)
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk())
             .andReturn();
 
