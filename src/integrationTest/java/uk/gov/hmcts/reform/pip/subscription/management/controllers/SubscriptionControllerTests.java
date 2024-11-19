@@ -85,6 +85,7 @@ class SubscriptionControllerTests {
     public static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
     public static final String VALIDATION_UUID = "UUID should not be null";
+    private static final String VALIDATION_MI_REPORT = "MI Reporting Data not found";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String RESPONSE_MATCH = "Response should match";
@@ -1068,13 +1069,17 @@ class SubscriptionControllerTests {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
-            .andExpect(status().isOk()).andReturn();
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
         List<MiReportAll> miData =
             Arrays.asList(OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), MiReportAll[].class));
 
-        assertEquals(VALID_USER_ID, miData.get(0).getUserId(), "");
-        assertEquals(LOCATION_NAME_1, miData.get(0).getLocationName(), "");
+        assertEquals(1, miData.size(), VALIDATION_MI_REPORT);
+        assertEquals(VALID_USER_ID, miData.get(0).getUserId(), VALIDATION_MI_REPORT);
+        assertEquals(LOCATION_NAME_1, miData.get(0).getLocationName(), VALIDATION_MI_REPORT);
     }
 
     @Test
