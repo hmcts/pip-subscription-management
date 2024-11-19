@@ -1099,13 +1099,16 @@ class SubscriptionControllerTests {
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
-            .andExpect(status().isOk()).andReturn().getResponse();
+            .andExpect(status().isOk()).andReturn();
+
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
         List<MiReportLocal> miData =
             Arrays.asList(OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), MiReportLocal[].class));
 
-        assertEquals(VALID_USER_ID, miData.get(0).getUserId(), "");
-        assertEquals(LOCATION_NAME_1, miData.get(0).getLocationName(), "");
+        assertEquals(1, miData.size(), VALIDATION_MI_REPORT);
+        assertEquals(VALID_USER_ID, miData.get(0).getUserId(), VALIDATION_MI_REPORT);
+        assertEquals(LOCATION_NAME_1, miData.get(0).getLocationName(), VALIDATION_MI_REPORT);
 
     }
 
