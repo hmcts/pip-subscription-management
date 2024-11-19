@@ -1065,12 +1065,14 @@ class SubscriptionControllerTests {
     void testGetSubscriptionDataForMiReportingAll() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
-        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
+            .andExpect(status().isOk()).andReturn();
 
-        assertThat(response.contains(VALID_USER_ID));
-        assertThat(response.contains(LOCATION_ID));
-        assertThat(response.contains(LOCATION_NAME_1));
+        List<MiReportAll> miData =
+            Arrays.asList(OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), MiReportAll[].class));
+
+        assertEquals(VALID_USER_ID, miData.get(0).getUserId(), "");
+        assertEquals(LOCATION_NAME_1, miData.get(0).getLocationName(), "");
     }
 
     @Test
@@ -1083,6 +1085,21 @@ class SubscriptionControllerTests {
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE
         );
+    }
+
+    @Test
+    void testGetSubscriptionDataForMiReportingLocal() throws Exception {
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
+            .andExpect(status().isOk()).andReturn().getResponse();
+
+        List<MiReportLocal> miData =
+            Arrays.asList(OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), MiReportLocal[].class));
+
+        assertEquals(VALID_USER_ID, miData.get(0).getUserId(), "");
+        assertEquals(LOCATION_NAME_1, miData.get(0).getLocationName(), "");
+
     }
 
     @Test
