@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportAll;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportLocal;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocalSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
@@ -173,7 +173,7 @@ public class SubscriptionController {
     @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting")
     @GetMapping("/mi-data-all")
     @IsAdmin
-    public ResponseEntity<List<MiReportAll>> getSubscriptionDataForMiReportingAll() {
+    public ResponseEntity<List<AllSubscriptionMiData>> getSubscriptionDataForMiReportingAll() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
     }
@@ -182,7 +182,7 @@ public class SubscriptionController {
     @Operation(summary = "Returns a list of subscription data for location-based subscriptions for MI reporting")
     @GetMapping("/mi-data-local")
     @IsAdmin
-    public ResponseEntity<List<MiReportLocal>> getSubscriptionDataForMiReportingLocal() {
+    public ResponseEntity<List<LocalSubscriptionMiData>> getSubscriptionDataForMiReportingLocal() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
     }

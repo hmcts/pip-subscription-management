@@ -5,8 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportAll;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportLocal;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocalSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
@@ -118,11 +118,11 @@ public class SubscriptionService {
         });
     }
 
-    public List<MiReportAll> getAllSubscriptionsDataForMiReporting() {
+    public List<AllSubscriptionMiData> getAllSubscriptionsDataForMiReporting() {
         return repository.getAllSubsDataForMi();
     }
 
-    public List<MiReportLocal> getLocalSubscriptionsDataForMiReporting() {
+    public List<LocalSubscriptionMiData> getLocalSubscriptionsDataForMiReporting() {
         return repository.getLocalSubsDataForMi();
     }
 }

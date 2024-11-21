@@ -20,11 +20,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocalSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportAll;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportLocal;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
@@ -1073,8 +1073,8 @@ class SubscriptionControllerTests {
 
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
-        List<MiReportAll> miData =
-            Arrays.asList(OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), MiReportAll[].class));
+        List<AllSubscriptionMiData> miData = Arrays.asList(
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), AllSubscriptionMiData[].class));
 
         assertEquals(1, miData.size(), VALIDATION_MI_REPORT);
         assertEquals(VALID_USER_ID, miData.get(0).getUserId(), VALIDATION_MI_REPORT);
@@ -1102,8 +1102,8 @@ class SubscriptionControllerTests {
 
         assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
 
-        List<MiReportLocal> miData =
-            Arrays.asList(OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), MiReportLocal[].class));
+        List<LocalSubscriptionMiData> miData = Arrays.asList(
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), LocalSubscriptionMiData[].class));
 
         assertEquals(1, miData.size(), VALIDATION_MI_REPORT);
         assertEquals(VALID_USER_ID, miData.get(0).getUserId(), VALIDATION_MI_REPORT);

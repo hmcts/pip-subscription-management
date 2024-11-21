@@ -9,10 +9,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocalSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportAll;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportLocal;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
@@ -222,22 +222,26 @@ class SubscriptionServiceTest {
 
     @Test
     void testMiServiceLocal() {
-        MiReportLocal miRecord = new MiReportLocal(ID, SEARCH_VALUE, EMAIL, USER_ID, LOCATION_NAME, CREATED_DATE);
-        List<MiReportLocal> miData = List.of(miRecord, miRecord);
+        LocalSubscriptionMiData miRecord = new LocalSubscriptionMiData(
+            ID, SEARCH_VALUE, EMAIL, USER_ID, LOCATION_NAME, CREATED_DATE
+        );
+        List<LocalSubscriptionMiData> miData = List.of(miRecord, miRecord);
 
         when(subscriptionRepository.getLocalSubsDataForMi()).thenReturn(miData);
-        List<MiReportLocal> miReportData = subscriptionService.getLocalSubscriptionsDataForMiReporting();
+        List<LocalSubscriptionMiData> miReportData = subscriptionService.getLocalSubscriptionsDataForMiReporting();
 
         assertEquals(miData, miReportData, "Returned data does not match expected data");
     }
 
     @Test
     void testMiServiceAll() {
-        MiReportAll miRecord = new MiReportAll(ID, EMAIL, SEARCH_TYPE, USER_ID, LOCATION_NAME, CREATED_DATE);
-        List<MiReportAll> miData = List.of(miRecord, miRecord);
+        AllSubscriptionMiData miRecord = new AllSubscriptionMiData(
+            ID, EMAIL, SEARCH_TYPE, USER_ID, LOCATION_NAME, CREATED_DATE
+        );
+        List<AllSubscriptionMiData> miData = List.of(miRecord, miRecord);
 
         when(subscriptionRepository.getAllSubsDataForMi()).thenReturn(miData);
-        List<MiReportAll> miReportData = subscriptionService.getAllSubscriptionsDataForMiReporting();
+        List<AllSubscriptionMiData> miReportData = subscriptionService.getAllSubscriptionsDataForMiReporting();
 
         assertEquals(miData, miReportData, "Returned data does not match expected data");
     }

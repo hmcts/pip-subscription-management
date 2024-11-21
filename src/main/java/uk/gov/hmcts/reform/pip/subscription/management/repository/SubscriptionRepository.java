@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportAll;
-import uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportLocal;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocalSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 
 import java.util.List;
@@ -44,12 +44,12 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     @Query("SELECT new uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportAll("
         + "s.id, s.channel, s.searchType, s.userId, s.locationName, s.createdDate) "
         + "FROM Subscription s")
-    List<MiReportAll> getAllSubsDataForMi();
+    List<AllSubscriptionMiData> getAllSubsDataForMi();
 
     @Query("SELECT new uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportLocal("
         + "s.id, s.searchValue, s.channel, s.userId, s.locationName, s.createdDate) "
         + "FROM Subscription s")
-    List<MiReportLocal> getLocalSubsDataForMi();
+    List<LocalSubscriptionMiData> getLocalSubsDataForMi();
 
     @Transactional
     @Modifying
