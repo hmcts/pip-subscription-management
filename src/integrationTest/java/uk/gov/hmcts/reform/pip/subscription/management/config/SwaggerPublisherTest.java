@@ -7,7 +7,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.utils.IntegrationBasicTestBase;
 
 import java.io.OutputStream;
