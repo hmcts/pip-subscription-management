@@ -8,6 +8,3 @@ spring:
 
 dbMigration:
   runOnStartup: true
-
-system-admin-provenance-id: ${SYSTEM_ADMIN_PROVENANCE_ID}
-system-admin-user-id: ${SYSTEM_ADMIN_USER_ID}
