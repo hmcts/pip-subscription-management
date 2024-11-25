@@ -41,12 +41,12 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findSubscriptionsBySearchValue(@Param("search_type") String searchType,
                                                       @Param("search_value") String searchValue);
 
-    @Query("SELECT new uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportAll("
+    @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData("
         + "s.id, s.channel, s.searchType, s.userId, s.locationName, s.createdDate) "
         + "FROM Subscription s")
     List<AllSubscriptionMiData> getAllSubsDataForMi();
 
-    @Query("SELECT new uk.gov.hmcts.reform.pip.subscription.management.dto.MiReportLocal("
+    @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.LocalSubscriptionMiData("
         + "s.id, s.searchValue, s.channel, s.userId, s.locationName, s.createdDate) "
         + "FROM Subscription s")
     List<LocalSubscriptionMiData> getLocalSubsDataForMi();
