@@ -61,11 +61,11 @@ public class SubscriptionLocationService {
         return repository.findSubscriptionsByLocationId(value);
     }
 
-    public String deleteSubscriptionByLocation(String locationId, String provenanceUserId)
+    public String deleteSubscriptionByLocation(String locationId, String userId)
         throws JsonProcessingException {
 
         log.info(writeLog(String.format("User %s attempting to delete all subscriptions for location %s",
-                                        provenanceUserId, locationId)));
+                                        userId, locationId)));
         List<Subscription> locationSubscriptions = findSubscriptionsByLocationId(locationId);
 
         List<UUID> subIds = locationSubscriptions.stream()
@@ -73,11 +73,11 @@ public class SubscriptionLocationService {
         repository.deleteByIdIn(subIds);
 
         log.info(writeLog(String.format("%s subscription(s) have been deleted for location %s by user %s",
-                                        subIds.size(), locationId, provenanceUserId)));
+                                        subIds.size(), locationId, userId)));
 
         String locationName = dataManagementService.getCourtName(locationId);
         notifySubscriberAboutSubscriptionDeletion(locationSubscriptions, locationName);
-        notifySystemAdminAboutSubscriptionDeletion(provenanceUserId,
+        notifySystemAdminAboutSubscriptionDeletion(userId,
             String.format("Total %s subscription(s) for location %s",
                           locationSubscriptions.size(), locationName));
 
@@ -103,15 +103,15 @@ public class SubscriptionLocationService {
         publicationServicesService.sendLocationDeletionSubscriptionEmail(userEmails, locationName);
     }
 
-    private void notifySystemAdminAboutSubscriptionDeletion(String provenanceUserId, String additionalDetails)
+    private void notifySystemAdminAboutSubscriptionDeletion(String userId, String additionalDetails)
         throws JsonProcessingException {
-        AzureAccount userInfo = accountManagementService.getAzureAccountInfo(provenanceUserId);
+        PiUser piUser = accountManagementService.getUserByUserId(userId).get();
         List<PiUser> systemAdminsAad = accountManagementService.getAllAccounts(PI_AAD.toString(),
                                                                             SYSTEM_ADMIN.toString());
         List<PiUser> systemAdminsSso = accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString());
         List<PiUser> systemAdmins = Stream.concat(systemAdminsAad.stream(), systemAdminsSso.stream()).toList();
         List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();
-        publicationServicesService.sendSystemAdminEmail(systemAdminEmails, userInfo.getDisplayName(),
+        publicationServicesService.sendSystemAdminEmail(systemAdminEmails, piUser.getEmail(),
                                                         ActionResult.SUCCEEDED, additionalDetails);
     }
 

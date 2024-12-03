@@ -227,11 +227,11 @@ public class SubscriptionController {
     @DeleteMapping("/location/{locationId}")
     @IsAdmin
     public ResponseEntity<String> deleteSubscriptionByLocation(
-        @RequestHeader("x-provenance-user-id") String provenanceUserId,
+        @RequestHeader("x-user-id") String userId,
         @PathVariable Integer locationId) throws JsonProcessingException {
         return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(
             locationId.toString(),
-            provenanceUserId
+            userId
         ));
     }
 }
