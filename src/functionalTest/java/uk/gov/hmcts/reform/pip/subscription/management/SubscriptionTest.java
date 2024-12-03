@@ -82,7 +82,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsSetOne() throws Exception {
+    void subscriptionTestsSetOne()  {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
@@ -120,7 +120,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsSetTwo() throws Exception {
+    void subscriptionTestsSetTwo()  {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
