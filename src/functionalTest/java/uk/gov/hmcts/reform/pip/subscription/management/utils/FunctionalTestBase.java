@@ -26,14 +26,19 @@ public class FunctionalTestBase {
     private OAuthClient authClient;
 
     protected String accessToken;
+    protected String dataManagementAccessToken;
 
     @Value("${test-url}")
     private String testUrl;
+
+    @Value("${data-management-test-url}")
+    private String dataManagementUrl;
 
     @BeforeAll
     void setUp() {
         RestAssured.baseURI = testUrl;
         accessToken = authClient.generateAccessToken();
+        dataManagementAccessToken = authClient.generateDataManagementAccessToken();
     }
 
     protected Response doPostRequest(final String path, final Map<String, String> additionalHeaders,
@@ -47,10 +52,62 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
+    protected Response doDataManagementPostRequest(final String path, final Map<String, String> additionalHeaders,
+                                     final Object body) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .baseUri(dataManagementUrl)
+            .body(body)
+            .when()
+            .post(path)
+            .thenReturn();
+    }
+
+    protected Response doPutRequest(final String path, final Map<String, String> additionalHeaders, final Object body) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .body(body)
+            .when()
+            .put(path)
+            .thenReturn();
+    }
+
+
+    protected Response doGetRequest(final String path, final Map<String, String> additionalHeaders) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .when()
+            .get(path)
+            .thenReturn();
+    }
+
+    protected Response doDeleteRequestWithBody(final String path, final Map<String, String> additionalHeaders, final Object body) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .body(body)
+            .when()
+            .delete(path)
+            .thenReturn();
+    }
+
     protected Response doDeleteRequest(final String path, final Map<String, String> additionalHeaders) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
+            .when()
+            .delete(path)
+            .thenReturn();
+    }
+
+    protected Response doDataManagementDeleteRequest(final String path, final Map<String, String> additionalHeaders) {
+        return given()
+            .relaxedHTTPSValidation()
+            .headers(getRequestHeaders(additionalHeaders))
+            .baseUri(dataManagementUrl)
             .when()
             .delete(path)
             .thenReturn();
