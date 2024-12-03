@@ -36,7 +36,6 @@ class SubscriptionControllerTest {
     private Subscription mockSubscription;
     private List<Subscription> mockSubscriptionList;
 
-    private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
     private static final Channel EMAIL = Channel.EMAIL;
@@ -44,6 +43,7 @@ class SubscriptionControllerTest {
     private static final String LOCATION_ID = "1";
     private static final String ACTIONING_USER_ID = "1234-1234";
     private static final String REQUESTER_NAME = "ReqName";
+    private static final String USER_ID = UUID.randomUUID().toString();
 
     @Mock
     SubscriptionService subscriptionService;
@@ -231,11 +231,11 @@ class SubscriptionControllerTest {
 
     @Test
     void testDeleteSubscriptionByLocationReturnsOk() throws JsonProcessingException {
-        when(subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME))
+        when(subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, USER_ID))
             .thenReturn("Total 10 subscriptions deleted for location id");
 
         assertEquals(HttpStatus.OK, subscriptionController.deleteSubscriptionByLocation(
-            REQUESTER_NAME, Integer.parseInt(LOCATION_ID)).getStatusCode(),
+            USER_ID, Integer.parseInt(LOCATION_ID)).getStatusCode(),
                      "Delete subscription location endpoint has not returned OK");
     }
 }

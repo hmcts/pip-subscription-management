@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
@@ -105,14 +104,21 @@ public class SubscriptionLocationService {
 
     private void notifySystemAdminAboutSubscriptionDeletion(String userId, String additionalDetails)
         throws JsonProcessingException {
-        PiUser piUser = accountManagementService.getUserByUserId(userId).get();
-        List<PiUser> systemAdminsAad = accountManagementService.getAllAccounts(PI_AAD.toString(),
-                                                                            SYSTEM_ADMIN.toString());
-        List<PiUser> systemAdminsSso = accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString());
-        List<PiUser> systemAdmins = Stream.concat(systemAdminsAad.stream(), systemAdminsSso.stream()).toList();
-        List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();
-        publicationServicesService.sendSystemAdminEmail(systemAdminEmails, piUser.getEmail(),
-                                                        ActionResult.SUCCEEDED, additionalDetails);
+        Optional<PiUser> piUserOptional = accountManagementService.getUserByUserId(userId);
+        if (piUserOptional.isPresent()) {
+            PiUser piUser = piUserOptional.get();
+            List<PiUser> systemAdminsAad = accountManagementService.getAllAccounts(PI_AAD.toString(),
+                                                                                   SYSTEM_ADMIN.toString());
+            List<PiUser> systemAdminsSso = accountManagementService
+                .getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString());
+
+            List<PiUser> systemAdmins = Stream.concat(systemAdminsAad.stream(), systemAdminsSso.stream()).toList();
+            List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();
+            publicationServicesService.sendSystemAdminEmail(systemAdminEmails, piUser.getEmail(),
+                                                            ActionResult.SUCCEEDED, additionalDetails);
+        } else {
+            log.error(writeLog(String.format("User %s not found in the system when notifying system admins", userId)));
+        }
     }
 
     private List<String> getUserEmailsForAllSubscriptions(List<Subscription> subscriptions) {
