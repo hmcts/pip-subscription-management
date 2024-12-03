@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.gov.hmcts.reform.pip.model.publication.*;
+import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
@@ -21,12 +21,17 @@ import uk.gov.hmcts.reform.pip.subscription.management.utils.OAuthClient;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.ACCEPTED;
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.hmcts.reform.pip.subscription.management.utils.TestUtil.randomLocationId;
 
 @ExtendWith(SpringExtension.class)
@@ -107,7 +112,8 @@ class SubscriptionTest extends FunctionalTestBase {
         assertThat(responseFindByUserId.getStatusCode()).isEqualTo(OK.value());
         UserSubscription returnedSubscriptionByUserId = responseFindByUserId.as(UserSubscription.class);
         assertThat(returnedSubscriptionByUserId.getCaseSubscriptions().size()).isEqualTo(0);
-        assertThat(returnedSubscriptionByUserId.getLocationSubscriptions().get(0).getLocationId()).isEqualTo(LOCATION_ID);
+        assertThat(returnedSubscriptionByUserId.getLocationSubscriptions().get(0).getLocationId())
+            .isEqualTo(LOCATION_ID);
         assertThat(returnedSubscriptionByUserId.getLocationSubscriptions().get(0).getLocationName()).isEqualTo(
             LOCATION_NAME);
 
@@ -116,7 +122,8 @@ class SubscriptionTest extends FunctionalTestBase {
             headerMap
         );
         assertThat(responseUserCanDeleteSubscription.getStatusCode()).isEqualTo(OK.value());
-        assertThat(responseUserCanDeleteSubscription.asString()).isEqualTo("Subscription: " + subscriptionId + " was deleted");
+        assertThat(responseUserCanDeleteSubscription.asString()).isEqualTo("Subscription: "
+                                                                               + subscriptionId + " was deleted");
     }
 
     @Test
@@ -149,7 +156,8 @@ class SubscriptionTest extends FunctionalTestBase {
             headerMap
         );
         assertThat(responseDeleteAllSubscriptionsForUser.getStatusCode()).isEqualTo(OK.value());
-        assertThat(responseDeleteAllSubscriptionsForUser.asString()).isEqualTo("All subscriptions deleted for user id " + USER_ID);
+        assertThat(responseDeleteAllSubscriptionsForUser.asString())
+            .isEqualTo("All subscriptions deleted for user id " + USER_ID);
     }
 
     @Test
@@ -164,7 +172,7 @@ class SubscriptionTest extends FunctionalTestBase {
             headerMap,
             createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
         );
-        String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
+        final String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
 
         Response responseFindByLocationId = doGetRequest(SUBSCRIPTION_BY_LOCATION_URL + LOCATION_ID, headerMap);
         assertThat(responseFindByLocationId.getStatusCode()).isEqualTo(OK.value());

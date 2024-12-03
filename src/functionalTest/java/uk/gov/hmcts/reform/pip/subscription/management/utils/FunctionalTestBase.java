@@ -53,7 +53,7 @@ public class FunctionalTestBase {
     }
 
     protected Response doDataManagementPostRequest(final String path, final Map<String, String> additionalHeaders,
-                                     final Object body) {
+                                                   final Object body) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
@@ -84,7 +84,8 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
-    protected Response doDeleteRequestWithBody(final String path, final Map<String, String> additionalHeaders, final Object body) {
+    protected Response doDeleteRequestWithBody(final String path, final Map<String, String> additionalHeaders,
+                                               final Object body) {
         return given()
             .relaxedHTTPSValidation()
             .headers(getRequestHeaders(additionalHeaders))
