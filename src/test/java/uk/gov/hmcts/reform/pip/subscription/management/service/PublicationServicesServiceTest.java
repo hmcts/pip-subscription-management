@@ -280,7 +280,7 @@ class PublicationServicesServiceTest {
     void testSendSystemAdminEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SUCCESSFULLY_SENT));
 
-        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), "Name",
+        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), EMAIL,
                                                         ActionResult.ATTEMPTED, "Error");
         assertTrue(logCaptor.getErrorLogs().isEmpty(), EMPTY_LOG_EMPTY_MESSAGE);
     }
@@ -290,7 +290,7 @@ class PublicationServicesServiceTest {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .setResponseCode(400));
 
-        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), "Name",
+        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), EMAIL,
                                                         ActionResult.ATTEMPTED, "Error");
 
         assertTrue(

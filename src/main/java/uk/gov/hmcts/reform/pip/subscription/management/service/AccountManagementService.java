@@ -15,7 +15,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
@@ -104,22 +103,6 @@ public class AccountManagementService {
                               userId, ex.getMessage())
             ));
             return Optional.empty();
-        }
-    }
-
-    public AzureAccount getAzureAccountInfo(String provenanceUserId) {
-        try {
-            return webClient.get().uri(url + "/account/azure/" + provenanceUserId)
-                .attributes(clientRegistrationId(ACCOUNT_MANAGEMENT_API))
-                .retrieve()
-                .bodyToMono(AzureAccount.class)
-                .block();
-        } catch (WebClientException ex) {
-            log.error(writeLog(
-                String.format("Request to Account Management to get Azure account failed with error message: %s",
-                              ex.getMessage())
-            ));
-            return new AzureAccount();
         }
     }
 
