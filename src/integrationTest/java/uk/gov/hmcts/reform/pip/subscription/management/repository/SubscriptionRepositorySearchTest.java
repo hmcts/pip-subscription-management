@@ -53,7 +53,6 @@ class SubscriptionRepositorySearchTest {
         subscription1.setSearchValue(LOCATION_ID);
         subscription1.setChannel(Channel.EMAIL);
         subscription1.setLocationName(LOCATION_NAME);
-        subscription1.setListType(LIST_TYPE);
 
         Subscription savedSubscription = subscriptionRepository.save(subscription1);
         subscriptionId1 = savedSubscription.getId();
@@ -84,7 +83,6 @@ class SubscriptionRepositorySearchTest {
         subscription4.setSearchValue(ListType.CIVIL_DAILY_CAUSE_LIST.name());
         subscription4.setChannel(Channel.EMAIL);
         subscription4.setLocationName(LOCATION_NAME);
-        subscription4.setListType(LIST_TYPE);
 
         savedSubscription = subscriptionRepository.save(subscription4);
         subscriptionId4 = savedSubscription.getId();

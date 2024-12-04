@@ -16,7 +16,6 @@ import uk.gov.hmcts.reform.pip.subscription.management.utils.FunctionalTestBase;
 import uk.gov.hmcts.reform.pip.subscription.management.utils.OAuthClient;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,7 +67,6 @@ class SubscriptionTest extends FunctionalTestBase {
         subscription.setCreatedDate(LocalDateTime.now());
         subscription.setLocationName(LOCATION_NAME);
         subscription.setLastUpdatedDate(LocalDateTime.now());
-        subscription.setListType(Collections.emptyList());
         return subscription;
     }
 }
