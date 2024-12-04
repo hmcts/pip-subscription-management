@@ -2,10 +2,9 @@
 -- This script will populate the subscription list type table with all the
 -- subscriptions which already exists in database
 --
---CREATE EXTENSION pgcrypto;
 
 INSERT INTO subscription_list_type(id, user_id, list_type, list_language)
-SELECT user_id id, user_id, list_type, STRING_TO_ARRAY('ENGLISH,WELSH', ',') list_language
+SELECT uuid(user_id) id, user_id, list_type, STRING_TO_ARRAY('ENGLISH,WELSH', ',') list_language
 FROM
   (
     SELECT user_id, list_type
