@@ -12,7 +12,9 @@ import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +39,8 @@ class SubscriptionRepositorySearchTest {
     private static final String SUBSCRIPTION_MATCHED_MESSAGE = "Subscription does not match";
     private static final String SUBSCRIPTION_EMPTY_MESSAGE = "Subscription is not empty";
 
+    private static final String LIST_LANGUAGE = "ENGLISH";
+
     private UUID subscriptionId1;
     private UUID subscriptionId2;
     private UUID subscriptionId3;
@@ -44,6 +48,9 @@ class SubscriptionRepositorySearchTest {
 
     @Autowired
     SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    SubscriptionListTypeRepository subscriptionListTypeRepository;
 
     @BeforeAll
     void setup() {
@@ -86,6 +93,12 @@ class SubscriptionRepositorySearchTest {
 
         savedSubscription = subscriptionRepository.save(subscription4);
         subscriptionId4 = savedSubscription.getId();
+
+        SubscriptionListType subscriptionListType = new SubscriptionListType();
+        subscriptionListType.setListType(Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name()));
+        subscriptionListType.setUserId(USER_ID);
+        subscriptionListType.setListLanguage(Arrays.asList(LIST_LANGUAGE));
+        subscriptionListTypeRepository.save(subscriptionListType);
     }
 
     @AfterAll
@@ -151,7 +164,7 @@ class SubscriptionRepositorySearchTest {
     @Test
     void shouldFindSubscriptionsByLocationIdSearchValue() {
         List<Subscription> subscriptions = subscriptionRepository.findSubscriptionsByLocationSearchValue(
-            SearchType.LOCATION_ID.name(), LOCATION_ID, ListType.CIVIL_DAILY_CAUSE_LIST.name()
+            LOCATION_ID, ListType.CIVIL_DAILY_CAUSE_LIST.name(), LIST_LANGUAGE
         );
         assertThat(subscriptions)
             .as(SUBSCRIPTION_MATCHED_MESSAGE)
@@ -163,7 +176,7 @@ class SubscriptionRepositorySearchTest {
     @Test
     void shouldNotFindSubscriptionsByLocationIdSearchValueIfListTypeUnmatched() {
         List<Subscription> subscriptions = subscriptionRepository.findSubscriptionsByLocationSearchValue(
-            SearchType.LOCATION_ID.name(), LOCATION_ID, ListType.CROWN_DAILY_LIST.name()
+            LOCATION_ID, ListType.CROWN_DAILY_LIST.name(), LIST_LANGUAGE
         );
         assertThat(subscriptions)
             .as(SUBSCRIPTION_EMPTY_MESSAGE)
