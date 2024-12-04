@@ -165,7 +165,7 @@ public class SubscriptionController {
     public ResponseEntity<String> addListTypesForSubscription(@PathVariable String userId,
             @RequestBody SubscriptionListType subscriptionListType) {
         subscriptionService.addListTypesForSubscription(subscriptionListType, userId);
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity.status(HttpStatus.CREATED)
             .body(String.format(
                 "Location list Type successfully added for user %s",
                 userId
@@ -174,7 +174,7 @@ public class SubscriptionController {
 
     @PutMapping("/configure-list-types/{userId}")
     @Operation(summary = "Endpoint to update list type for existing subscription")
-    @ApiResponse(responseCode = "201", description = "Subscription successfully updated for user: {userId}")
+    @ApiResponse(responseCode = "200", description = "Subscription successfully updated for user: {userId}")
     @ApiResponse(responseCode = "400", description =
         "This request object has an invalid format. Please check again.")
     public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,

@@ -14,6 +14,7 @@ import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.utils.FunctionalTestBase;
 import uk.gov.hmcts.reform.pip.subscription.management.utils.OAuthClient;
@@ -51,6 +52,8 @@ class SubscriptionTest extends FunctionalTestBase {
     private static final String BUILD_SUBSCRIBER_LIST_URL = SUBSCRIPTION_URL + "/artefact-recipients";
     private static final String BUILD_DELETED_ARTEFACT_SUBSCRIBER_URL = SUBSCRIPTION_URL + "/deleted-artefact";
     private static final String CONFIGURE_LIST_TYPE_URL = SUBSCRIPTION_URL + "/configure-list-types/";
+    private static final String ADD_LIST_TYPE_URL = SUBSCRIPTION_URL + "/add-list-types/";
+
     private static final String DELETE_SUBSCRIPTIONS_FOR_USER_URL = SUBSCRIPTION_URL + "/user/";
     private static final String SUBSCRIPTION_BY_LOCATION_URL = SUBSCRIPTION_URL + "/location/";
 
@@ -59,6 +62,8 @@ class SubscriptionTest extends FunctionalTestBase {
     private static final String USER_ID = UUID.randomUUID().toString();
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String BEARER = "Bearer ";
+    private static final String LIST_LANGUAGE = "ENGLISH";
+    private static final String LIST_LANGUAGE_CONFIGURE = "WELSH";
 
     private static final ListType LIST_TYPE = ListType.CIVIL_DAILY_CAUSE_LIST;
     private Map<String, String> authorisationHeaders;
@@ -139,10 +144,34 @@ class SubscriptionTest extends FunctionalTestBase {
             createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
         );
 
+        SubscriptionListType listType = new SubscriptionListType(
+            USER_ID,
+            List.of(LIST_TYPE.name()),
+            List.of(LIST_LANGUAGE)
+        );
+
+        Response responseAddListType = doPostRequest(
+            ADD_LIST_TYPE_URL + USER_ID,
+            headerMap,
+            listType
+        );
+        assertThat(responseAddListType.getStatusCode()).isEqualTo(CREATED.value());
+        assertThat(responseAddListType.asString()).isEqualTo(
+            String.format(
+                "Location list Type successfully added for user %s",
+                USER_ID
+            ));
+
+        SubscriptionListType listTypeToConfigure = new SubscriptionListType(
+            USER_ID,
+            List.of(LIST_TYPE.name(),ListType.CIVIL_DAILY_CAUSE_LIST.name()),
+            List.of(LIST_LANGUAGE_CONFIGURE)
+        );
+
         Response responseConfigureListType = doPutRequest(
             CONFIGURE_LIST_TYPE_URL + USER_ID,
             headerMap,
-            List.of(LIST_TYPE.name())
+            listTypeToConfigure
         );
         assertThat(responseConfigureListType.getStatusCode()).isEqualTo(OK.value());
         assertThat(responseConfigureListType.asString()).isEqualTo(
@@ -247,7 +276,6 @@ class SubscriptionTest extends FunctionalTestBase {
         subscription.setCreatedDate(LocalDateTime.now());
         subscription.setLocationName(locationName);
         subscription.setLastUpdatedDate(LocalDateTime.now());
-        subscription.setListType(List.of(LIST_TYPE.name()));
         return subscription;
     }
 }
