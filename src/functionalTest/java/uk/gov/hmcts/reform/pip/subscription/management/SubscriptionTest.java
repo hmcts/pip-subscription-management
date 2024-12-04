@@ -87,7 +87,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsSetOne()  {
+    void subscriptionTestsPartOne() {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
@@ -127,7 +127,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsSetTwo()  {
+    void subscriptionTestsPartTwo() {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
@@ -161,7 +161,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsSetThree() {
+    void subscriptionTestsPartThree() {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
@@ -195,7 +195,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsSetFour() throws Exception {
+    void subscriptionTestsPartFour() throws Exception {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
@@ -234,6 +234,8 @@ class SubscriptionTest extends FunctionalTestBase {
             headerMap, List.of(UUID.fromString(subscriptionId))
         );
         assertThat(responseBulkDeleteSubscriptions.getStatusCode()).isEqualTo(OK.value());
+        assertThat(responseBulkDeleteSubscriptions.asString()).isEqualTo(
+            "Subscriptions with ID " + subscriptionId + " deleted");
     }
 
     private Subscription createTestSubscription(String locationid, String userId, String locationName) {
