@@ -21,7 +21,6 @@ import static uk.gov.hmcts.reform.pip.model.publication.Sensitivity.CLASSIFIED;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_ID;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.CASE_URN;
 import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LIST_TYPE;
-import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
 
 @Service
 @Slf4j
@@ -59,7 +58,8 @@ public class SubscriptionNotificationService {
     public void collectSubscribers(Artefact artefact) {
 
         List<Subscription> subscriptionList = new ArrayList<>(querySubscriptionValueForLocation(
-            LOCATION_ID.name(), artefact.getLocationId(), artefact.getListType().toString()));
+            artefact.getLocationId(), artefact.getListType().toString(),
+                                                artefact.getLanguage().toString()));
 
         subscriptionList.addAll(querySubscriptionValue(LIST_TYPE.name(), artefact.getListType().name()));
 
@@ -105,8 +105,9 @@ public class SubscriptionNotificationService {
         return repository.findSubscriptionsBySearchValue(term, value);
     }
 
-    private List<Subscription> querySubscriptionValueForLocation(String term, String value, String listType) {
-        return repository.findSubscriptionsByLocationSearchValue(term, value, listType);
+    private List<Subscription> querySubscriptionValueForLocation(String value, String listType,
+                                                                 String listLanguage) {
+        return repository.findSubscriptionsByLocationSearchValue(value, listType, listLanguage);
     }
 
     @SuppressWarnings("unchecked")
