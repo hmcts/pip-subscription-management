@@ -3,7 +3,6 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 import com.azure.core.http.ContentType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import nl.altindag.log.LogCaptor;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -13,8 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
@@ -22,7 +19,6 @@ import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscription;
 import uk.gov.hmcts.reform.pip.model.subscription.ThirdPartySubscriptionArtefact;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
-import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.models.BulkSubscriptionsSummary;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionsSummary;
@@ -39,20 +35,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest(classes = {Application.class})
 @ActiveProfiles({"test", "non-async"})
-@AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class PublicationServicesServiceTest {
 
-    private static MockWebServer mockPublicationServicesEndpoint;
     private static final String CONTENT_TYPE = "Content-Type";
-
-    @Autowired
-    WebClient webClient;
-
-    @Autowired
-    PublicationServicesService publicationServicesService;
-
     private static final String TEST_ID = "123";
     private static final UUID ARTEFACT_ID = UUID.randomUUID();
     private static final String EMAIL = "a@b.com";
@@ -64,17 +50,22 @@ class PublicationServicesServiceTest {
 
     private final SubscriptionsSummary subscriptionsSummary = new SubscriptionsSummary();
     private final Subscription subscription = new Subscription();
-    LogCaptor logCaptor = LogCaptor.forClass(PublicationServicesService.class);
+    private final LogCaptor logCaptor = LogCaptor.forClass(PublicationServicesService.class);
+
+    private final MockWebServer mockPublicationServicesEndpoint = new MockWebServer();
+    private PublicationServicesService publicationServicesService;
+
 
     @BeforeEach
-    void setup() throws IOException {
+    void setup() {
         subscriptionsSummary.setEmail("a@b.com");
-
-
         subscription.setSearchType(SearchType.CASE_ID);
         subscription.setSearchValue(TEST_ID);
-        mockPublicationServicesEndpoint = new MockWebServer();
-        mockPublicationServicesEndpoint.start(8081);
+
+        WebClient mockedWebClient = WebClient.builder()
+            .baseUrl(mockPublicationServicesEndpoint.url("/").toString())
+            .build();
+        publicationServicesService = new PublicationServicesService(mockedWebClient);
     }
 
     @AfterEach
