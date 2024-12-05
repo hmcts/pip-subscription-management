@@ -10,7 +10,6 @@ FROM
     SELECT user_id, list_type
     FROM subscription
     WHERE search_type = 'LOCATION_ID'
-      AND list_type != '{}'
     GROUP BY user_id, list_type
     ORDER BY user_id
 
