@@ -48,7 +48,6 @@ class SubscriptionTest extends FunctionalTestBase {
     private static final String FIND_SUBSCRIPTION_BY_USER_ID_URL = "/subscription/user/";
     private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = "/testing-support/subscription/";
     private static final String TESTING_SUPPORT_LOCATION_URL = "/testing-support/location/";
-    private static final String TESTING_SUPPORT_PUBLICATION_URL = "/testing-support/publication/";
     private static final String BUILD_SUBSCRIBER_LIST_URL = SUBSCRIPTION_URL + "/artefact-recipients";
     private static final String BUILD_DELETED_ARTEFACT_SUBSCRIBER_URL = SUBSCRIPTION_URL + "/deleted-artefact";
     private static final String CONFIGURE_LIST_TYPE_URL = SUBSCRIPTION_URL + "/configure-list-types/";
@@ -80,10 +79,6 @@ class SubscriptionTest extends FunctionalTestBase {
 
     @AfterAll
     public void teardown() {
-        doDataManagementDeleteRequest(
-            TESTING_SUPPORT_PUBLICATION_URL + LOCATION_NAME,
-            Map.of(AUTHORIZATION, BEARER + dataManagementAccessToken)
-        );
         doDeleteRequest(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME, authorisationHeaders);
         doDataManagementDeleteRequest(
             TESTING_SUPPORT_LOCATION_URL + LOCATION_NAME,
