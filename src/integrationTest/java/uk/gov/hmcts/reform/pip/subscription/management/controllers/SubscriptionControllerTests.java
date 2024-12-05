@@ -811,7 +811,7 @@ class SubscriptionControllerTests {
             .post(ADD_LIST_TYPE_PATH)
             .contentType(MediaType.APPLICATION_JSON)
             .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
-        MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
+        MvcResult result = mvc.perform(request).andExpect(status().isCreated()).andReturn();
 
         assertEquals(String.format(
                          "Location list Type successfully added for user %s",

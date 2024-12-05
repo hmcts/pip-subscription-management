@@ -224,7 +224,7 @@ class SubscriptionControllerTest {
                     "Location list Type successfully added for user %s",
                     USER_ID
                 ),
-                HttpStatus.OK
+                HttpStatus.CREATED
             ),
             subscriptionController.addListTypesForSubscription(USER_ID, subscriptionListType),
                 RETURNED_SUBSCRIPTION_NOT_MATCHED
