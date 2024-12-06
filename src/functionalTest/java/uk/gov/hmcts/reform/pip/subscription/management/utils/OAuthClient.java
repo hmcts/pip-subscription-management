@@ -13,6 +13,12 @@ public class OAuthClient {
     @Value("${CLIENT_SECRET_FT}")
     private String clientSecret;
 
+    @Value("${CLIENT_ID}")
+    private String clientIdDataManagement;
+
+    @Value("${CLIENT_SECRET}")
+    private String clientSecretDataManagement;
+
     @Value("${APP_URI}")
     private String scope;
 
@@ -46,9 +52,9 @@ public class OAuthClient {
         String token = given()
             .relaxedHTTPSValidation()
             .header("content-type", "application/x-www-form-urlencoded")
-            .formParam("client_id", clientId)
+            .formParam("client_id", clientIdDataManagement)
             .formParam("scope", scopeDataManagement + "/.default")
-            .formParam("client_secret", clientSecret)
+            .formParam("client_secret", clientSecretDataManagement)
             .formParam("grant_type", "client_credentials")
             .baseUri("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token")
             .post()
