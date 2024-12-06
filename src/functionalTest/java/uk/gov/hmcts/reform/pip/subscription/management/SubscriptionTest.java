@@ -87,7 +87,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsPartOne() {
+    void testGetSubscription() {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
@@ -127,7 +127,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsPartTwo() {
+    void testConfigureSubscriptionByListType() {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
@@ -185,7 +185,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsPartThree() {
+    void testGetSubscriptionByLocation() {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
@@ -219,7 +219,7 @@ class SubscriptionTest extends FunctionalTestBase {
     }
 
     @Test
-    void subscriptionTestsPartFour() throws Exception {
+    void testPostArtefactAndBulkDelete() throws Exception {
 
         Map<String, String> headerMap = new ConcurrentHashMap<>();
         headerMap.putAll(authorisationHeaders);
