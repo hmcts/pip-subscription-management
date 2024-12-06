@@ -74,7 +74,6 @@ public class FunctionalTestBase {
             .thenReturn();
     }
 
-
     protected Response doGetRequest(final String path, final Map<String, String> additionalHeaders) {
         return given()
             .relaxedHTTPSValidation()
