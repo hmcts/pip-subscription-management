@@ -106,7 +106,7 @@ class SubscriptionRepositoryTest {
             .as(SUBSCRIPTION_MATCHED_MESSAGE)
             .hasSize(3)
             .matches(s -> s.stream()
-                .noneMatch(e -> e.getId().equals(subscriptionId4)));
+                .noneMatch(e -> e.contains(subscriptionId4.toString())));
     }
 
     @Test

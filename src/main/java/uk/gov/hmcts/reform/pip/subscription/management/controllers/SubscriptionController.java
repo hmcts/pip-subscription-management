@@ -4,12 +4,16 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +28,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
-import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
-import uk.gov.hmcts.reform.pip.model.report.LocalSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
@@ -169,20 +171,34 @@ public class SubscriptionController {
             ));
     }
 
-    @ApiResponse(responseCode = OK_CODE, description = "A JSON model which contains the data.")
-    @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting")
+    @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
+        + "See example for headers ", content = {
+            @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
+                mediaType = MediaType.TEXT_PLAIN_VALUE,
+                schema = @Schema(implementation = String.class))
+            }
+        )
+    @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting. "
+        + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-all")
     @IsAdmin
-    public ResponseEntity<List<AllSubscriptionMiData>> getSubscriptionDataForMiReportingAll() {
+    public ResponseEntity<String> getSubscriptionDataForMiReportingAll() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
     }
 
-    @ApiResponse(responseCode = OK_CODE, description = "A JSON model which contains the data.")
-    @Operation(summary = "Returns a list of subscription data for location-based subscriptions for MI reporting")
+    @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
+        + "See example for headers ", content = {
+            @Content(examples = {@ExampleObject("id,search_value,channel,user_id,court_name,created_date")},
+                mediaType = MediaType.TEXT_PLAIN_VALUE,
+                schema = @Schema(implementation = String.class))
+            }
+        )
+    @Operation(summary = "Returns a list of subscription data for location-based subscriptions for MI reporting. "
+        + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-local")
     @IsAdmin
-    public ResponseEntity<List<LocalSubscriptionMiData>> getSubscriptionDataForMiReportingLocal() {
+    public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
     }
