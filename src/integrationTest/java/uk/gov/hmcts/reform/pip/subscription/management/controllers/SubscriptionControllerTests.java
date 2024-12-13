@@ -20,6 +20,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocalSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
@@ -38,7 +40,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -83,6 +84,7 @@ class SubscriptionControllerTests {
     public static final String VALIDATION_ONE_CASE_LOCATION = "Location subscription list does not contain 1 case";
     public static final String VALIDATION_DATE_ADDED = "Date added does not match the expected date added";
     public static final String VALIDATION_UUID = "UUID should not be null";
+    private static final String VALIDATION_MI_REPORT = "MI Reporting Data not found";
     private static final String FORBIDDEN_STATUS_CODE = "Status code does not match forbidden";
     private static final String NOT_FOUND_STATUS_CODE = "Status code does not match not found";
     private static final String RESPONSE_MATCH = "Response should match";
@@ -117,9 +119,6 @@ class SubscriptionControllerTests {
     private static final String OPENING_BRACKET = "[\"";
     private static final String CLOSING_BRACKET = "\"]";
     private static final String DOUBLE_QUOTE_COMMA = "\",\"";
-    private static final String EXPECTED_MI_DATA_ALL_HEADERS = "id,channel,search_type,user_id,court_name,created_date";
-    private static final String EXPECTED_MI_DATA_LOCAL_HEADERS = "id,search_value,channel,user_id,court_name,"
-        + "created_date";
 
     private static String rawArtefact;
 
@@ -1068,13 +1067,18 @@ class SubscriptionControllerTests {
     void testGetSubscriptionDataForMiReportingAll() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
-        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
+            .andExpect(status().isOk())
+            .andReturn();
 
-        assertEquals(EXPECTED_MI_DATA_ALL_HEADERS, response.split("\n")[0],
-                     "Should successfully retrieve MI data headers"
-        );
-        assertThat(response.contains(VALID_USER_ID));
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        List<AllSubscriptionMiData> miData = Arrays.asList(
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), AllSubscriptionMiData[].class));
+
+        assertEquals(1, miData.size(), VALIDATION_MI_REPORT);
+        assertEquals(VALID_USER_ID, miData.get(0).getUserId(), VALIDATION_MI_REPORT);
+        assertEquals(LOCATION_NAME_1, miData.get(0).getLocationName(), VALIDATION_MI_REPORT);
     }
 
     @Test
@@ -1093,13 +1097,18 @@ class SubscriptionControllerTests {
     void testGetSubscriptionDataForMiReportingLocal() throws Exception {
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
-        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
+            .andExpect(status().isOk()).andReturn();
 
-        assertEquals(EXPECTED_MI_DATA_LOCAL_HEADERS, response.split("\n")[0],
-                     "Should successfully retrieve MI data headers"
-        );
-        assertThat(response.contains(VALID_USER_ID));
+        assertNotNull(response.getResponse(), VALIDATION_EMPTY_RESPONSE);
+
+        List<LocalSubscriptionMiData> miData = Arrays.asList(
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), LocalSubscriptionMiData[].class));
+
+        assertEquals(1, miData.size(), VALIDATION_MI_REPORT);
+        assertEquals(VALID_USER_ID, miData.get(0).getUserId(), VALIDATION_MI_REPORT);
+        assertEquals(LOCATION_NAME_1, miData.get(0).getLocationName(), VALIDATION_MI_REPORT);
+
     }
 
     @Test
