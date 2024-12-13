@@ -8,12 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -107,24 +105,6 @@ class SubscriptionRepositoryTest {
             .hasSize(3)
             .matches(s -> s.stream()
                 .noneMatch(e -> e.contains(subscriptionId4.toString())));
-    }
-
-    @Test
-    void shouldUpdateSubscription() {
-        subscriptionRepository.updateLocationSubscriptions(USER_ID2, ListType.CIVIL_DAILY_CAUSE_LIST.name());
-        List<Subscription> updatedSubscriptions = subscriptionRepository.findByUserId(USER_ID2);
-
-        assertThat(updatedSubscriptions)
-            .as(SUBSCRIPTION_MATCHED_MESSAGE)
-            .hasSize(1);
-
-        assertThat(updatedSubscriptions.get(0).getLastUpdatedDate())
-            .as(SUBSCRIPTION_MATCHED_MESSAGE)
-            .isNotNull();
-
-        assertThat(updatedSubscriptions.get(0).getListType())
-            .as(SUBSCRIPTION_MATCHED_MESSAGE).hasSize(1)
-            .containsExactly(ListType.CIVIL_DAILY_CAUSE_LIST.name());
     }
 
     @Test

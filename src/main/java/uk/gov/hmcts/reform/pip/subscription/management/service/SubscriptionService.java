@@ -1,12 +1,13 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -22,15 +23,24 @@ import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
  */
 @Slf4j
 @Service
+@SuppressWarnings("PMD.TooManyMethods")
 public class SubscriptionService {
 
     private final SubscriptionRepository repository;
+
+    private final SubscriptionListTypeRepository subscriptionListTypeRepository;
     private final DataManagementService dataManagementService;
 
+    private final SubscriptionLocationService subscriptionLocationService;
+
     @Autowired
-    public SubscriptionService(SubscriptionRepository repository, DataManagementService dataManagementService) {
+    public SubscriptionService(SubscriptionRepository repository, DataManagementService dataManagementService,
+                               SubscriptionListTypeRepository subscriptionListTypeRepository,
+                               SubscriptionLocationService subscriptionLocationService) {
         this.repository = repository;
         this.dataManagementService = dataManagementService;
+        this.subscriptionListTypeRepository = subscriptionListTypeRepository;
+        this.subscriptionLocationService = subscriptionLocationService;
     }
 
     public Subscription createSubscription(Subscription subscription, String actioningUserId) {
@@ -47,16 +57,25 @@ public class SubscriptionService {
         return repository.save(subscription);
     }
 
-    public void configureListTypesForSubscription(String userId, List<String> listType) {
-        log.info(writeLog(userId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
+    public void addListTypesForSubscription(SubscriptionListType subscriptionListType,
+                                                  String actioningUserId) {
+        log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
+        subscriptionListTypeRepository.deleteByUserId(subscriptionListType.getUserId());
+        subscriptionListTypeRepository.save(subscriptionListType);
+    }
 
-        repository.updateLocationSubscriptions(userId,
-            listType == null ? "" : StringUtils.join(listType, ','));
+    public void configureListTypesForSubscription(SubscriptionListType subscriptionListType,
+                                                  String actioningUserId) {
+        log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
+
+        Optional<SubscriptionListType> existingSubscriptionListType = subscriptionListTypeRepository
+            .findByUserId(subscriptionListType.getUserId());
+        existingSubscriptionListType.ifPresent(listType -> subscriptionListType.setId(listType.getId()));
+        subscriptionListTypeRepository.save(subscriptionListType);
     }
 
     public void deleteById(UUID id, String actioningUserId) {
         Optional<Subscription> subscription = repository.findById(id);
-
         if (subscription.isEmpty()) {
             throw new SubscriptionNotFoundException(String.format(
                 "No subscription found with the subscription id %s",
@@ -64,10 +83,15 @@ public class SubscriptionService {
             ));
         }
 
+        repository.deleteById(id);
+
+        if (subscription.get().getSearchType().equals(LOCATION_ID)) {
+            subscriptionLocationService
+                .deleteSubscriptionListTypeByUser(subscription.get().getUserId());
+        }
+
         log.info(writeLog(actioningUserId, UserActions.DELETE_SUBSCRIPTION,
                           id.toString()));
-
-        repository.deleteById(id);
     }
 
     public void bulkDeleteSubscriptions(List<UUID> ids) {
@@ -79,6 +103,25 @@ public class SubscriptionService {
                                      .toList());
             throw new SubscriptionNotFoundException("No subscription found with the subscription ID(s): "
                     + missingIds.toString().replace("[", "").replace("]", ""));
+        }
+
+        //FIND ALL THE LOCATION SUBSCRIPTION FOR THE USER AND CHECK IF MORE THAN ONE LOCATION SUBSCRIPTION EXISTS
+        //DO NOT DELETE RECORD FROM SUBSCRIPTION LIST TYPE BECAUSE ONE RECORD IS LINKED WITH ALL THE LOCATION
+        //SUBSCRIPTIONS
+        List<Subscription> bulkDeleteLocationSubscriptions = subscriptions.stream()
+            .filter(s -> s.getSearchType()
+            .equals(LOCATION_ID)).toList();
+
+        List<Subscription> userLocationSubscriptions = repository
+            .findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId());
+
+        if (!userLocationSubscriptions.isEmpty()
+            && bulkDeleteLocationSubscriptions.size()
+            == repository.findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId()).size()) {
+            Optional<SubscriptionListType> subscriptionListTypes =
+                subscriptionListTypeRepository.findByUserId(subscriptions.get(0).getUserId());
+            subscriptionListTypes.ifPresent(subscriptionListType -> subscriptionListTypeRepository
+                .deleteByUserId(subscriptionListType.getUserId()));
         }
 
         repository.deleteByIdIn(ids);
