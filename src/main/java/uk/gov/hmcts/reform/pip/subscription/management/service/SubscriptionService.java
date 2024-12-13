@@ -5,8 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
-import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
-import uk.gov.hmcts.reform.pip.model.report.LocalSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
@@ -118,11 +116,19 @@ public class SubscriptionService {
         });
     }
 
-    public List<AllSubscriptionMiData> getAllSubscriptionsDataForMiReporting() {
-        return repository.getAllSubsDataForMi();
+    public String getAllSubscriptionsDataForMiReporting() {
+        StringBuilder builder = new StringBuilder(60);
+        builder.append("id,channel,search_type,user_id,court_name,created_date").append(System.lineSeparator());
+        repository.getAllSubsDataForMi()
+            .forEach(line -> builder.append(line).append(System.lineSeparator()));
+        return builder.toString();
     }
 
-    public List<LocalSubscriptionMiData> getLocalSubscriptionsDataForMiReporting() {
-        return repository.getLocalSubsDataForMi();
+    public String getLocalSubscriptionsDataForMiReporting() {
+        StringBuilder builder = new StringBuilder(60);
+        builder.append("id,search_value,channel,user_id,court_name,created_date").append(System.lineSeparator());
+        repository.getLocalSubsDataForMi()
+            .forEach(line -> builder.append(line).append(System.lineSeparator()));
+        return builder.toString();
     }
 }
