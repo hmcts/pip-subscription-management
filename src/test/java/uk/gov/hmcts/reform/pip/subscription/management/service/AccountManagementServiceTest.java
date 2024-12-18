@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.function.client.WebClient;
-import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
@@ -31,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -189,32 +187,6 @@ class AccountManagementServiceTest {
         assertThat(result)
             .as("User should not be returned")
             .isEmpty();
-    }
-
-    @Test
-    void testGetAzureAccountInfo() throws IOException {
-        AzureAccount response = new AzureAccount();
-        response.setAzureAccountId(VALID_ID);
-        jsonResponse = OBJECT_WRITER.writeValueAsString(Optional.of(response));
-
-        mockAccountManagementEndpoint.enqueue(new MockResponse()
-                                                  .addHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON)
-                                                  .setBody(jsonResponse));
-
-        AzureAccount result = accountManagementService.getAzureAccountInfo(VALID_ID);
-
-        assertEquals(VALID_ID, result.getAzureAccountId(),
-                      "Valid user information has not been returned from the server");
-    }
-
-    @Test
-    void testGetAzureAccountInfoError() {
-        mockAccountManagementEndpoint.enqueue(new MockResponse().setResponseCode(BAD_REQUEST.value()));
-
-        AzureAccount result = accountManagementService.getAzureAccountInfo(INVALID_ID);
-
-        assertNull(result.getDisplayName(),
-                   "User information should not be returned from the server");
     }
 
     @Test
