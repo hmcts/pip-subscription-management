@@ -2,6 +2,7 @@ package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import nl.altindag.log.LogCaptor;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,7 +10,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
@@ -18,10 +18,10 @@ import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRe
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,14 +41,15 @@ class SubscriptionLocationServiceTest {
 
     private static final String COURT_NAME = "test court name";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
-    private static final String REQUESTER_NAME = "ReqName";
     private static final String EMAIL_ADDRESS = "test@test.com";
     private static final String LOCATION_ID = "1";
     private static final String LOCATION_NAME_PREFIX = "TEST_PIP_1234_";
+    private static final String EXPECTED_LOG_MESSAGE = "Expected log message not found";
 
     private List<Subscription> mockSubscriptionList;
     private List<UUID> mockSubscriptionIds;
-    AzureAccount azureAccount;
+    private PiUser piUser;
+    private String userId;
 
     @Mock
     DataManagementService dataManagementService;
@@ -71,8 +72,10 @@ class SubscriptionLocationServiceTest {
         mockSubscriptionIds = mockSubscriptionList.stream()
             .map(Subscription::getId).toList();
 
-        azureAccount = new AzureAccount();
-        azureAccount.setDisplayName("ReqName");
+        userId = UUID.randomUUID().toString();
+        piUser = new PiUser();
+        piUser.setEmail(EMAIL_ADDRESS);
+        piUser.setUserId(userId);
     }
 
     @Test
@@ -90,8 +93,8 @@ class SubscriptionLocationServiceTest {
                 .thenReturn(mockSubscriptionList);
             when(dataManagementService.getCourtName(LOCATION_ID))
                 .thenReturn(COURT_NAME);
-            when(accountManagementService.getAzureAccountInfo(REQUESTER_NAME))
-                .thenReturn(azureAccount);
+            when(accountManagementService.getUserByUserId(userId))
+                .thenReturn(Optional.of(piUser));
             when(accountManagementService.getAllAccounts(PI_AAD.toString(), SYSTEM_ADMIN.toString()))
                 .thenReturn(List.of(sysAdminUser1));
             when(accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString()))
@@ -99,23 +102,22 @@ class SubscriptionLocationServiceTest {
 
             doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
 
-            assertEquals(
-                "The subscription for given location is not deleted",
-                "Total 8 subscriptions deleted for location id 1",
-                subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME)
-            );
+            Assertions.assertEquals("Total 8 subscriptions deleted for location id 1",
+                                    subscriptionLocationService
+                                        .deleteSubscriptionByLocation(LOCATION_ID, userId),
+                                    "The subscription for given location is not deleted");
 
             assertTrue(logCaptor.getInfoLogs().get(0).contains("User "
-                                                                   + REQUESTER_NAME
+                                                                   + userId
                                                                    + " attempting to delete all "
                                                                    + "subscriptions for location "
                                                                    + LOCATION_ID),
-                       "Expected log message not found");
+                       EXPECTED_LOG_MESSAGE);
             assertTrue(logCaptor.getInfoLogs().get(1).contains("8 subscription(s) have been deleted for location "
                                                                    + LOCATION_ID
                                                                    + " by user "
-                                                                   + REQUESTER_NAME),
-                       "Expected log message not found");
+                                                                   + userId),
+                       EXPECTED_LOG_MESSAGE);
         }
     }
 
@@ -124,36 +126,46 @@ class SubscriptionLocationServiceTest {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionLocationService.class)) {
             when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID)).thenReturn(List.of());
             assertThrows(SubscriptionNotFoundException.class, () ->
-                             subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME),
+                             subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, userId),
                          "SubscriptionNotFoundException not thrown when trying to delete a subscription"
                              + " that does not exist");
 
             assertTrue(logCaptor.getInfoLogs().get(0).contains("User "
-                                                                   + REQUESTER_NAME
+                                                                   + userId
                                                                    + " attempting to delete all"
                                                                    + " subscriptions for location "
                                                                    + LOCATION_ID),
-                       "Expected log message not found");
+                       EXPECTED_LOG_MESSAGE);
         }
 
     }
 
     @Test
     void testDeleteSubscriptionByLocationWhenSystemAdminEmpty() throws JsonProcessingException {
+        try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionLocationService.class)) {
+            when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
+                .thenReturn(mockSubscriptionList);
+            when(dataManagementService.getCourtName(LOCATION_ID))
+                .thenReturn(COURT_NAME);
+            doNothing().when(publicationService).sendLocationDeletionSubscriptionEmail(any(), any());
+            when(accountManagementService.getUserByUserId(userId))
+                .thenReturn(Optional.empty());
 
-        when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
-            .thenReturn(mockSubscriptionList);
-        when(dataManagementService.getCourtName(LOCATION_ID))
-            .thenReturn(COURT_NAME);
-        doNothing().when(publicationService).sendLocationDeletionSubscriptionEmail(any(), any());
-        when(accountManagementService.getAzureAccountInfo(REQUESTER_NAME))
-            .thenReturn(azureAccount);
+            doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
 
-        doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
 
-        assertEquals("The subscription for given location is not deleted",
-                     "Total 8 subscriptions deleted for location id 1",
-                     subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME));
+            Assertions.assertEquals(
+                subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, userId),
+                "Total 8 subscriptions deleted for location id 1",
+                "The subscription for given location is not deleted"
+            );
+
+            assertTrue(
+                logCaptor.getErrorLogs().get(0).contains("User " + userId
+                                                             + " not found in the system when notifying system admins"),
+                "Expected log message not found"
+            );
+        }
     }
 
     @Test
