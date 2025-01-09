@@ -52,6 +52,7 @@ public class SubscriptionController {
 
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
+    private static final String X_USER_ID_HEADER = "x-user-id";
 
     private final SubscriptionService subscriptionService;
     private final UserSubscriptionService userSubscriptionService;
@@ -81,7 +82,7 @@ public class SubscriptionController {
         + "check again.")
     public ResponseEntity<String> createSubscription(
         @RequestBody @Valid uk.gov.hmcts.reform.pip.model.subscription.Subscription sub,
-        @RequestHeader("x-user-id") String actioningUserId
+        @RequestHeader(X_USER_ID_HEADER) String actioningUserId
     ) {
         Subscription subscription = subscriptionService.createSubscription(new Subscription(sub), actioningUserId);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -98,7 +99,7 @@ public class SubscriptionController {
     @DeleteMapping("/{subId}")
     @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subId)")
     public ResponseEntity<String> deleteById(@Parameter @PathVariable UUID subId,
-                                             @RequestHeader("x-user-id") String actioningUserId) {
+                                             @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
 
         subscriptionService.deleteById(subId, actioningUserId);
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
@@ -112,7 +113,7 @@ public class SubscriptionController {
     @DeleteMapping("/v2/bulk")
     @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subIds)")
     public ResponseEntity<String> bulkDeleteSubscriptionsV2(@RequestBody List<UUID> subIds,
-                                                            @RequestHeader("x-user-id") String actioningUserId) {
+                                                            @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
 
         subscriptionService.bulkDeleteSubscriptions(subIds);
         return ResponseEntity.ok(String.format(
@@ -243,11 +244,11 @@ public class SubscriptionController {
     @DeleteMapping("/location/{locationId}")
     @IsAdmin
     public ResponseEntity<String> deleteSubscriptionByLocation(
-        @RequestHeader("x-provenance-user-id") String provenanceUserId,
+        @RequestHeader(X_USER_ID_HEADER) String userId,
         @PathVariable Integer locationId) throws JsonProcessingException {
         return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(
             locationId.toString(),
-            provenanceUserId
+            userId
         ));
     }
 }

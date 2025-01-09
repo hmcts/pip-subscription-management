@@ -1200,7 +1200,7 @@ class SubscriptionControllerTests {
 
         MvcResult deleteResponse = mvc.perform(delete(
                 "/subscription/location/" + LOCATION_ID)
-                                                   .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk()).andReturn();
 
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
@@ -1216,7 +1216,7 @@ class SubscriptionControllerTests {
     void testDeleteSubscriptionByLocationNotFound() throws Exception {
         MvcResult response = mvc.perform(delete(
                 SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                             .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -1229,7 +1229,7 @@ class SubscriptionControllerTests {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
         MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                             .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),

@@ -106,10 +106,10 @@ public class PublicationServicesService {
         }
     }
 
-    public void sendSystemAdminEmail(List<String> emails, String requesterName, ActionResult actionResult,
+    public void sendSystemAdminEmail(List<String> emails, String requesterEmail, ActionResult actionResult,
                                        String additionalDetails) {
         DeleteLocationSubscriptionAction payload =
-            formatSystemAdminAction(emails, requesterName, actionResult, additionalDetails);
+            formatSystemAdminAction(emails, requesterEmail, actionResult, additionalDetails);
         try {
             webClient.post().uri(url + "/notify/sysadmin/update")
                 .body(BodyInserters.fromValue(payload))
@@ -126,10 +126,10 @@ public class PublicationServicesService {
     }
 
     private DeleteLocationSubscriptionAction formatSystemAdminAction(List<String> emails,
-        String requesterName, ActionResult actionResult, String additionalDetails) {
+        String requesterEmail, ActionResult actionResult, String additionalDetails) {
         DeleteLocationSubscriptionAction systemAdminAction = new DeleteLocationSubscriptionAction();
         systemAdminAction.setEmailList(emails);
-        systemAdminAction.setRequesterName(requesterName);
+        systemAdminAction.setRequesterEmail(requesterEmail);
         systemAdminAction.setActionResult(actionResult);
         systemAdminAction.setDetailString(additionalDetails);
         return systemAdminAction;
