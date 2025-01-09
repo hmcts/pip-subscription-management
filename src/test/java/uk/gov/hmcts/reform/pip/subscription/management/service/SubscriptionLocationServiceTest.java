@@ -54,9 +54,6 @@ class SubscriptionLocationServiceTest {
     private List<Subscription> mockSubscriptionList;
     private List<UUID> mockSubscriptionIds;
     private List<SubscriptionListType> mockSubscriptionListType;
-    private List<UUID> mockSubscriptionListTypeIds;
-
-    AzureAccount azureAccount;
 
     private PiUser piUser;
     private String userId;
@@ -86,12 +83,6 @@ class SubscriptionLocationServiceTest {
             .map(Subscription::getId).toList();
 
         mockSubscriptionListType = createMockSubscriptionListType(USER_ID);
-        mockSubscriptionListTypeIds = mockSubscriptionListType.stream()
-            .map(SubscriptionListType::getId).toList();
-
-
-        azureAccount = new AzureAccount();
-        azureAccount.setDisplayName("ReqName");
 
         userId = UUID.randomUUID().toString();
         piUser = new PiUser();
@@ -166,17 +157,16 @@ class SubscriptionLocationServiceTest {
     @Test
     void testDeleteSubscriptionByLocationWhenSystemAdminEmpty() throws JsonProcessingException {
         try (LogCaptor logCaptor = LogCaptor.forClass(SubscriptionLocationService.class)) {
-        when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
-            .thenReturn(mockSubscriptionList);
-        when(subscriptionListTypeRepository.findByUserId(any()))
-            .thenReturn(Optional.of(mockSubscriptionListType.get(0)));
-        when(dataManagementService.getCourtName(LOCATION_ID))
-            .thenReturn(COURT_NAME);
-        doNothing().when(publicationService).sendLocationDeletionSubscriptionEmail(any(), any());
-        when(accountManagementService.getAzureAccountInfo(REQUESTER_NAME))
-            .thenReturn(azureAccount);
+            when(subscriptionRepository.findSubscriptionsByLocationId(LOCATION_ID))
+                .thenReturn(mockSubscriptionList);
+            when(dataManagementService.getCourtName(LOCATION_ID))
+                .thenReturn(COURT_NAME);
+            doNothing().when(publicationService).sendLocationDeletionSubscriptionEmail(any(), any());
+            when(accountManagementService.getUserByUserId(userId))
+                .thenReturn(Optional.empty());
 
             doNothing().when(subscriptionRepository).deleteByIdIn(mockSubscriptionIds);
+
 
             Assertions.assertEquals(
                 subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, userId),
