@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
@@ -67,11 +66,11 @@ public class SubscriptionLocationService {
         return repository.findSubscriptionsByLocationId(value);
     }
 
-    public String deleteSubscriptionByLocation(String locationId, String provenanceUserId)
+    public String deleteSubscriptionByLocation(String locationId, String userId)
         throws JsonProcessingException {
 
         log.info(writeLog(String.format("User %s attempting to delete all subscriptions for location %s",
-                                        provenanceUserId, locationId)));
+                                        userId, locationId)));
         List<Subscription> locationSubscriptions = findSubscriptionsByLocationId(locationId);
 
         List<UUID> subIds = locationSubscriptions.stream()
@@ -82,11 +81,11 @@ public class SubscriptionLocationService {
         this.deleteAllSubscriptionListTypeForLocation(locationSubscriptions);
 
         log.info(writeLog(String.format("%s subscription(s) have been deleted for location %s by user %s",
-                                        subIds.size(), locationId, provenanceUserId)));
+                                        subIds.size(), locationId, userId)));
 
         String locationName = dataManagementService.getCourtName(locationId);
         notifySubscriberAboutSubscriptionDeletion(locationSubscriptions, locationName);
-        notifySystemAdminAboutSubscriptionDeletion(provenanceUserId,
+        notifySystemAdminAboutSubscriptionDeletion(userId,
             String.format("Total %s subscription(s) for location %s",
                           locationSubscriptions.size(), locationName));
 
@@ -135,16 +134,23 @@ public class SubscriptionLocationService {
         publicationServicesService.sendLocationDeletionSubscriptionEmail(userEmails, locationName);
     }
 
-    private void notifySystemAdminAboutSubscriptionDeletion(String provenanceUserId, String additionalDetails)
+    private void notifySystemAdminAboutSubscriptionDeletion(String userId, String additionalDetails)
         throws JsonProcessingException {
-        AzureAccount userInfo = accountManagementService.getAzureAccountInfo(provenanceUserId);
-        List<PiUser> systemAdminsAad = accountManagementService.getAllAccounts(PI_AAD.toString(),
-                                                                            SYSTEM_ADMIN.toString());
-        List<PiUser> systemAdminsSso = accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString());
-        List<PiUser> systemAdmins = Stream.concat(systemAdminsAad.stream(), systemAdminsSso.stream()).toList();
-        List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();
-        publicationServicesService.sendSystemAdminEmail(systemAdminEmails, userInfo.getDisplayName(),
-                                                        ActionResult.SUCCEEDED, additionalDetails);
+        Optional<PiUser> piUserOptional = accountManagementService.getUserByUserId(userId);
+        if (piUserOptional.isPresent()) {
+            PiUser piUser = piUserOptional.get();
+            List<PiUser> systemAdminsAad = accountManagementService.getAllAccounts(PI_AAD.toString(),
+                                                                                   SYSTEM_ADMIN.toString());
+            List<PiUser> systemAdminsSso = accountManagementService
+                .getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString());
+
+            List<PiUser> systemAdmins = Stream.concat(systemAdminsAad.stream(), systemAdminsSso.stream()).toList();
+            List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();
+            publicationServicesService.sendSystemAdminEmail(systemAdminEmails, piUser.getEmail(),
+                                                            ActionResult.SUCCEEDED, additionalDetails);
+        } else {
+            log.error(writeLog(String.format("User %s not found in the system when notifying system admins", userId)));
+        }
     }
 
     private List<String> getUserEmailsForAllSubscriptions(List<Subscription> subscriptions) {

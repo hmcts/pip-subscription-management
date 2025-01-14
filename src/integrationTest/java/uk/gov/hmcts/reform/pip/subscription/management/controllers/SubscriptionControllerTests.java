@@ -811,7 +811,7 @@ class SubscriptionControllerTests {
             .post(ADD_LIST_TYPE_PATH)
             .contentType(MediaType.APPLICATION_JSON)
             .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
-        MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
+        MvcResult result = mvc.perform(request).andExpect(status().isCreated()).andReturn();
 
         assertEquals(String.format(
                          "Location list Type successfully added for user %s",
@@ -1200,7 +1200,7 @@ class SubscriptionControllerTests {
 
         MvcResult deleteResponse = mvc.perform(delete(
                 "/subscription/location/" + LOCATION_ID)
-                                                   .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk()).andReturn();
 
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
@@ -1216,7 +1216,7 @@ class SubscriptionControllerTests {
     void testDeleteSubscriptionByLocationNotFound() throws Exception {
         MvcResult response = mvc.perform(delete(
                 SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                             .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -1229,7 +1229,7 @@ class SubscriptionControllerTests {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
         MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                             .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),

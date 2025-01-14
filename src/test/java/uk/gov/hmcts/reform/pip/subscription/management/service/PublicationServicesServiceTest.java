@@ -1,7 +1,6 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import com.azure.core.http.ContentType;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.altindag.log.LogCaptor;
 import okhttp3.mockwebserver.MockResponse;
@@ -93,7 +92,7 @@ class PublicationServicesServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesRequestBodyEmail() throws JsonProcessingException, InterruptedException {
+    void testPostSubscriptionSummariesRequestBodyEmail() throws IOException, InterruptedException {
         subscription.setSearchType(SearchType.LIST_TYPE);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscription));
@@ -108,14 +107,14 @@ class PublicationServicesServiceTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         BulkSubscriptionsSummary bulkSubscriptionsSummary =
-            objectMapper.readValue(recordedRequest.getUtf8Body(), BulkSubscriptionsSummary.class);
+            objectMapper.readValue(recordedRequest.getBody().readByteArray(), BulkSubscriptionsSummary.class);
 
         SubscriptionsSummary subscriptionsSummary = bulkSubscriptionsSummary.getSubscriptionEmails().get(0);
         assertEquals(EMAIL, subscriptionsSummary.getEmail(), "Subscription email should match");
     }
 
     @Test
-    void testPostSubscriptionSummariesRequestBodyArtefactId() throws JsonProcessingException, InterruptedException {
+    void testPostSubscriptionSummariesRequestBodyArtefactId() throws IOException, InterruptedException {
         subscription.setSearchType(SearchType.LIST_TYPE);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscription));
@@ -130,7 +129,7 @@ class PublicationServicesServiceTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         BulkSubscriptionsSummary bulkSubscriptionsSummary =
-            objectMapper.readValue(recordedRequest.getUtf8Body(), BulkSubscriptionsSummary.class);
+            objectMapper.readValue(recordedRequest.getBody().readByteArray(), BulkSubscriptionsSummary.class);
 
         assertEquals(ARTEFACT_ID, bulkSubscriptionsSummary.getArtefactId(), "Subscription artefact ID should match");
     }
@@ -138,7 +137,7 @@ class PublicationServicesServiceTest {
     @ParameterizedTest
     @EnumSource(value = SearchType.class, names = {"LOCATION_ID", "CASE_URN", "CASE_ID"})
     void testPostSubscriptionDifferentTypes(SearchType searchType)
-        throws InterruptedException, JsonProcessingException {
+        throws InterruptedException, IOException {
         subscription.setSearchType(searchType);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscription));
@@ -155,7 +154,7 @@ class PublicationServicesServiceTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         BulkSubscriptionsSummary bulkSubscriptionsSummary =
-            objectMapper.readValue(recordedRequest.getUtf8Body(), BulkSubscriptionsSummary.class);
+            objectMapper.readValue(recordedRequest.getBody().readByteArray(), BulkSubscriptionsSummary.class);
 
         SubscriptionsSummaryDetails subscriptionsSummaryDetailsReturned = bulkSubscriptionsSummary
             .getSubscriptionEmails().get(0).getSubscriptions();
@@ -184,7 +183,7 @@ class PublicationServicesServiceTest {
     }
 
     @Test
-    void testPostSubscriptionSummariesWhenMultipleSubscriptions() throws InterruptedException, JsonProcessingException {
+    void testPostSubscriptionSummariesWhenMultipleSubscriptions() throws InterruptedException, IOException {
         subscription.setSearchType(SearchType.LOCATION_ID);
         Map<String, List<Subscription>> subscriptionsMap = new ConcurrentHashMap<>();
         subscriptionsMap.put(EMAIL, List.of(subscription));
@@ -201,7 +200,7 @@ class PublicationServicesServiceTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         BulkSubscriptionsSummary bulkSubscriptionsSummary =
-            objectMapper.readValue(recordedRequest.getUtf8Body(), BulkSubscriptionsSummary.class);
+            objectMapper.readValue(recordedRequest.getBody().readByteArray(), BulkSubscriptionsSummary.class);
 
         assertEquals(2, bulkSubscriptionsSummary.getSubscriptionEmails().size(),
                      "Number of subscriptions should match when there are multiple subscriptions");
@@ -280,7 +279,7 @@ class PublicationServicesServiceTest {
     void testSendSystemAdminEmail() {
         mockPublicationServicesEndpoint.enqueue(new MockResponse().setBody(SUCCESSFULLY_SENT));
 
-        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), "Name",
+        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), EMAIL,
                                                         ActionResult.ATTEMPTED, "Error");
         assertTrue(logCaptor.getErrorLogs().isEmpty(), EMPTY_LOG_EMPTY_MESSAGE);
     }
@@ -290,7 +289,7 @@ class PublicationServicesServiceTest {
         mockPublicationServicesEndpoint.enqueue(new MockResponse()
                                                     .setResponseCode(400));
 
-        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), "Name",
+        publicationServicesService.sendSystemAdminEmail(List.of("test@test.com"), EMAIL,
                                                         ActionResult.ATTEMPTED, "Error");
 
         assertTrue(
