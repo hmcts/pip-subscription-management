@@ -12,8 +12,10 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
+import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
@@ -36,14 +38,17 @@ class SubscriptionControllerTest {
     private Subscription mockSubscription;
     private List<Subscription> mockSubscriptionList;
 
-    private static final String USER_ID = "Ralph21";
     private static final String SEARCH_VALUE = "193254";
     private static final String STATUS_CODE_MATCH = "Status codes should match";
+    private static final String RETURNED_SUBSCRIPTION_NOT_MATCHED =
+        "Returned subscription does not match expected subscription";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final List<String> LIST_TYPES = Arrays.asList(ListType.CIVIL_DAILY_CAUSE_LIST.name());
+    private static final List<String> LIST_LANGUAGE = Arrays.asList("ENGLISH");
     private static final String LOCATION_ID = "1";
     private static final String ACTIONING_USER_ID = "1234-1234";
     private static final String REQUESTER_NAME = "ReqName";
+    private static final String USER_ID = UUID.randomUUID().toString();
 
     @Mock
     SubscriptionService subscriptionService;
@@ -62,18 +67,42 @@ class SubscriptionControllerTest {
 
     UserSubscription userSubscription;
 
+    SubscriptionListType subscriptionListType;
+
     @BeforeEach
     void setup() {
-        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now(),
-                                                                    ListType.CIVIL_DAILY_CAUSE_LIST
-        );
+        mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
         userSubscription = new UserSubscription();
+        subscriptionListType = new SubscriptionListType(USER_ID, LIST_TYPES, LIST_LANGUAGE);
+
     }
 
     @Test
-    void testCreateSubscription() {
+    void testLocationSubscription() {
         when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
             .thenReturn(mockSubscription);
+
+        uk.gov.hmcts.reform.pip.model.subscription.Subscription modelSubscription = mockSubscription.toDto();
+        modelSubscription.setCreatedDate(modelSubscription.getCreatedDate());
+
+        assertEquals(
+            new ResponseEntity<>(
+                String.format("Subscription created with the id %s for user %s",
+                              mockSubscription.getId(), mockSubscription.getUserId()
+                ),
+                HttpStatus.CREATED
+            ),
+            subscriptionController.createSubscription(modelSubscription, ACTIONING_USER_ID),
+                RETURNED_SUBSCRIPTION_NOT_MATCHED
+        );
+    }
+
+    @Test
+    void testCreateCaseSubscription() {
+        mockSubscription.setSearchType(SearchType.CASE_ID);
+        when(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID))
+            .thenReturn(mockSubscription);
+
         assertEquals(
             new ResponseEntity<>(
                 String.format("Subscription created with the id %s for user %s",
@@ -82,7 +111,7 @@ class SubscriptionControllerTest {
                 HttpStatus.CREATED
             ),
             subscriptionController.createSubscription(mockSubscription.toDto(), ACTIONING_USER_ID),
-            "Returned subscription does not match expected subscription"
+                RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
@@ -186,8 +215,25 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    void testAddListTypesForSubscription() {
+        doNothing().when(subscriptionService).addListTypesForSubscription(subscriptionListType, USER_ID);
+
+        assertEquals(
+            new ResponseEntity<>(
+                String.format(
+                    "Location list Type successfully added for user %s",
+                    USER_ID
+                ),
+                HttpStatus.CREATED
+            ),
+            subscriptionController.addListTypesForSubscription(USER_ID, subscriptionListType),
+                RETURNED_SUBSCRIPTION_NOT_MATCHED
+        );
+    }
+
+    @Test
     void testConfigureListTypesForSubscription() {
-        doNothing().when(subscriptionService).configureListTypesForSubscription(USER_ID, LIST_TYPES);
+        doNothing().when(subscriptionService).configureListTypesForSubscription(subscriptionListType, USER_ID);
 
         assertEquals(
             new ResponseEntity<>(
@@ -197,8 +243,8 @@ class SubscriptionControllerTest {
                 ),
                 HttpStatus.OK
             ),
-            subscriptionController.configureListTypesForSubscription(USER_ID, LIST_TYPES),
-            "Returned subscription does not match expected subscription"
+            subscriptionController.configureListTypesForSubscription(USER_ID, subscriptionListType),
+                RETURNED_SUBSCRIPTION_NOT_MATCHED
         );
     }
 
@@ -231,11 +277,11 @@ class SubscriptionControllerTest {
 
     @Test
     void testDeleteSubscriptionByLocationReturnsOk() throws JsonProcessingException {
-        when(subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, REQUESTER_NAME))
+        when(subscriptionLocationService.deleteSubscriptionByLocation(LOCATION_ID, USER_ID))
             .thenReturn("Total 10 subscriptions deleted for location id");
 
         assertEquals(HttpStatus.OK, subscriptionController.deleteSubscriptionByLocation(
-            REQUESTER_NAME, Integer.parseInt(LOCATION_ID)).getStatusCode(),
+            USER_ID, Integer.parseInt(LOCATION_ID)).getStatusCode(),
                      "Delete subscription location endpoint has not returned OK");
     }
 }

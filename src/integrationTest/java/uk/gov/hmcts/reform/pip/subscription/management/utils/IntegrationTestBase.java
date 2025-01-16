@@ -1,19 +1,19 @@
 package uk.gov.hmcts.reform.pip.subscription.management.utils;
 
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.reform.pip.subscription.management.service.AccountManagementService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.DataManagementService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.PublicationServicesService;
 
 public class IntegrationTestBase {
 
-    @MockBean
+    @MockitoBean
     protected AccountManagementService accountManagementService;
 
-    @MockBean
+    @MockitoBean
     protected DataManagementService dataManagementService;
 
-    @MockBean
+    @MockitoBean
     protected PublicationServicesService publicationServicesService;
 
 }

@@ -19,7 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
@@ -108,6 +107,9 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     private static final String RAW_JSON_MISSING_CHANNEL =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
 
+    private static final String RAW_JSON_ADD_UPDATE_LIST_TYPE =
+        "{\"listType\": [\"FAMILY_DAILY_CAUSE_LIST\"], \"listLanguage\": [\"ENGLISH\"],\"userId\": \"3\"}";
+
     private static final String LOCATION_ID = "9";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
@@ -118,12 +120,12 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL = "/subscription/mi-data-local";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
+    private static final String ADD_LIST_TYPE_PATH = "/subscription/add-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final String DELETED_BULK_SUBSCRIPTION_V2_PATH = "/subscription/v2/bulk";
     private static final String SUBSCRIPTIONS_BY_LOCATION = "/subscription/location/";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
-    private static final String UPDATED_LIST_TYPE = "[\"CIVIL_DAILY_CAUSE_LIST\"]";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
@@ -154,7 +156,6 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     private static final String ACTIONING_USER_ID = UUID_STRING;
     private static final String INVALID_ACTIONING_USER_ID = UUID.randomUUID().toString();
     private static final String USER_ID_HEADER = "x-user-id";
-    private static final String X_PROVENANCE_USER_ID_HEADER = "x-provenance-user-id";
     private static final String TEST_EMAIL = "test-email-cath@justice.gov.uk";
 
     @BeforeAll
@@ -221,12 +222,11 @@ class SubscriptionControllerTests extends IntegrationTestBase {
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
                                                                               SearchType searchType,
-                                                                              String userId, ListType listType)
+                                                                              String userId)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
         SUBSCRIPTION.setSearchType(searchType);
-        SUBSCRIPTION.setListType(List.of(listType.name()));
         return setupMockSubscription(searchValue);
     }
 
@@ -777,8 +777,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     @Test
     void testBuildCourtSubscribersListReturnsAccepted() throws Exception {
         mvc.perform(setupMockSubscriptionWithListType(LOCATION_ID, SearchType.LOCATION_ID,
-                                                      VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST
-        ));
+                                                      VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
@@ -836,12 +835,43 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     }
 
     @Test
+    void testAddListTypesForSubscription() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ADD_LIST_TYPE_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
+        MvcResult result = mvc.perform(request).andExpect(status().isCreated()).andReturn();
+
+        assertEquals(String.format(
+                         "Location list Type successfully added for user %s",
+                         VALID_USER_ID
+                     ),
+                     result.getResponse().getContentAsString(), RESPONSE_MATCH
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedAddListTypesForSubscription() throws Exception {
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ADD_LIST_TYPE_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
+        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
     void testConfigureListTypesForSubscription() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(UPDATED_LIST_TYPE);
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
         MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
 
         assertEquals(String.format(
@@ -859,7 +889,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(UPDATED_LIST_TYPE);
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
         MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
@@ -1192,24 +1222,18 @@ class SubscriptionControllerTests extends IntegrationTestBase {
 
     @Test
     void testDeleteSubscriptionByLocation() throws Exception {
-
         when(accountManagementService.getMappedEmails(
             List.of(UUID_STRING))).thenReturn(Map.of(UUID_STRING, Optional.of(TEST_EMAIL)));
         doNothing().when(publicationServicesService)
             .sendLocationDeletionSubscriptionEmail(List.of(TEST_EMAIL), LOCATION_NAME_1);
 
-        String displayName = "Display Name";
-        AzureAccount azureAccount = new AzureAccount();
-        azureAccount.setDisplayName(displayName);
-
-        when(accountManagementService.getAzureAccountInfo(systemAdminProvenanceId)).thenReturn(azureAccount);
         when(accountManagementService.getAllAccounts(PI_AAD.toString(), SYSTEM_ADMIN.toString()))
             .thenReturn(List.of(systemAdminUser));
         when(accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString()))
             .thenReturn(List.of(systemAdminUser));
 
         doNothing().when(publicationServicesService)
-            .sendSystemAdminEmail(List.of(TEST_EMAIL, TEST_EMAIL), displayName,
+            .sendSystemAdminEmail(List.of(TEST_EMAIL, TEST_EMAIL), TEST_EMAIL,
                                   ActionResult.SUCCEEDED, systemAdminProvenanceId);
 
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
@@ -1219,7 +1243,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
 
         MvcResult deleteResponse = mvc.perform(delete(
                 "/subscription/location/" + LOCATION_ID)
-                                                   .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk()).andReturn();
 
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
@@ -1235,7 +1259,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     void testDeleteSubscriptionByLocationNotFound() throws Exception {
         MvcResult response = mvc.perform(delete(
                 SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                             .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -1248,7 +1272,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
         MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                             .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),

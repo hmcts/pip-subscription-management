@@ -4,11 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.reform.pip.model.account.AzureAccount;
 import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -31,6 +32,8 @@ public class SubscriptionLocationService {
 
     private final SubscriptionRepository repository;
 
+    private final SubscriptionListTypeRepository subscriptionListTypeRepository;
+
     private final DataManagementService dataManagementService;
 
     private final AccountManagementService accountManagementService;
@@ -42,12 +45,14 @@ public class SubscriptionLocationService {
         SubscriptionRepository repository,
         DataManagementService dataManagementService,
         AccountManagementService accountManagementService,
-        PublicationServicesService publicationServicesService
+        PublicationServicesService publicationServicesService,
+        SubscriptionListTypeRepository subscriptionListTypeRepository
     ) {
         this.repository = repository;
         this.dataManagementService = dataManagementService;
         this.accountManagementService = accountManagementService;
         this.publicationServicesService = publicationServicesService;
+        this.subscriptionListTypeRepository = subscriptionListTypeRepository;
     }
 
     public List<Subscription> findSubscriptionsByLocationId(String value) {
@@ -61,28 +66,54 @@ public class SubscriptionLocationService {
         return locationSubscriptions;
     }
 
-    public String deleteSubscriptionByLocation(String locationId, String provenanceUserId)
+    public String deleteSubscriptionByLocation(String locationId, String userId)
         throws JsonProcessingException {
 
         log.info(writeLog(String.format("User %s attempting to delete all subscriptions for location %s",
-                                        provenanceUserId, locationId)));
+                                        userId, locationId)));
         List<Subscription> locationSubscriptions = findSubscriptionsByLocationId(locationId);
 
         List<UUID> subIds = locationSubscriptions.stream()
             .map(Subscription::getId).toList();
         repository.deleteByIdIn(subIds);
 
+        //DELETE DATA FROM SUBSCRIPTION LIST TYPE TABLE AS WELL.
+        this.deleteAllSubscriptionListTypeForLocation(locationSubscriptions);
+
         log.info(writeLog(String.format("%s subscription(s) have been deleted for location %s by user %s",
-                                        subIds.size(), locationId, provenanceUserId)));
+                                        subIds.size(), locationId, userId)));
 
         String locationName = dataManagementService.getCourtName(locationId);
         notifySubscriberAboutSubscriptionDeletion(locationSubscriptions, locationName);
-        notifySystemAdminAboutSubscriptionDeletion(provenanceUserId,
+        notifySystemAdminAboutSubscriptionDeletion(userId,
             String.format("Total %s subscription(s) for location %s",
                           locationSubscriptions.size(), locationName));
 
         return String.format("Total %s subscriptions deleted for location id %s", subIds.size(), locationId);
 
+    }
+
+    private void deleteAllSubscriptionListTypeForLocation(List<Subscription> locationSubscriptions) {
+        List<String> uniqueUsers = locationSubscriptions.stream()
+            .map(Subscription::getUserId).distinct().toList();
+
+        if (!uniqueUsers.isEmpty()) {
+
+            for (String userId : uniqueUsers) {
+                this.deleteSubscriptionListTypeByUser(userId);
+            }
+        }
+    }
+
+    public void deleteSubscriptionListTypeByUser(String userId) {
+        List<Subscription> userLocationSubscriptions =
+            repository.findLocationSubscriptionsByUserId(userId);
+
+        if (userLocationSubscriptions.isEmpty()) {
+            Optional<SubscriptionListType> subscriptionListType =
+                subscriptionListTypeRepository.findByUserId(userId);
+            subscriptionListType.ifPresent(subscriptionListTypeRepository::delete);
+        }
     }
 
     public String deleteAllSubscriptionsWithLocationNamePrefix(String prefix) {
@@ -103,16 +134,23 @@ public class SubscriptionLocationService {
         publicationServicesService.sendLocationDeletionSubscriptionEmail(userEmails, locationName);
     }
 
-    private void notifySystemAdminAboutSubscriptionDeletion(String provenanceUserId, String additionalDetails)
+    private void notifySystemAdminAboutSubscriptionDeletion(String userId, String additionalDetails)
         throws JsonProcessingException {
-        AzureAccount userInfo = accountManagementService.getAzureAccountInfo(provenanceUserId);
-        List<PiUser> systemAdminsAad = accountManagementService.getAllAccounts(PI_AAD.toString(),
-                                                                            SYSTEM_ADMIN.toString());
-        List<PiUser> systemAdminsSso = accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString());
-        List<PiUser> systemAdmins = Stream.concat(systemAdminsAad.stream(), systemAdminsSso.stream()).toList();
-        List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();
-        publicationServicesService.sendSystemAdminEmail(systemAdminEmails, userInfo.getDisplayName(),
-                                                        ActionResult.SUCCEEDED, additionalDetails);
+        Optional<PiUser> piUserOptional = accountManagementService.getUserByUserId(userId);
+        if (piUserOptional.isPresent()) {
+            PiUser piUser = piUserOptional.get();
+            List<PiUser> systemAdminsAad = accountManagementService.getAllAccounts(PI_AAD.toString(),
+                                                                                   SYSTEM_ADMIN.toString());
+            List<PiUser> systemAdminsSso = accountManagementService
+                .getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString());
+
+            List<PiUser> systemAdmins = Stream.concat(systemAdminsAad.stream(), systemAdminsSso.stream()).toList();
+            List<String> systemAdminEmails = systemAdmins.stream().map(PiUser::getEmail).toList();
+            publicationServicesService.sendSystemAdminEmail(systemAdminEmails, piUser.getEmail(),
+                                                            ActionResult.SUCCEEDED, additionalDetails);
+        } else {
+            log.error(writeLog(String.format("User %s not found in the system when notifying system admins", userId)));
+        }
     }
 
     private List<String> getUserEmailsForAllSubscriptions(List<Subscription> subscriptions) {

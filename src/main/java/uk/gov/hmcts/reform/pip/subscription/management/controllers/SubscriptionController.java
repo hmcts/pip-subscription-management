@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
@@ -51,6 +52,7 @@ public class SubscriptionController {
 
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
+    private static final String X_USER_ID_HEADER = "x-user-id";
 
     private final SubscriptionService subscriptionService;
     private final UserSubscriptionService userSubscriptionService;
@@ -80,7 +82,7 @@ public class SubscriptionController {
         + "check again.")
     public ResponseEntity<String> createSubscription(
         @RequestBody @Valid uk.gov.hmcts.reform.pip.model.subscription.Subscription sub,
-        @RequestHeader("x-user-id") String actioningUserId
+        @RequestHeader(X_USER_ID_HEADER) String actioningUserId
     ) {
         Subscription subscription = subscriptionService.createSubscription(new Subscription(sub), actioningUserId);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -97,7 +99,7 @@ public class SubscriptionController {
     @DeleteMapping("/{subId}")
     @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subId)")
     public ResponseEntity<String> deleteById(@Parameter @PathVariable UUID subId,
-                                             @RequestHeader("x-user-id") String actioningUserId) {
+                                             @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
 
         subscriptionService.deleteById(subId, actioningUserId);
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
@@ -111,7 +113,7 @@ public class SubscriptionController {
     @DeleteMapping("/v2/bulk")
     @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subIds)")
     public ResponseEntity<String> bulkDeleteSubscriptionsV2(@RequestBody List<UUID> subIds,
-                                                            @RequestHeader("x-user-id") String actioningUserId) {
+                                                            @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
 
         subscriptionService.bulkDeleteSubscriptions(subIds);
         return ResponseEntity.ok(String.format(
@@ -156,14 +158,29 @@ public class SubscriptionController {
             "Deleted artefact third party subscriber notification request has been accepted");
     }
 
-    @PutMapping("/configure-list-types/{userId}")
-    @Operation(summary = "Endpoint to update list type for existing subscription")
+    @PostMapping("/add-list-types/{userId}")
+    @Operation(summary = "Endpoint to add list type for existing subscription")
     @ApiResponse(responseCode = "201", description = "Subscription successfully updated for user: {userId}")
     @ApiResponse(responseCode = "400", description =
         "This request object has an invalid format. Please check again.")
+    public ResponseEntity<String> addListTypesForSubscription(@PathVariable String userId,
+            @RequestBody SubscriptionListType subscriptionListType) {
+        subscriptionService.addListTypesForSubscription(subscriptionListType, userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(String.format(
+                "Location list Type successfully added for user %s",
+                userId
+            ));
+    }
+
+    @PutMapping("/configure-list-types/{userId}")
+    @Operation(summary = "Endpoint to update list type for existing subscription")
+    @ApiResponse(responseCode = "200", description = "Subscription successfully updated for user: {userId}")
+    @ApiResponse(responseCode = "400", description =
+        "This request object has an invalid format. Please check again.")
     public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
-                                                                    @RequestBody List<String> listType) {
-        subscriptionService.configureListTypesForSubscription(userId, listType);
+            @RequestBody SubscriptionListType subscriptionListType) {
+        subscriptionService.configureListTypesForSubscription(subscriptionListType, userId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(String.format(
                 "Location list Type successfully updated for user %s",
@@ -227,11 +244,11 @@ public class SubscriptionController {
     @DeleteMapping("/location/{locationId}")
     @IsAdmin
     public ResponseEntity<String> deleteSubscriptionByLocation(
-        @RequestHeader("x-provenance-user-id") String provenanceUserId,
+        @RequestHeader(X_USER_ID_HEADER) String userId,
         @PathVariable Integer locationId) throws JsonProcessingException {
         return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(
             locationId.toString(),
-            provenanceUserId
+            userId
         ));
     }
 }
