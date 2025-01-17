@@ -30,15 +30,8 @@ class SubscriptionRepositorySearchTest {
     private static final String LOCATION_NAME = "Test location name";
     private static final String CASE_NUMBER = "Test case number";
     private static final String CASE_URN = "Test case URN";
-    private static final List<String> LIST_TYPE = List.of(
-        ListType.CIVIL_DAILY_CAUSE_LIST.name(),
-        ListType.FAMILY_DAILY_CAUSE_LIST.name(),
-        ListType.CIVIL_AND_FAMILY_DAILY_CAUSE_LIST.name()
-    );
-
     private static final String SUBSCRIPTION_MATCHED_MESSAGE = "Subscription does not match";
     private static final String SUBSCRIPTION_EMPTY_MESSAGE = "Subscription is not empty";
-
     private static final String LIST_LANGUAGE = "ENGLISH";
 
     private UUID subscriptionId1;
@@ -90,7 +83,6 @@ class SubscriptionRepositorySearchTest {
         subscription4.setSearchValue(ListType.CIVIL_DAILY_CAUSE_LIST.name());
         subscription4.setChannel(Channel.EMAIL);
         subscription4.setLocationName(LOCATION_NAME);
-
         savedSubscription = subscriptionRepository.save(subscription4);
         subscriptionId4 = savedSubscription.getId();
 

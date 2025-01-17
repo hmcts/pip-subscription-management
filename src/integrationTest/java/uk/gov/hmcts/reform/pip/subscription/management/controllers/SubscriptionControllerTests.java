@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.io.IOUtils;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -19,14 +19,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import uk.gov.hmcts.reform.pip.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
+import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
+import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.utils.IntegrationTestBase;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,17 +40,24 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
 
 @SpringBootTest(classes = {Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -54,7 +67,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.ExcessiveClassLength"})
-class SubscriptionControllerTests {
+class SubscriptionControllerTests extends IntegrationTestBase {
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -128,11 +141,13 @@ class SubscriptionControllerTests {
     @Autowired
     protected MockMvc mvc;
 
-    @Value("${system-admin-provenance-id}")
-    private String systemAdminProvenanceId;
+    private final String systemAdminProvenanceId = UUID.randomUUID().toString();
 
-    @Value("${system-admin-user-id}")
-    private String systemAdminUserId;
+    private final String systemAdminUserId = UUID.randomUUID().toString();
+
+    private static PiUser systemAdminUser = new PiUser();
+
+    private static PiUser verifiedUser = new PiUser();
 
     protected static final String SUBSCRIPTION_PATH = "/subscription";
     protected static final uk.gov.hmcts.reform.pip.model.subscription.Subscription SUBSCRIPTION =
@@ -141,7 +156,7 @@ class SubscriptionControllerTests {
     private static final String ACTIONING_USER_ID = UUID_STRING;
     private static final String INVALID_ACTIONING_USER_ID = UUID.randomUUID().toString();
     private static final String USER_ID_HEADER = "x-user-id";
-    private static final String X_PROVENANCE_USER_ID_HEADER = "x-provenance-user-id";
+    private static final String TEST_EMAIL = "test-email-cath@justice.gov.uk";
 
     @BeforeAll
     static void setup() throws IOException {
@@ -150,10 +165,24 @@ class SubscriptionControllerTests {
         SUBSCRIPTION.setSearchType(SearchType.LOCATION_ID);
         SUBSCRIPTION.setUserId(UUID_STRING);
 
+        systemAdminUser.setRoles(SYSTEM_ADMIN);
+        systemAdminUser.setEmail(TEST_EMAIL);
+        verifiedUser.setRoles(Roles.VERIFIED);
+
         try (InputStream is = SubscriptionControllerTests.class.getClassLoader()
                 .getResourceAsStream("mock/artefact.json")) {
             rawArtefact = new String(IOUtils.toByteArray(Objects.requireNonNull(is)));
         }
+    }
+
+    @BeforeEach
+    public void beforeEach() {
+        when(accountManagementService.getUserByUserId(ACTIONING_USER_ID)).thenReturn(Optional.of(verifiedUser));
+        when(dataManagementService.getCourtName(LOCATION_ID)).thenReturn(LOCATION_NAME_1);
+        when(accountManagementService.getUserByUserId(systemAdminUserId)).thenReturn(Optional.of(systemAdminUser));
+        when(accountManagementService.getUserByUserId(INVALID_ACTIONING_USER_ID)).thenReturn(Optional.of(verifiedUser));
+        when(accountManagementService.isUserAuthorised(VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST,
+                                                       Sensitivity.CLASSIFIED)).thenReturn(true);
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
@@ -1193,6 +1222,20 @@ class SubscriptionControllerTests {
 
     @Test
     void testDeleteSubscriptionByLocation() throws Exception {
+        when(accountManagementService.getMappedEmails(
+            List.of(UUID_STRING))).thenReturn(Map.of(UUID_STRING, Optional.of(TEST_EMAIL)));
+        doNothing().when(publicationServicesService)
+            .sendLocationDeletionSubscriptionEmail(List.of(TEST_EMAIL), LOCATION_NAME_1);
+
+        when(accountManagementService.getAllAccounts(PI_AAD.toString(), SYSTEM_ADMIN.toString()))
+            .thenReturn(List.of(systemAdminUser));
+        when(accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString()))
+            .thenReturn(List.of(systemAdminUser));
+
+        doNothing().when(publicationServicesService)
+            .sendSystemAdminEmail(List.of(TEST_EMAIL, TEST_EMAIL), TEST_EMAIL,
+                                  ActionResult.SUCCEEDED, systemAdminProvenanceId);
+
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
 
         mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))

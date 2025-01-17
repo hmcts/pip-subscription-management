@@ -63,7 +63,7 @@ public class SubscriptionLocationService {
                 value
             ));
         }
-        return repository.findSubscriptionsByLocationId(value);
+        return locationSubscriptions;
     }
 
     public String deleteSubscriptionByLocation(String locationId, String userId)

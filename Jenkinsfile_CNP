@@ -20,24 +20,15 @@ def setupTestSecrets() {
       secret('app-pip-subscription-management-pwd', 'CLIENT_SECRET'),
       secret('app-pip-subscription-management-scope', 'APP_URI'),
       secret('app-pip-data-management-scope', 'DATA_MANAGEMENT_AZ_API'),
-      secret('app-pip-account-management-scope', 'ACCOUNT_MANAGEMENT_AZ_API'),
-      secret('app-pip-publication-services-scope', 'PUBLICATION_SERVICES_AZ_API'),
       secret('app-tenant', 'TENANT_ID'),
-      secret('b2c-test-system-admin-account-id', 'SYSTEM_ADMIN_USER_ID'),
-      secret('b2c-test-system-admin-account-provenance-id', 'SYSTEM_ADMIN_PROVENANCE_ID'),
-
       secret('app-pip-data-management-id', 'CLIENT_ID_FT'),
       secret('app-pip-data-management-pwd', 'CLIENT_SECRET_FT'),
     ]) {
     env.CLIENT_ID = "${CLIENT_ID}"
     env.CLIENT_SECRET = "${CLIENT_SECRET}"
-    env.APP_URI = "${APP_URI}"
     env.DATA_MANAGEMENT_AZ_API = "${DATA_MANAGEMENT_AZ_API}"
-    env.ACCOUNT_MANAGEMENT_AZ_API = "${ACCOUNT_MANAGEMENT_AZ_API}"
-    env.PUBLICATION_SERVICES_AZ_API = "${PUBLICATION_SERVICES_AZ_API}"
+    env.APP_URI = "${APP_URI}"
     env.TENANT_ID = "${TENANT_ID}"
-    env.SYSTEM_ADMIN_USER_ID = "${SYSTEM_ADMIN_USER_ID}"
-    env.SYSTEM_ADMIN_PROVENANCE_ID = "${SYSTEM_ADMIN_PROVENANCE_ID}"
     env.CLIENT_ID_FT = "${CLIENT_ID_FT}"
     env.CLIENT_SECRET_FT = "${CLIENT_SECRET_FT}"
   }

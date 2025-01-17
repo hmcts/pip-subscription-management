@@ -35,9 +35,7 @@ class SubscriptionRepositoryTest {
     private static final String SUBSCRIPTION_MATCHED_MESSAGE = "Subscription does not match";
     private static final String SUBSCRIPTION_EMPTY_MESSAGE = "Subscription is not empty";
 
-    private UUID subscriptionId1;
     private UUID subscriptionId2;
-    private UUID subscriptionId3;
     private UUID subscriptionId4;
 
     @Autowired
@@ -51,9 +49,7 @@ class SubscriptionRepositoryTest {
         subscription1.setSearchValue(LOCATION_ID1);
         subscription1.setChannel(Channel.EMAIL);
         subscription1.setLocationName(LOCATION_NAME1);
-
-        Subscription savedSubscription = subscriptionRepository.save(subscription1);
-        subscriptionId1 = savedSubscription.getId();
+        subscriptionRepository.save(subscription1);
 
         Subscription subscription2 = new Subscription();
         subscription2.setUserId(USER_ID1);
@@ -62,7 +58,7 @@ class SubscriptionRepositoryTest {
         subscription2.setChannel(Channel.EMAIL);
         subscription2.setLocationName(LOCATION_NAME2);
 
-        savedSubscription = subscriptionRepository.save(subscription2);
+        Subscription savedSubscription = subscriptionRepository.save(subscription2);
         subscriptionId2 = savedSubscription.getId();
 
         Subscription subscription3 = new Subscription();
@@ -71,9 +67,7 @@ class SubscriptionRepositoryTest {
         subscription3.setSearchValue(LOCATION_ID3);
         subscription3.setChannel(Channel.EMAIL);
         subscription3.setLocationName(LOCATION_NAME3);
-
-        savedSubscription = subscriptionRepository.save(subscription3);
-        subscriptionId3 = savedSubscription.getId();
+        subscriptionRepository.save(subscription3);
 
         Subscription subscription4 = new Subscription();
         subscription4.setUserId(USER_ID1);
