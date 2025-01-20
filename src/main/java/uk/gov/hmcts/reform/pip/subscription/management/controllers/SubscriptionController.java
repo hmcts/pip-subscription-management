@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
@@ -157,14 +158,29 @@ public class SubscriptionController {
             "Deleted artefact third party subscriber notification request has been accepted");
     }
 
-    @PutMapping("/configure-list-types/{userId}")
-    @Operation(summary = "Endpoint to update list type for existing subscription")
+    @PostMapping("/add-list-types/{userId}")
+    @Operation(summary = "Endpoint to add list type for existing subscription")
     @ApiResponse(responseCode = "201", description = "Subscription successfully updated for user: {userId}")
     @ApiResponse(responseCode = "400", description =
         "This request object has an invalid format. Please check again.")
+    public ResponseEntity<String> addListTypesForSubscription(@PathVariable String userId,
+            @RequestBody SubscriptionListType subscriptionListType) {
+        subscriptionService.addListTypesForSubscription(subscriptionListType, userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(String.format(
+                "Location list Type successfully added for user %s",
+                userId
+            ));
+    }
+
+    @PutMapping("/configure-list-types/{userId}")
+    @Operation(summary = "Endpoint to update list type for existing subscription")
+    @ApiResponse(responseCode = "200", description = "Subscription successfully updated for user: {userId}")
+    @ApiResponse(responseCode = "400", description =
+        "This request object has an invalid format. Please check again.")
     public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
-                                                                    @RequestBody List<String> listType) {
-        subscriptionService.configureListTypesForSubscription(userId, listType);
+            @RequestBody SubscriptionListType subscriptionListType) {
+        subscriptionService.configureListTypesForSubscription(subscriptionListType, userId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(String.format(
                 "Location list Type successfully updated for user %s",

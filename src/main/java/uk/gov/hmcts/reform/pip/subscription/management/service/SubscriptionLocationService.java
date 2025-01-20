@@ -8,6 +8,8 @@ import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -30,6 +32,8 @@ public class SubscriptionLocationService {
 
     private final SubscriptionRepository repository;
 
+    private final SubscriptionListTypeRepository subscriptionListTypeRepository;
+
     private final DataManagementService dataManagementService;
 
     private final AccountManagementService accountManagementService;
@@ -41,12 +45,14 @@ public class SubscriptionLocationService {
         SubscriptionRepository repository,
         DataManagementService dataManagementService,
         AccountManagementService accountManagementService,
-        PublicationServicesService publicationServicesService
+        PublicationServicesService publicationServicesService,
+        SubscriptionListTypeRepository subscriptionListTypeRepository
     ) {
         this.repository = repository;
         this.dataManagementService = dataManagementService;
         this.accountManagementService = accountManagementService;
         this.publicationServicesService = publicationServicesService;
+        this.subscriptionListTypeRepository = subscriptionListTypeRepository;
     }
 
     public List<Subscription> findSubscriptionsByLocationId(String value) {
@@ -57,7 +63,7 @@ public class SubscriptionLocationService {
                 value
             ));
         }
-        return repository.findSubscriptionsByLocationId(value);
+        return locationSubscriptions;
     }
 
     public String deleteSubscriptionByLocation(String locationId, String userId)
@@ -71,6 +77,9 @@ public class SubscriptionLocationService {
             .map(Subscription::getId).toList();
         repository.deleteByIdIn(subIds);
 
+        //DELETE DATA FROM SUBSCRIPTION LIST TYPE TABLE AS WELL.
+        this.deleteAllSubscriptionListTypeForLocation(locationSubscriptions);
+
         log.info(writeLog(String.format("%s subscription(s) have been deleted for location %s by user %s",
                                         subIds.size(), locationId, userId)));
 
@@ -82,6 +91,29 @@ public class SubscriptionLocationService {
 
         return String.format("Total %s subscriptions deleted for location id %s", subIds.size(), locationId);
 
+    }
+
+    private void deleteAllSubscriptionListTypeForLocation(List<Subscription> locationSubscriptions) {
+        List<String> uniqueUsers = locationSubscriptions.stream()
+            .map(Subscription::getUserId).distinct().toList();
+
+        if (!uniqueUsers.isEmpty()) {
+
+            for (String userId : uniqueUsers) {
+                this.deleteSubscriptionListTypeByUser(userId);
+            }
+        }
+    }
+
+    public void deleteSubscriptionListTypeByUser(String userId) {
+        List<Subscription> userLocationSubscriptions =
+            repository.findLocationSubscriptionsByUserId(userId);
+
+        if (userLocationSubscriptions.isEmpty()) {
+            Optional<SubscriptionListType> subscriptionListType =
+                subscriptionListTypeRepository.findByUserId(userId);
+            subscriptionListType.ifPresent(subscriptionListTypeRepository::delete);
+        }
     }
 
     public String deleteAllSubscriptionsWithLocationNamePrefix(String prefix) {
