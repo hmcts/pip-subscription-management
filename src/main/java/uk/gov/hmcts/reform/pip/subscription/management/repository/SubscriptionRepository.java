@@ -6,12 +6,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 
 /**
  * This JPA interface allows us to specify specific find methods for the database and it should
@@ -41,11 +42,23 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     @Query(value = "SELECT cast(id as text), channel, search_type, user_id, location_name, created_date "
         + "FROM Subscription", nativeQuery = true)
+    @Deprecated
     List<String> getAllSubsDataForMi();
+
+    @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData("
+        + "id, channel, searchType, userId, locationName, createdDate) "
+        + "FROM Subscription")
+    List<AllSubscriptionMiData> getAllSubsDataForMiV2();
 
     @Query(value = "SELECT cast(ID as text), search_value, channel, user_id, location_name, created_date "
         + "FROM Subscription WHERE search_type ='LOCATION_ID'", nativeQuery = true)
+    @Deprecated
     List<String> getLocalSubsDataForMi();
+
+    @Query("SELECT new uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData("
+        + "s.id, s.searchValue, s.channel, s.userId, s.locationName, s.createdDate) "
+        + "FROM Subscription s WHERE s.searchType ='LOCATION_ID'")
+    List<LocationSubscriptionMiData> getLocationSubsDataForMiV2();
 
     @Query(value = "SELECT s.* FROM Subscription s "
         + "INNER JOIN Subscription_List_Type sl "

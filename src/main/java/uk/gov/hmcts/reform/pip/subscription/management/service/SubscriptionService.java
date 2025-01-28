@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
@@ -159,6 +161,7 @@ public class SubscriptionService {
         });
     }
 
+    @Deprecated
     public String getAllSubscriptionsDataForMiReporting() {
         StringBuilder builder = new StringBuilder(60);
         builder.append("id,channel,search_type,user_id,court_name,created_date").append(System.lineSeparator());
@@ -167,11 +170,20 @@ public class SubscriptionService {
         return builder.toString();
     }
 
+    public List<AllSubscriptionMiData> getAllSubscriptionsDataForMiReportingV2() {
+        return repository.getAllSubsDataForMiV2();
+    }
+
+    @Deprecated
     public String getLocalSubscriptionsDataForMiReporting() {
         StringBuilder builder = new StringBuilder(60);
         builder.append("id,search_value,channel,user_id,court_name,created_date").append(System.lineSeparator());
         repository.getLocalSubsDataForMi()
             .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
+    }
+
+    public List<LocationSubscriptionMiData> getLocationSubscriptionsDataForMiReportingV2() {
+        return repository.getLocationSubsDataForMiV2();
     }
 }

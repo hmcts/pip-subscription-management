@@ -23,6 +23,8 @@ import uk.gov.hmcts.reform.pip.model.account.PiUser;
 import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
@@ -118,6 +120,8 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     private static final String SUBSCRIPTION_BASE_URL = "/subscription/";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL = "/subscription/mi-data-all";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL = "/subscription/mi-data-local";
+    private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL_V2 = "/subscription/v2/mi-data-all";
+    private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL_V2 = "/subscription/v2/mi-data-location";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
     private static final String ADD_LIST_TYPE_PATH = "/subscription/add-list-types/" + VALID_USER_ID;
@@ -192,6 +196,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
         SUBSCRIPTION.setCaseName(CASE_NAME);
         SUBSCRIPTION.setCaseNumber(CASE_ID);
         SUBSCRIPTION.setUrn(CASE_URN);
+        SUBSCRIPTION.setChannel(Channel.EMAIL);
         SUBSCRIPTION.setCreatedDate(DATE_ADDED);
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
@@ -1166,6 +1171,87 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testGetSubscriptionDataForMiReportingLocalUnauthorized() throws Exception {
         MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testGetSubscriptionDataForMiReportingAllV2() throws Exception {
+        mvc.perform(setupMockSubscription(LOCATION_ID))
+            .andExpect(status().isCreated());
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
+
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL_V2))
+            .andExpect(status().isOk()).andReturn();
+
+        List<AllSubscriptionMiData> allSubscriptionMiData =  Arrays.asList(
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), AllSubscriptionMiData[].class)
+        );
+
+        assertThat(allSubscriptionMiData)
+            .as("Must contain the expected case subscription")
+            .anyMatch(anySubscription -> anySubscription.getSearchType().equals(SearchType.CASE_ID)
+                && anySubscription.getChannel().equals(Channel.EMAIL)
+                && VALID_USER_ID.equals(anySubscription.getUserId())
+            );
+
+        assertThat(allSubscriptionMiData)
+            .as("Must contain the expected location subscription")
+            .anyMatch(locationSubscription -> locationSubscription.getSearchType().equals(SearchType.LOCATION_ID)
+                && LOCATION_NAME_1.equals(locationSubscription.getLocationName())
+                && locationSubscription.getChannel().equals(Channel.EMAIL)
+                && ACTIONING_USER_ID.equals(locationSubscription.getUserId())
+            );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testGetSubscriptionDataForMiReportingAllV2Unauthorized() throws Exception {
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL_V2))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testGetSubscriptionDataForMiReportingLocationV2() throws Exception {
+        mvc.perform(setupMockSubscription(LOCATION_ID))
+            .andExpect(status().isCreated());
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
+
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL_V2))
+            .andExpect(status().isOk()).andReturn();
+
+        List<LocationSubscriptionMiData> locationSubscriptions =  Arrays.asList(
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), LocationSubscriptionMiData[].class)
+        );
+
+        assertThat(locationSubscriptions).extracting(LocationSubscriptionMiData::getSearchValue)
+            .as("Should not retrieve case subscriptions")
+            .noneMatch(CASE_ID::equals);
+
+        assertThat(locationSubscriptions)
+            .as("Must contain the expected location subscription")
+            .anyMatch(locationSubscription -> LOCATION_ID.equals(locationSubscription.getSearchValue())
+                    && LOCATION_NAME_1.equals(locationSubscription.getLocationName())
+                    && locationSubscription.getChannel().equals(Channel.EMAIL)
+                    && ACTIONING_USER_ID.equals(locationSubscription.getUserId())
+            );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testGetSubscriptionDataForMiReportingLocationV2Unauthorized() throws Exception {
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL_V2))
             .andExpect(status().isForbidden())
             .andReturn();
 
