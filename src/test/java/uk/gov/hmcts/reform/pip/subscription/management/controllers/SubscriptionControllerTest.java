@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -212,6 +215,40 @@ class SubscriptionControllerTest {
             subscriptionController.getSubscriptionDataForMiReportingAll().getStatusCode(),
             STATUS_CODE_MATCH
         );
+    }
+
+    @Test
+    void testMiDataAllSubscriptionsReturnsSuccessfully() {
+        AllSubscriptionMiData allSubscriptionMiData = new AllSubscriptionMiData();
+        allSubscriptionMiData.setId(UUID.randomUUID());
+
+        when(subscriptionService.getAllSubscriptionsDataForMiReportingV2()).thenReturn(
+            List.of(allSubscriptionMiData)
+        );
+
+        ResponseEntity<List<AllSubscriptionMiData>> response =
+            subscriptionController.getSubscriptionDataForMiReportingAllV2();
+
+        assertEquals(response.getStatusCode(), HttpStatus.OK, STATUS_CODE_MATCH);
+        assertTrue(response.getBody().contains(allSubscriptionMiData),
+                   RETURNED_SUBSCRIPTION_NOT_MATCHED);
+    }
+
+    @Test
+    void testMiDataLocationSubscriptionsReturnsSuccessfully() {
+        LocationSubscriptionMiData locationSubscriptionMiData = new LocationSubscriptionMiData();
+        locationSubscriptionMiData.setId(UUID.randomUUID());
+
+        when(subscriptionService.getLocationSubscriptionsDataForMiReportingV2()).thenReturn(
+            List.of(locationSubscriptionMiData)
+        );
+
+        ResponseEntity<List<LocationSubscriptionMiData>> response =
+            subscriptionController.getSubscriptionDataForMiReportingLocationV2();
+
+        assertEquals(response.getStatusCode(), HttpStatus.OK, STATUS_CODE_MATCH);
+        assertTrue(response.getBody().contains(locationSubscriptionMiData),
+                   RETURNED_SUBSCRIPTION_NOT_MATCHED);
     }
 
     @Test
