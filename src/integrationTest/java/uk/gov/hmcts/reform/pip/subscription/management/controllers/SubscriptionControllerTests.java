@@ -1181,7 +1181,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
 
     @Test
     void testGetSubscriptionDataForMiReportingAllV2() throws Exception {
-        mvc.perform(setupMockSubscription(LOCATION_ID))
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
@@ -1205,7 +1205,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
             .anyMatch(locationSubscription -> locationSubscription.getSearchType().equals(SearchType.LOCATION_ID)
                 && LOCATION_NAME_1.equals(locationSubscription.getLocationName())
                 && locationSubscription.getChannel().equals(Channel.EMAIL)
-                && ACTIONING_USER_ID.equals(locationSubscription.getUserId())
+                && VALID_USER_ID.equals(locationSubscription.getUserId())
             );
     }
 
@@ -1223,7 +1223,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
 
     @Test
     void testGetSubscriptionDataForMiReportingLocationV2() throws Exception {
-        mvc.perform(setupMockSubscription(LOCATION_ID))
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
             .andExpect(status().isCreated());
@@ -1244,7 +1244,7 @@ class SubscriptionControllerTests extends IntegrationTestBase {
             .anyMatch(locationSubscription -> LOCATION_ID.equals(locationSubscription.getSearchValue())
                     && LOCATION_NAME_1.equals(locationSubscription.getLocationName())
                     && locationSubscription.getChannel().equals(Channel.EMAIL)
-                    && ACTIONING_USER_ID.equals(locationSubscription.getUserId())
+                    && VALID_USER_ID.equals(locationSubscription.getUserId())
             );
     }
 
