@@ -35,7 +35,7 @@ class SubscriptionRepositoryTest {
     private static final String LOCATION_NAME2 = "Test location name 2";
     private static final String LOCATION_NAME3 = "Test location name 3";
     private static final String CASE_NUMBER = "Test case number";
-    private static final LocalDateTime SUBSCRIPTION_CREATED_DATE = LocalDateTime.now();
+    private static final LocalDateTime SUBSCRIPTION_CREATED_DATE = LocalDateTime.of(2025, 2, 5, 2, 2, 2);
 
     private static final String SUBSCRIPTION_MATCHED_MESSAGE = "Subscription does not match";
     private static final String SUBSCRIPTION_EMPTY_MESSAGE = "Subscription is not empty";

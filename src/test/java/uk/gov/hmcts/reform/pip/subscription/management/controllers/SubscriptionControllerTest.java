@@ -229,7 +229,7 @@ class SubscriptionControllerTest {
         ResponseEntity<List<AllSubscriptionMiData>> response =
             subscriptionController.getSubscriptionDataForMiReportingAllV2();
 
-        assertEquals(response.getStatusCode(), HttpStatus.OK, STATUS_CODE_MATCH);
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertTrue(response.getBody().contains(allSubscriptionMiData),
                    RETURNED_SUBSCRIPTION_NOT_MATCHED);
     }
@@ -246,7 +246,7 @@ class SubscriptionControllerTest {
         ResponseEntity<List<LocationSubscriptionMiData>> response =
             subscriptionController.getSubscriptionDataForMiReportingLocationV2();
 
-        assertEquals(response.getStatusCode(), HttpStatus.OK, STATUS_CODE_MATCH);
+        assertEquals(HttpStatus.OK, response.getStatusCode(), STATUS_CODE_MATCH);
         assertTrue(response.getBody().contains(locationSubscriptionMiData),
                    RETURNED_SUBSCRIPTION_NOT_MATCHED);
     }
