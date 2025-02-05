@@ -161,7 +161,11 @@ public class SubscriptionService {
         });
     }
 
-    @Deprecated
+    /**
+     * Previous version of the MI Reporting service method. No longer used and soon to be removed.
+     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
+     */
+    @Deprecated(since = "2")
     public String getAllSubscriptionsDataForMiReporting() {
         StringBuilder builder = new StringBuilder(60);
         builder.append("id,channel,search_type,user_id,court_name,created_date").append(System.lineSeparator());
@@ -174,7 +178,11 @@ public class SubscriptionService {
         return repository.getAllSubsDataForMiV2();
     }
 
-    @Deprecated
+    /**
+     * Previous version of the MI Reporting service method. No longer used and soon to be removed.
+     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
+     */
+    @Deprecated(since = "2")
     public String getLocalSubscriptionsDataForMiReporting() {
         StringBuilder builder = new StringBuilder(60);
         builder.append("id,search_value,channel,user_id,court_name,created_date").append(System.lineSeparator());

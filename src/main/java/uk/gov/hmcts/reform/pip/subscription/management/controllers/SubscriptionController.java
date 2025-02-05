@@ -189,6 +189,10 @@ public class SubscriptionController {
             ));
     }
 
+    /**
+     * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
+     * @deprecated This endpoint will be removed in the future in favour of the V2 equivalent.
+     */
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
@@ -200,7 +204,7 @@ public class SubscriptionController {
         + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-all")
     @IsAdmin
-    @Deprecated
+    @Deprecated(since = "2")
     public ResponseEntity<String> getSubscriptionDataForMiReportingAll() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
@@ -215,6 +219,10 @@ public class SubscriptionController {
             .body(subscriptionService.getAllSubscriptionsDataForMiReportingV2());
     }
 
+    /**
+     * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
+     * @deprecated This endpoint will be removed in the future in favour of the V2 equivalent.
+     */
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("id,search_value,channel,user_id,court_name,created_date")},
@@ -226,7 +234,7 @@ public class SubscriptionController {
         + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-local")
     @IsAdmin
-    @Deprecated
+    @Deprecated(since = "2")
     public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
