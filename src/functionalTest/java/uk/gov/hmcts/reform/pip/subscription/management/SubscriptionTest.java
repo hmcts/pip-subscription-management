@@ -1,6 +1,7 @@
 package uk.gov.hmcts.reform.pip.subscription.management;
 
 import io.restassured.response.Response;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
@@ -55,6 +58,8 @@ class SubscriptionTest extends FunctionalTestBase {
 
     private static final String DELETE_SUBSCRIPTIONS_FOR_USER_URL = SUBSCRIPTION_URL + "/user/";
     private static final String SUBSCRIPTION_BY_LOCATION_URL = SUBSCRIPTION_URL + "/location/";
+    private static final String MI_DATA_URL = SUBSCRIPTION_URL + "/v2/mi-data-all";
+    private static final String MI_DATA_LOCATION_URL = SUBSCRIPTION_URL + "/v2/mi-data-location";
 
     private static final String LOCATION_ID = randomLocationId();
     private static final String LOCATION_NAME = "TestLocation" + LOCATION_ID;
@@ -159,7 +164,7 @@ class SubscriptionTest extends FunctionalTestBase {
 
         SubscriptionListType listTypeToConfigure = new SubscriptionListType(
             USER_ID,
-            List.of(LIST_TYPE.name(),ListType.CIVIL_DAILY_CAUSE_LIST.name()),
+            List.of(LIST_TYPE.name(), ListType.CIVIL_DAILY_CAUSE_LIST.name()),
             List.of(LIST_LANGUAGE_CONFIGURE)
         );
 
@@ -260,6 +265,60 @@ class SubscriptionTest extends FunctionalTestBase {
         assertThat(responseBulkDeleteSubscriptions.getStatusCode()).isEqualTo(OK.value());
         assertThat(responseBulkDeleteSubscriptions.asString()).isEqualTo(
             "Subscriptions with ID " + subscriptionId + " deleted");
+    }
+
+    @Test
+    void testGetMiDataAllV2() {
+        Map<String, String> headerMap = new ConcurrentHashMap<>();
+        headerMap.putAll(authorisationHeaders);
+        headerMap.put(USER_ID_HEADER, USER_ID);
+
+        Response responseCreateSubscription = doPostRequest(
+            SUBSCRIPTION_URL,
+            headerMap,
+            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+        );
+
+        final String subscriptionId = responseCreateSubscription.asString().split(" ")[5];
+
+        final Response responseGetSubscriptionMetadata = doGetRequest(
+            MI_DATA_URL, headerMap
+        );
+
+        AssertionsForClassTypes.assertThat(responseGetSubscriptionMetadata.getStatusCode()).isEqualTo(OK.value());
+        List<AllSubscriptionMiData> returnedSubscriptions = Arrays.asList(responseGetSubscriptionMetadata.getBody()
+                                                                              .as(AllSubscriptionMiData[].class));
+
+        assertThat(returnedSubscriptions).anyMatch(
+            subscription -> subscriptionId.equals(subscription.getId().toString())
+        );
+    }
+
+    @Test
+    void testGetMiDataLocationSubscriptionV2() {
+        Map<String, String> headerMap = new ConcurrentHashMap<>();
+        headerMap.putAll(authorisationHeaders);
+        headerMap.put(USER_ID_HEADER, USER_ID);
+
+        doPostRequest(
+            SUBSCRIPTION_URL,
+            headerMap,
+            createTestSubscription(LOCATION_ID, USER_ID, LOCATION_NAME)
+        );
+
+        final Response responseGetLocationSubscriptionMetadata = doGetRequest(
+            MI_DATA_LOCATION_URL, authorisationHeaders
+        );
+
+        AssertionsForClassTypes.assertThat(responseGetLocationSubscriptionMetadata.getStatusCode())
+            .isEqualTo(OK.value());
+        List<LocationSubscriptionMiData> returnedLocationSubscriptions = Arrays
+            .asList(responseGetLocationSubscriptionMetadata.getBody()
+                        .as(LocationSubscriptionMiData[].class));
+
+        assertThat(returnedLocationSubscriptions).anyMatch(
+            locationSubscription -> LOCATION_ID.equals(locationSubscription.getSearchValue())
+        );
     }
 
     private Subscription createTestSubscription(String locationid, String userId, String locationName) {
