@@ -18,6 +18,7 @@ import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("functional")
+@ActiveProfiles("integration")
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 class TestingSupportControllerTests {
@@ -40,6 +41,7 @@ class TestingSupportControllerTests {
     private static final String TESTING_SUPPORT_SUBSCRIPTION_URL = TESTING_SUPPORT_BASE_URL + "subscription/";
 
     private static final String SUBSCRIPTION_PATH = "/subscription";
+    private static final String SUBSCRIPTION_BY_USER_PATH = "/subscription/user/%s";
 
     private static final String LOCATION_NAME_PREFIX = "TEST_123_";
     private static final String LOCATION_NAME = "Court1";
@@ -47,7 +49,6 @@ class TestingSupportControllerTests {
     private static final String USER_ID_HEADER = "x-user-id";
     private static final String ACTIONING_USER_ID = "1234-1234";
 
-    private static final UUID SUBSCRIPTION_ID = UUID.randomUUID();
     private static final String USER_ID = UUID.randomUUID().toString();
     private static final String CASE_ID = "T485913";
 
@@ -79,13 +80,18 @@ class TestingSupportControllerTests {
             .as("Subscription response does not match")
             .isEqualTo("1 subscription(s) deleted for location name starting with " + LOCATION_NAME_PREFIX);
 
-        mockMvc.perform(get(SUBSCRIPTION_PATH + "/" + SUBSCRIPTION_ID))
-            .andExpect(status().isNotFound());
+        MvcResult mvcResult = mockMvc.perform(get(String.format(SUBSCRIPTION_BY_USER_PATH,  USER_ID))).andReturn();
+        UserSubscription userSubscription =
+            OBJECT_MAPPER.readValue(mvcResult.getResponse().getContentAsString(), UserSubscription.class);
+
+        assertThat(userSubscription.getLocationSubscriptions().size()).isEqualTo(0);
+        assertThat(userSubscription.getCaseSubscriptions().size()).isEqualTo(0);
+        assertThat(userSubscription.getListTypeSubscriptions().size()).isEqualTo(0);
     }
 
     @Test
     @WithMockUser(username = "unauthorized_isAuthorized", authorities = {"APPROLE_unknown.authorized"})
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
+    @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
     void testUnauthorisedTestingSupportDeleteSubscriptions() throws Exception {
         mockMvc.perform(delete(TESTING_SUPPORT_SUBSCRIPTION_URL + LOCATION_NAME_PREFIX))
             .andExpect(status().isForbidden());
@@ -94,7 +100,6 @@ class TestingSupportControllerTests {
     private Subscription createSubscription() {
         Subscription subscription = new Subscription();
 
-        subscription.setId(SUBSCRIPTION_ID);
         subscription.setLocationName(LOCATION_NAME_PREFIX + LOCATION_NAME);
         subscription.setChannel(Channel.API_COURTEL);
         subscription.setSearchType(SearchType.CASE_ID);

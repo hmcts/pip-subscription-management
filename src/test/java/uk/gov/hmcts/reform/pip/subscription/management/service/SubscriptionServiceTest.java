@@ -9,13 +9,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,7 +33,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_AND_FAMILY_DAILY_CAUSE_LIST;
 import static uk.gov.hmcts.reform.pip.model.publication.ListType.CIVIL_DAILY_CAUSE_LIST;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscription;
 import static uk.gov.hmcts.reform.pip.subscription.management.helpers.SubscriptionUtils.createMockSubscriptionList;
@@ -41,6 +45,7 @@ class SubscriptionServiceTest {
     private static final String SEARCH_VALUE = "193254";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final String ACTIONING_USER_ID = "1234-1234";
+    private static final Integer LOCATION_ID = 1;
 
     public static final List<String> EXAMPLE_CSV_ALL = List.of(
         "a01d52c0-5c95-4f75-8994-a1c42cb45aaa,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1245,"
@@ -69,6 +74,7 @@ class SubscriptionServiceTest {
     private List<Subscription> mockSubscriptionList;
     private Subscription mockSubscription;
     private Subscription findableSubscription;
+    private SubscriptionListType mockSubscriptionListType;
 
     @Captor
     private ArgumentCaptor<List<UUID>> listCaptor;
@@ -77,19 +83,25 @@ class SubscriptionServiceTest {
     DataManagementService dataManagementService;
 
     @Mock
+    SubscriptionLocationService subscriptionLocationService;
+
+    @Mock
     SubscriptionRepository subscriptionRepository;
+
+    @Mock
+    SubscriptionListTypeRepository subscriptionListTypeRepository;
 
     @InjectMocks
     SubscriptionService subscriptionService;
 
     @BeforeEach
     void setup() {
-        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, DATE_ADDED,
-                                                  CIVIL_DAILY_CAUSE_LIST
-        );
+        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, DATE_ADDED);
         mockSubscriptionList = createMockSubscriptionList(DATE_ADDED);
         findableSubscription = findableSubscription();
         mockSubscription.setChannel(Channel.EMAIL);
+        mockSubscriptionListType = new SubscriptionListType(USER_ID,
+            List.of(CIVIL_DAILY_CAUSE_LIST.name()), List.of("ENGLISH"));
     }
 
     @Test
@@ -137,7 +149,6 @@ class SubscriptionServiceTest {
     @Test
     void testCreateSubscriptionWithCourtNameWithoutListType() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
-        mockSubscription.setListType(null);
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
@@ -148,7 +159,6 @@ class SubscriptionServiceTest {
     @Test
     void testCreateSubscriptionWithCourtNameWithMultipleListType() {
         mockSubscription.setSearchType(SearchType.LOCATION_ID);
-        mockSubscription.setListType(List.of(CIVIL_DAILY_CAUSE_LIST.name(), CIVIL_AND_FAMILY_DAILY_CAUSE_LIST.name()));
         when(dataManagementService.getCourtName(SEARCH_VALUE)).thenReturn(COURT_NAME);
         when(subscriptionRepository.save(mockSubscription)).thenReturn(mockSubscription);
         assertEquals(subscriptionService.createSubscription(mockSubscription, ACTIONING_USER_ID), mockSubscription,
@@ -175,8 +185,7 @@ class SubscriptionServiceTest {
 
     @Test
     void testConfigureListTypesForLocationSubscription() {
-        doNothing().when(subscriptionRepository).updateLocationSubscriptions(any(), any());
-        subscriptionService.configureListTypesForSubscription(USER_ID, List.of(CIVIL_DAILY_CAUSE_LIST.name()));
+        subscriptionService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);
 
         assertEquals(USER_ID, mockSubscription.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR
@@ -185,8 +194,19 @@ class SubscriptionServiceTest {
 
     @Test
     void testConfigureEmptyListTypesForLocationSubscription() {
-        doNothing().when(subscriptionRepository).updateLocationSubscriptions(USER_ID, "");
-        subscriptionService.configureListTypesForSubscription(USER_ID, null);
+        mockSubscriptionListType.setListType(new ArrayList<>());
+        subscriptionService.configureListTypesForSubscription(mockSubscriptionListType, USER_ID);
+
+        assertEquals(USER_ID, mockSubscription.getUserId(),
+                     SUBSCRIPTION_CREATED_ERROR
+        );
+    }
+
+    @Test
+    void testAddListTypesForLocationSubscription() {
+        when(subscriptionListTypeRepository.save(mockSubscriptionListType))
+            .thenReturn(mockSubscriptionListType);
+        subscriptionService.addListTypesForSubscription(mockSubscriptionListType, USER_ID);
 
         assertEquals(USER_ID, mockSubscription.getUserId(),
                      SUBSCRIPTION_CREATED_ERROR
@@ -199,6 +219,7 @@ class SubscriptionServiceTest {
         ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
         doNothing().when(subscriptionRepository).deleteById(captor.capture());
         when(subscriptionRepository.findById(testUuid)).thenReturn(Optional.of(findableSubscription));
+        doNothing().when(subscriptionLocationService).deleteSubscriptionListTypeByUser(any());
         subscriptionService.deleteById(testUuid, ACTIONING_USER_ID);
         assertEquals(testUuid, captor.getValue(), "The service layer tried to delete the wrong subscription");
     }
@@ -257,6 +278,20 @@ class SubscriptionServiceTest {
     }
 
     @Test
+    void testMiServiceLocationV2() {
+        LocationSubscriptionMiData locationSubscriptionMiData = new LocationSubscriptionMiData();
+        locationSubscriptionMiData.setId(UUID.randomUUID());
+
+        when(subscriptionRepository.getLocationSubsDataForMiV2())
+            .thenReturn(List.of(locationSubscriptionMiData));
+
+        List<LocationSubscriptionMiData> locationSubscriptionsMiDataList = subscriptionService
+            .getLocationSubscriptionsDataForMiReportingV2();
+
+        assertThat(locationSubscriptionsMiDataList).contains(locationSubscriptionMiData);
+    }
+
+    @Test
     void testMiServiceAll() {
         when(subscriptionRepository.getAllSubsDataForMi()).thenReturn(EXAMPLE_CSV_ALL);
         String testString = subscriptionService.getAllSubscriptionsDataForMiReporting();
@@ -276,6 +311,20 @@ class SubscriptionServiceTest {
             .as("Wrong comma count compared to header row!")
             .allSatisfy(
                 e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
+    }
+
+    @Test
+    void testMiServiceAllV2() {
+        AllSubscriptionMiData allSubscriptionMiData = new AllSubscriptionMiData();
+        allSubscriptionMiData.setId(UUID.randomUUID());
+
+        when(subscriptionRepository.getAllSubsDataForMiV2())
+            .thenReturn(List.of(allSubscriptionMiData));
+
+        List<AllSubscriptionMiData> allSubscriptionsMiDataList = subscriptionService
+            .getAllSubscriptionsDataForMiReportingV2();
+
+        assertThat(allSubscriptionsMiDataList).contains(allSubscriptionMiData);
     }
 }
 

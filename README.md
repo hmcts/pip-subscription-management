@@ -181,9 +181,13 @@ Below is a table of currently used environment variables for starting the servic
 
 Secrets required for getting tests to run correctly can be found in the below table:
 
-| Variable                   | Description                                   |
-|:---------------------------|:----------------------------------------------|
-| SYSTEM_ADMIN_PROVENANCE_ID | Provenance ID for the test system admin user. |
+
+| Variable                      | Description                                                                                                                              |
+|:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------|
+| TENANT_ID                     | Directory unique ID assigned to our Azure AD tenant. Represents the organisation that owns and manages the Azure AD instance.            |
+| APP_URI                       | As above                                                                                                                                 |
+| CLIENT_ID_FT                  | Client ID of external service used for authentication with subscription-management application in the functional tests.                  |
+| CLIENT_SECRET_FT              | Client secret of external service.used for authentication with subscription-management application in the functional tests.              |
 
 #### Application.yaml files
 The service can also be adapted using the yaml files found in the following locations:

@@ -1,6 +1,5 @@
 package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,7 +27,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.reform.pip.model.authentication.roles.IsAdmin;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionLocationService;
 import uk.gov.hmcts.reform.pip.subscription.management.service.SubscriptionNotificationService;
@@ -51,6 +53,7 @@ public class SubscriptionController {
 
     private static final String OK_CODE = "200";
     private static final String NOT_FOUND_ERROR_CODE = "404";
+    private static final String X_USER_ID_HEADER = "x-user-id";
 
     private final SubscriptionService subscriptionService;
     private final UserSubscriptionService userSubscriptionService;
@@ -80,7 +83,7 @@ public class SubscriptionController {
         + "check again.")
     public ResponseEntity<String> createSubscription(
         @RequestBody @Valid uk.gov.hmcts.reform.pip.model.subscription.Subscription sub,
-        @RequestHeader("x-user-id") String actioningUserId
+        @RequestHeader(X_USER_ID_HEADER) String actioningUserId
     ) {
         Subscription subscription = subscriptionService.createSubscription(new Subscription(sub), actioningUserId);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -97,7 +100,7 @@ public class SubscriptionController {
     @DeleteMapping("/{subId}")
     @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subId)")
     public ResponseEntity<String> deleteById(@Parameter @PathVariable UUID subId,
-                                             @RequestHeader("x-user-id") String actioningUserId) {
+                                             @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
 
         subscriptionService.deleteById(subId, actioningUserId);
         return ResponseEntity.ok(String.format("Subscription: %s was deleted", subId));
@@ -111,7 +114,7 @@ public class SubscriptionController {
     @DeleteMapping("/v2/bulk")
     @PreAuthorize("@authorisationService.userCanDeleteSubscriptions(#actioningUserId, #subIds)")
     public ResponseEntity<String> bulkDeleteSubscriptionsV2(@RequestBody List<UUID> subIds,
-                                                            @RequestHeader("x-user-id") String actioningUserId) {
+                                                            @RequestHeader(X_USER_ID_HEADER) String actioningUserId) {
 
         subscriptionService.bulkDeleteSubscriptions(subIds);
         return ResponseEntity.ok(String.format(
@@ -156,14 +159,29 @@ public class SubscriptionController {
             "Deleted artefact third party subscriber notification request has been accepted");
     }
 
-    @PutMapping("/configure-list-types/{userId}")
-    @Operation(summary = "Endpoint to update list type for existing subscription")
+    @PostMapping("/add-list-types/{userId}")
+    @Operation(summary = "Endpoint to add list type for existing subscription")
     @ApiResponse(responseCode = "201", description = "Subscription successfully updated for user: {userId}")
     @ApiResponse(responseCode = "400", description =
         "This request object has an invalid format. Please check again.")
+    public ResponseEntity<String> addListTypesForSubscription(@PathVariable String userId,
+            @RequestBody SubscriptionListType subscriptionListType) {
+        subscriptionService.addListTypesForSubscription(subscriptionListType, userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(String.format(
+                "Location list Type successfully added for user %s",
+                userId
+            ));
+    }
+
+    @PutMapping("/configure-list-types/{userId}")
+    @Operation(summary = "Endpoint to update list type for existing subscription")
+    @ApiResponse(responseCode = "200", description = "Subscription successfully updated for user: {userId}")
+    @ApiResponse(responseCode = "400", description =
+        "This request object has an invalid format. Please check again.")
     public ResponseEntity<String> configureListTypesForSubscription(@PathVariable String userId,
-                                                                    @RequestBody List<String> listType) {
-        subscriptionService.configureListTypesForSubscription(userId, listType);
+            @RequestBody SubscriptionListType subscriptionListType) {
+        subscriptionService.configureListTypesForSubscription(subscriptionListType, userId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(String.format(
                 "Location list Type successfully updated for user %s",
@@ -171,6 +189,10 @@ public class SubscriptionController {
             ));
     }
 
+    /**
+     * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
+     * @deprecated This endpoint will be removed in the future in favour of the V2 equivalent.
+     */
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
@@ -182,11 +204,25 @@ public class SubscriptionController {
         + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-all")
     @IsAdmin
+    @Deprecated(since = "2")
     public ResponseEntity<String> getSubscriptionDataForMiReportingAll() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
     }
 
+    @ApiResponse(responseCode = OK_CODE, description = "List of All subscriptions MI data")
+    @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting")
+    @GetMapping("/v2/mi-data-all")
+    @IsAdmin
+    public ResponseEntity<List<AllSubscriptionMiData>> getSubscriptionDataForMiReportingAllV2() {
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(subscriptionService.getAllSubscriptionsDataForMiReportingV2());
+    }
+
+    /**
+     * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
+     * @deprecated This endpoint will be removed in the future in favour of the V2 equivalent.
+     */
     @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
         + "See example for headers ", content = {
             @Content(examples = {@ExampleObject("id,search_value,channel,user_id,court_name,created_date")},
@@ -198,9 +234,19 @@ public class SubscriptionController {
         + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
     @GetMapping("/mi-data-local")
     @IsAdmin
+    @Deprecated(since = "2")
     public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
+    }
+
+    @ApiResponse(responseCode = OK_CODE, description = "List of Location Subscription MI Data")
+    @Operation(summary = "Returns a list of subscription data for location-based subscriptions for MI reporting")
+    @GetMapping("/v2/mi-data-location")
+    @IsAdmin
+    public ResponseEntity<List<LocationSubscriptionMiData>> getSubscriptionDataForMiReportingLocationV2() {
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(subscriptionService.getLocationSubscriptionsDataForMiReportingV2());
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "Deleted all subscriptions for user id {userId}")
@@ -227,11 +273,11 @@ public class SubscriptionController {
     @DeleteMapping("/location/{locationId}")
     @IsAdmin
     public ResponseEntity<String> deleteSubscriptionByLocation(
-        @RequestHeader("x-provenance-user-id") String provenanceUserId,
+        @RequestHeader(X_USER_ID_HEADER) String userId,
         @PathVariable Integer locationId) throws JsonProcessingException {
         return ResponseEntity.ok(subscriptionLocationService.deleteSubscriptionByLocation(
             locationId.toString(),
-            provenanceUserId
+            userId
         ));
     }
 }

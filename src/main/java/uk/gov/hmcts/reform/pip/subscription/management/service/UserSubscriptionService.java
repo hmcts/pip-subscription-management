@@ -4,13 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.ListTypeSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 
@@ -19,9 +22,13 @@ import static uk.gov.hmcts.reform.pip.model.LogBuilder.writeLog;
 public class UserSubscriptionService {
     private final SubscriptionRepository repository;
 
+    private final SubscriptionListTypeRepository subscriptionListTypeRepository;
+
     @Autowired
-    public UserSubscriptionService(SubscriptionRepository repository) {
+    public UserSubscriptionService(SubscriptionRepository repository,
+                                   SubscriptionListTypeRepository subscriptionListTypeRepository) {
         this.repository = repository;
+        this.subscriptionListTypeRepository = subscriptionListTypeRepository;
     }
 
     /**
@@ -43,12 +50,16 @@ public class UserSubscriptionService {
      * @return A confirmation message.
      */
     public String deleteAllByUserId(String userId) {
+        subscriptionListTypeRepository.deleteByUserId(userId);
         repository.deleteAllByUserId(userId);
         String message = String.format("All subscriptions deleted for user id %s", userId);
         log.info(writeLog(message));
         return message;
     }
 
+    // New version of PMD check that the default case should not be supplied for enum switch if all enum cases are
+    // supplied. However this will fail checkstyle if the default case is removed
+    @SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
     private UserSubscription collectSubscriptions(List<Subscription> subscriptions) {
         UserSubscription userSubscription = new UserSubscription();
         subscriptions.forEach(subscription -> {
@@ -58,7 +69,12 @@ public class UserSubscriptionService {
                     locationSubscription.setSubscriptionId(subscription.getId());
                     locationSubscription.setLocationName(subscription.getLocationName());
                     locationSubscription.setLocationId(subscription.getSearchValue());
-                    locationSubscription.setListType(subscription.getListType());
+                    Optional<SubscriptionListType> subscriptionListType = subscriptionListTypeRepository
+                        .findByUserId(subscription.getUserId());
+                    if (subscriptionListType.isPresent()) {
+                        locationSubscription.setListType(subscriptionListType.get().getListType());
+                        locationSubscription.setListLanguage(subscriptionListType.get().getListLanguage());
+                    }
                     locationSubscription.setDateAdded(subscription.getCreatedDate());
                     userSubscription.getLocationSubscriptions().add(locationSubscription);
                 }

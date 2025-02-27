@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import uk.gov.hmcts.reform.pip.model.publication.Artefact;
+import uk.gov.hmcts.reform.pip.model.publication.Language;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
 import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
@@ -59,12 +60,11 @@ class SubscriptionNotificationServiceTest {
     private static final UUID TEST_UUID = UUID.randomUUID();
     private static final String TEST_USER_EMAIL = "a@b.com";
     private static final String TEST = "test";
-
-    private static final String LOCATION_ID_SEARCH = SearchType.LOCATION_ID.name();
     private static final String CASE_ID_SEARCH = SearchType.CASE_ID.name();
     private static final String LIST_TYPE_SEARCH = SearchType.LIST_TYPE.name();
     private static final String MAGISTRATES_PUBLIC_LIST = ListType.MAGISTRATES_PUBLIC_LIST.name();
     private static final String CIVIL_DAILY_LIST = ListType.CIVIL_DAILY_CAUSE_LIST.name();
+    private static final String LIST_LANGUAGE = "ENGLISH";
 
     private Subscription mockSubscription;
     private final SubscriptionsSummary mockSubscriptionsSummary = new SubscriptionsSummary();
@@ -111,18 +111,19 @@ class SubscriptionNotificationServiceTest {
         classifiedArtefactMatches.setSearch(searchTerms);
         classifiedArtefactMatches.setLocationId(COURT_MATCH);
         classifiedArtefactMatches.setListType(ListType.SJP_PRESS_LIST);
+        classifiedArtefactMatches.setLanguage(Language.ENGLISH);
 
         publicArtefactMatches.setArtefactId(TEST_UUID);
         publicArtefactMatches.setSensitivity(Sensitivity.PUBLIC);
         publicArtefactMatches.setLocationId(COURT_MATCH);
         publicArtefactMatches.setSearch(searchTerms);
         publicArtefactMatches.setListType(ListType.MAGISTRATES_PUBLIC_LIST);
+        publicArtefactMatches.setLanguage(Language.ENGLISH);
 
         returnedSubscription.setUserId(ACCEPTED_USER_ID);
         restrictedSubscription.setUserId(FORBIDDEN_USER_ID);
 
-        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now(),
-                                                  ListType.CIVIL_DAILY_CAUSE_LIST);
+        mockSubscription = createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
 
         mockSubscriptionsSummary.setEmail(TEST_USER_EMAIL);
         mockSubscription.setChannel(Channel.EMAIL);
@@ -133,8 +134,8 @@ class SubscriptionNotificationServiceTest {
     void testCollectSubscribersCourtSubscriptionNotClassified() throws IOException {
         returnedSubscription.setChannel(Channel.EMAIL);
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(returnedSubscription));
         when(subscriptionChannelService.buildEmailSubscriptions(any())).thenReturn(returnedMappedEmails);
         doNothing().when(publicationServicesService).postSubscriptionSummaries(any(), any());
@@ -150,10 +151,9 @@ class SubscriptionNotificationServiceTest {
     @Test
     void testCollectSubscribersCourtSubscriptionWithListTypeNotClassified() throws IOException {
         returnedSubscription.setChannel(Channel.EMAIL);
-        returnedSubscription.setListType(List.of(MAGISTRATES_PUBLIC_LIST, CIVIL_DAILY_LIST));
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(returnedSubscription));
 
         when(subscriptionChannelService.buildEmailSubscriptions(any())).thenReturn(returnedMappedEmails);
@@ -175,8 +175,8 @@ class SubscriptionNotificationServiceTest {
         mockSubscriptionsSummaryDetails.addToCaseUrn(CASE_URN_KEY);
         mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
 
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(mockSubscription));
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
@@ -208,8 +208,8 @@ class SubscriptionNotificationServiceTest {
         mockSubscriptionsSummaryDetails.addToCaseUrn(CASE_URN_KEY);
         mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
 
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(mockSubscription));
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
@@ -241,8 +241,8 @@ class SubscriptionNotificationServiceTest {
         mockSubscriptionsSummaryDetails.addToCaseNumber(CASE_NUMBER_KEY);
         mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
 
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(mockSubscription));
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
@@ -269,8 +269,8 @@ class SubscriptionNotificationServiceTest {
         mockSubscriptionsSummaryDetails.addToCaseNumber(CASE_ID);
         mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
 
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(mockSubscription));
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
@@ -297,8 +297,8 @@ class SubscriptionNotificationServiceTest {
         mockSubscriptionsSummaryDetails.addToLocationId(COURT_MATCH);
         mockSubscriptionsSummary.setSubscriptions(mockSubscriptionsSummaryDetails);
 
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(mockSubscription));
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(mockSubscription));
@@ -343,8 +343,8 @@ class SubscriptionNotificationServiceTest {
         mockSubscription.setChannel(Channel.API_COURTEL);
         Map<String, List<Subscription>> returnedMap = new ConcurrentHashMap<>();
         returnedMap.put(TEST, List.of(mockSubscription));
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(mockSubscription));
         when(subscriptionChannelService.buildApiSubscriptions(List.of(mockSubscription))).thenReturn(returnedMap);
         doNothing().when(publicationServicesService).sendThirdPartyList(any(ThirdPartySubscription.class));
@@ -394,8 +394,8 @@ class SubscriptionNotificationServiceTest {
     @Test
     void testNoValidSubscriptionsDoesNotCallPostSubscriptionSummaries() {
         returnedSubscription.setChannel(Channel.EMAIL);
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(returnedSubscription));
         when(subscriptionChannelService.buildEmailSubscriptions(any())).thenReturn(new ConcurrentHashMap<>());
 
@@ -406,8 +406,8 @@ class SubscriptionNotificationServiceTest {
     @Test
     void testMultipleSubscriptionsIsPassedToPostSubscriptionSummaries() {
         returnedSubscription.setChannel(Channel.EMAIL);
-        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(LOCATION_ID_SEARCH, COURT_MATCH,
-                                                                           MAGISTRATES_PUBLIC_LIST))
+        when(subscriptionRepository.findSubscriptionsByLocationSearchValue(COURT_MATCH,
+                                                                           MAGISTRATES_PUBLIC_LIST, LIST_LANGUAGE))
             .thenReturn(List.of(returnedSubscription, returnedSubscription));
 
         returnedMappedEmails.put(TEST_USER_EMAIL, List.of(returnedSubscription));

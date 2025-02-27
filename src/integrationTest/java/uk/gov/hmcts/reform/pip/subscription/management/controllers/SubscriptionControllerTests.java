@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.io.IOUtils;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -19,15 +19,22 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import uk.gov.hmcts.reform.pip.model.account.PiUser;
+import uk.gov.hmcts.reform.pip.model.account.Roles;
 import uk.gov.hmcts.reform.pip.model.publication.ListType;
+import uk.gov.hmcts.reform.pip.model.publication.Sensitivity;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.model.subscription.Channel;
 import uk.gov.hmcts.reform.pip.model.subscription.SearchType;
+import uk.gov.hmcts.reform.pip.model.system.admin.ActionResult;
 import uk.gov.hmcts.reform.pip.subscription.management.Application;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.ExceptionResponse;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.CaseSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.LocationSubscription;
 import uk.gov.hmcts.reform.pip.subscription.management.models.response.UserSubscription;
+import uk.gov.hmcts.reform.pip.subscription.management.utils.IntegrationTestBase;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,27 +42,34 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.hmcts.reform.pip.model.account.Roles.SYSTEM_ADMIN;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.PI_AAD;
+import static uk.gov.hmcts.reform.pip.model.account.UserProvenances.SSO;
 
 @SpringBootTest(classes = {Application.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("functional")
+@ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @WithMockUser(username = "admin", authorities = {"APPROLE_api.request.admin"})
 @AutoConfigureEmbeddedDatabase(type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES)
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.ExcessiveClassLength"})
-class SubscriptionControllerTests {
+class SubscriptionControllerTests extends IntegrationTestBase {
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -95,6 +109,9 @@ class SubscriptionControllerTests {
     private static final String RAW_JSON_MISSING_CHANNEL =
         "{\"userId\": \"3\", \"searchType\": \"CASE_ID\",\"searchValue\": \"321\"}";
 
+    private static final String RAW_JSON_ADD_UPDATE_LIST_TYPE =
+        "{\"listType\": [\"FAMILY_DAILY_CAUSE_LIST\"], \"listLanguage\": [\"ENGLISH\"],\"userId\": \"3\"}";
+
     private static final String LOCATION_ID = "9";
     private static final String CASE_ID = "T485913";
     private static final String CASE_URN = "IBRANE1BVW";
@@ -103,14 +120,16 @@ class SubscriptionControllerTests {
     private static final String SUBSCRIPTION_BASE_URL = "/subscription/";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL = "/subscription/mi-data-all";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL = "/subscription/mi-data-local";
+    private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL_V2 = "/subscription/v2/mi-data-all";
+    private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL_V2 = "/subscription/v2/mi-data-location";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
     private static final String UPDATE_LIST_TYPE_PATH = "/subscription/configure-list-types/" + VALID_USER_ID;
+    private static final String ADD_LIST_TYPE_PATH = "/subscription/add-list-types/" + VALID_USER_ID;
     private static final String ARTEFACT_RECIPIENT_PATH = "/subscription/artefact-recipients";
     private static final String DELETED_ARTEFACT_RECIPIENT_PATH = "/subscription/deleted-artefact";
     private static final String DELETED_BULK_SUBSCRIPTION_V2_PATH = "/subscription/v2/bulk";
     private static final String SUBSCRIPTIONS_BY_LOCATION = "/subscription/location/";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
-    private static final String UPDATED_LIST_TYPE = "[\"CIVIL_DAILY_CAUSE_LIST\"]";
     private static final String UNAUTHORIZED_ROLE = "APPROLE_unknown.authorized";
     private static final String UNAUTHORIZED_USERNAME = "unauthorized_isAuthorized";
 
@@ -126,8 +145,13 @@ class SubscriptionControllerTests {
     @Autowired
     protected MockMvc mvc;
 
-    @Value("${system-admin-provenance-id}")
-    private String systemAdminProvenanceId;
+    private final String systemAdminProvenanceId = UUID.randomUUID().toString();
+
+    private final String systemAdminUserId = UUID.randomUUID().toString();
+
+    private static PiUser systemAdminUser = new PiUser();
+
+    private static PiUser verifiedUser = new PiUser();
 
     protected static final String SUBSCRIPTION_PATH = "/subscription";
     protected static final uk.gov.hmcts.reform.pip.model.subscription.Subscription SUBSCRIPTION =
@@ -135,10 +159,8 @@ class SubscriptionControllerTests {
 
     private static final String ACTIONING_USER_ID = UUID_STRING;
     private static final String INVALID_ACTIONING_USER_ID = UUID.randomUUID().toString();
-    private static final String SYSTEM_ADMIN_USER_ID = "87f907d2-eb28-42cc-b6e1-ae2b03f7bba2";
-
     private static final String USER_ID_HEADER = "x-user-id";
-    private static final String X_PROVENANCE_USER_ID_HEADER = "x-provenance-user-id";
+    private static final String TEST_EMAIL = "test-email-cath@justice.gov.uk";
 
     @BeforeAll
     static void setup() throws IOException {
@@ -147,10 +169,24 @@ class SubscriptionControllerTests {
         SUBSCRIPTION.setSearchType(SearchType.LOCATION_ID);
         SUBSCRIPTION.setUserId(UUID_STRING);
 
+        systemAdminUser.setRoles(SYSTEM_ADMIN);
+        systemAdminUser.setEmail(TEST_EMAIL);
+        verifiedUser.setRoles(Roles.VERIFIED);
+
         try (InputStream is = SubscriptionControllerTests.class.getClassLoader()
                 .getResourceAsStream("mock/artefact.json")) {
             rawArtefact = new String(IOUtils.toByteArray(Objects.requireNonNull(is)));
         }
+    }
+
+    @BeforeEach
+    public void beforeEach() {
+        when(accountManagementService.getUserByUserId(ACTIONING_USER_ID)).thenReturn(Optional.of(verifiedUser));
+        when(dataManagementService.getCourtName(LOCATION_ID)).thenReturn(LOCATION_NAME_1);
+        when(accountManagementService.getUserByUserId(systemAdminUserId)).thenReturn(Optional.of(systemAdminUser));
+        when(accountManagementService.getUserByUserId(INVALID_ACTIONING_USER_ID)).thenReturn(Optional.of(verifiedUser));
+        when(accountManagementService.isUserAuthorised(VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST,
+                                                       Sensitivity.CLASSIFIED)).thenReturn(true);
     }
 
     protected MockHttpServletRequestBuilder setupMockSubscription(String searchValue) throws JsonProcessingException {
@@ -160,6 +196,7 @@ class SubscriptionControllerTests {
         SUBSCRIPTION.setCaseName(CASE_NAME);
         SUBSCRIPTION.setCaseNumber(CASE_ID);
         SUBSCRIPTION.setUrn(CASE_URN);
+        SUBSCRIPTION.setChannel(Channel.EMAIL);
         SUBSCRIPTION.setCreatedDate(DATE_ADDED);
         return MockMvcRequestBuilders.post(SUBSCRIPTION_PATH)
             .content(OBJECT_MAPPER.writeValueAsString(SUBSCRIPTION))
@@ -190,12 +227,11 @@ class SubscriptionControllerTests {
 
     protected MockHttpServletRequestBuilder setupMockSubscriptionWithListType(String searchValue,
                                                                               SearchType searchType,
-                                                                              String userId, ListType listType)
+                                                                              String userId)
         throws JsonProcessingException {
 
         SUBSCRIPTION.setUserId(userId);
         SUBSCRIPTION.setSearchType(searchType);
-        SUBSCRIPTION.setListType(List.of(listType.name()));
         return setupMockSubscription(searchValue);
     }
 
@@ -412,7 +448,7 @@ class SubscriptionControllerTests {
         );
 
         MvcResult deleteResponse = mvc.perform(delete(SUBSCRIPTION_BASE_URL + returnedSubscription.getId())
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -746,8 +782,7 @@ class SubscriptionControllerTests {
     @Test
     void testBuildCourtSubscribersListReturnsAccepted() throws Exception {
         mvc.perform(setupMockSubscriptionWithListType(LOCATION_ID, SearchType.LOCATION_ID,
-                                                      VALID_USER_ID, ListType.CIVIL_DAILY_CAUSE_LIST
-        ));
+                                                      VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .post(ARTEFACT_RECIPIENT_PATH)
             .contentType(MediaType.APPLICATION_JSON)
@@ -805,12 +840,43 @@ class SubscriptionControllerTests {
     }
 
     @Test
+    void testAddListTypesForSubscription() throws Exception {
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ADD_LIST_TYPE_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
+        MvcResult result = mvc.perform(request).andExpect(status().isCreated()).andReturn();
+
+        assertEquals(String.format(
+                         "Location list Type successfully added for user %s",
+                         VALID_USER_ID
+                     ),
+                     result.getResponse().getContentAsString(), RESPONSE_MATCH
+        );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testUnauthorizedAddListTypesForSubscription() throws Exception {
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+            .post(ADD_LIST_TYPE_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
+        MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
+
+        assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
     void testConfigureListTypesForSubscription() throws Exception {
         mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID));
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(UPDATED_LIST_TYPE);
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
         MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
 
         assertEquals(String.format(
@@ -828,7 +894,7 @@ class SubscriptionControllerTests {
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
             .put(UPDATE_LIST_TYPE_PATH)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(UPDATED_LIST_TYPE);
+            .content(RAW_JSON_ADD_UPDATE_LIST_TYPE);
         MvcResult mvcResult = mvc.perform(request).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
@@ -869,7 +935,7 @@ class SubscriptionControllerTests {
         MvcResult deleteResponse = mvc.perform(delete(DELETED_BULK_SUBSCRIPTION_V2_PATH)
                                                    .contentType(MediaType.APPLICATION_JSON)
                                                    .content(subscriptionIdRequest)
-                                                   .header(USER_ID_HEADER, SYSTEM_ADMIN_USER_ID))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -1114,6 +1180,87 @@ class SubscriptionControllerTests {
     }
 
     @Test
+    void testGetSubscriptionDataForMiReportingAllV2() throws Exception {
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
+
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL_V2))
+            .andExpect(status().isOk()).andReturn();
+
+        List<AllSubscriptionMiData> allSubscriptionMiData =  Arrays.asList(
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), AllSubscriptionMiData[].class)
+        );
+
+        assertThat(allSubscriptionMiData)
+            .as("Must contain the expected case subscription")
+            .anyMatch(anySubscription -> anySubscription.getSearchType().equals(SearchType.CASE_ID)
+                && anySubscription.getChannel().equals(Channel.EMAIL)
+                && VALID_USER_ID.equals(anySubscription.getUserId())
+            );
+
+        assertThat(allSubscriptionMiData)
+            .as("Must contain the expected location subscription")
+            .anyMatch(locationSubscription -> locationSubscription.getSearchType().equals(SearchType.LOCATION_ID)
+                && LOCATION_NAME_1.equals(locationSubscription.getLocationName())
+                && locationSubscription.getChannel().equals(Channel.EMAIL)
+                && VALID_USER_ID.equals(locationSubscription.getUserId())
+            );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testGetSubscriptionDataForMiReportingAllV2Unauthorized() throws Exception {
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL_V2))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
+    void testGetSubscriptionDataForMiReportingLocationV2() throws Exception {
+        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
+        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
+            .andExpect(status().isCreated());
+
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL_V2))
+            .andExpect(status().isOk()).andReturn();
+
+        List<LocationSubscriptionMiData> locationSubscriptions =  Arrays.asList(
+            OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), LocationSubscriptionMiData[].class)
+        );
+
+        assertThat(locationSubscriptions).extracting(LocationSubscriptionMiData::getSearchValue)
+            .as("Should not retrieve case subscriptions")
+            .noneMatch(CASE_ID::equals);
+
+        assertThat(locationSubscriptions)
+            .as("Must contain the expected location subscription")
+            .anyMatch(locationSubscription -> LOCATION_ID.equals(locationSubscription.getSearchValue())
+                    && LOCATION_NAME_1.equals(locationSubscription.getLocationName())
+                    && locationSubscription.getChannel().equals(Channel.EMAIL)
+                    && VALID_USER_ID.equals(locationSubscription.getUserId())
+            );
+    }
+
+    @Test
+    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
+    void testGetSubscriptionDataForMiReportingLocationV2Unauthorized() throws Exception {
+        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL_V2))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
+                     FORBIDDEN_STATUS_CODE
+        );
+    }
+
+    @Test
     void testFindSubscriptionsByLocationId() throws Exception {
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
 
@@ -1161,6 +1308,20 @@ class SubscriptionControllerTests {
 
     @Test
     void testDeleteSubscriptionByLocation() throws Exception {
+        when(accountManagementService.getMappedEmails(
+            List.of(UUID_STRING))).thenReturn(Map.of(UUID_STRING, Optional.of(TEST_EMAIL)));
+        doNothing().when(publicationServicesService)
+            .sendLocationDeletionSubscriptionEmail(List.of(TEST_EMAIL), LOCATION_NAME_1);
+
+        when(accountManagementService.getAllAccounts(PI_AAD.toString(), SYSTEM_ADMIN.toString()))
+            .thenReturn(List.of(systemAdminUser));
+        when(accountManagementService.getAllAccounts(SSO.toString(), SYSTEM_ADMIN.toString()))
+            .thenReturn(List.of(systemAdminUser));
+
+        doNothing().when(publicationServicesService)
+            .sendSystemAdminEmail(List.of(TEST_EMAIL, TEST_EMAIL), TEST_EMAIL,
+                                  ActionResult.SUCCEEDED, systemAdminProvenanceId);
+
         mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, UUID_STRING));
 
         mvc.perform(get(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID))
@@ -1168,7 +1329,7 @@ class SubscriptionControllerTests {
 
         MvcResult deleteResponse = mvc.perform(delete(
                 "/subscription/location/" + LOCATION_ID)
-                                                   .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                                   .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isOk()).andReturn();
 
         assertNotNull(deleteResponse.getResponse(), VALIDATION_EMPTY_RESPONSE);
@@ -1184,7 +1345,7 @@ class SubscriptionControllerTests {
     void testDeleteSubscriptionByLocationNotFound() throws Exception {
         MvcResult response = mvc.perform(delete(
                 SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                             .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -1197,7 +1358,7 @@ class SubscriptionControllerTests {
     @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
     void testDeleteSubscriptionByLocationUnauthorized() throws Exception {
         MvcResult response = mvc.perform(delete(SUBSCRIPTIONS_BY_LOCATION + LOCATION_ID)
-                                             .header(X_PROVENANCE_USER_ID_HEADER, systemAdminProvenanceId))
+                                             .header(USER_ID_HEADER, systemAdminUserId))
             .andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),

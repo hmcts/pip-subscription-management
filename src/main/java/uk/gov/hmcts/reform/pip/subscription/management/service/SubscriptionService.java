@@ -1,12 +1,15 @@
 package uk.gov.hmcts.reform.pip.subscription.management.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.pip.model.enums.UserActions;
+import uk.gov.hmcts.reform.pip.model.report.AllSubscriptionMiData;
+import uk.gov.hmcts.reform.pip.model.report.LocationSubscriptionMiData;
 import uk.gov.hmcts.reform.pip.subscription.management.errorhandling.exceptions.SubscriptionNotFoundException;
 import uk.gov.hmcts.reform.pip.subscription.management.models.Subscription;
+import uk.gov.hmcts.reform.pip.subscription.management.models.SubscriptionListType;
+import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionListTypeRepository;
 import uk.gov.hmcts.reform.pip.subscription.management.repository.SubscriptionRepository;
 
 import java.util.ArrayList;
@@ -22,15 +25,24 @@ import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
  */
 @Slf4j
 @Service
+@SuppressWarnings("PMD.TooManyMethods")
 public class SubscriptionService {
 
     private final SubscriptionRepository repository;
+
+    private final SubscriptionListTypeRepository subscriptionListTypeRepository;
     private final DataManagementService dataManagementService;
 
+    private final SubscriptionLocationService subscriptionLocationService;
+
     @Autowired
-    public SubscriptionService(SubscriptionRepository repository, DataManagementService dataManagementService) {
+    public SubscriptionService(SubscriptionRepository repository, DataManagementService dataManagementService,
+                               SubscriptionListTypeRepository subscriptionListTypeRepository,
+                               SubscriptionLocationService subscriptionLocationService) {
         this.repository = repository;
         this.dataManagementService = dataManagementService;
+        this.subscriptionListTypeRepository = subscriptionListTypeRepository;
+        this.subscriptionLocationService = subscriptionLocationService;
     }
 
     public Subscription createSubscription(Subscription subscription, String actioningUserId) {
@@ -47,16 +59,25 @@ public class SubscriptionService {
         return repository.save(subscription);
     }
 
-    public void configureListTypesForSubscription(String userId, List<String> listType) {
-        log.info(writeLog(userId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
+    public void addListTypesForSubscription(SubscriptionListType subscriptionListType,
+                                                  String actioningUserId) {
+        log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
+        subscriptionListTypeRepository.deleteByUserId(subscriptionListType.getUserId());
+        subscriptionListTypeRepository.save(subscriptionListType);
+    }
 
-        repository.updateLocationSubscriptions(userId,
-            listType == null ? "" : StringUtils.join(listType, ','));
+    public void configureListTypesForSubscription(SubscriptionListType subscriptionListType,
+                                                  String actioningUserId) {
+        log.info(writeLog(actioningUserId, UserActions.CREATE_SUBSCRIPTION, LOCATION_ID.name()));
+
+        Optional<SubscriptionListType> existingSubscriptionListType = subscriptionListTypeRepository
+            .findByUserId(subscriptionListType.getUserId());
+        existingSubscriptionListType.ifPresent(listType -> subscriptionListType.setId(listType.getId()));
+        subscriptionListTypeRepository.save(subscriptionListType);
     }
 
     public void deleteById(UUID id, String actioningUserId) {
         Optional<Subscription> subscription = repository.findById(id);
-
         if (subscription.isEmpty()) {
             throw new SubscriptionNotFoundException(String.format(
                 "No subscription found with the subscription id %s",
@@ -64,10 +85,15 @@ public class SubscriptionService {
             ));
         }
 
+        repository.deleteById(id);
+
+        if (subscription.get().getSearchType().equals(LOCATION_ID)) {
+            subscriptionLocationService
+                .deleteSubscriptionListTypeByUser(subscription.get().getUserId());
+        }
+
         log.info(writeLog(actioningUserId, UserActions.DELETE_SUBSCRIPTION,
                           id.toString()));
-
-        repository.deleteById(id);
     }
 
     public void bulkDeleteSubscriptions(List<UUID> ids) {
@@ -79,6 +105,25 @@ public class SubscriptionService {
                                      .toList());
             throw new SubscriptionNotFoundException("No subscription found with the subscription ID(s): "
                     + missingIds.toString().replace("[", "").replace("]", ""));
+        }
+
+        //FIND ALL THE LOCATION SUBSCRIPTION FOR THE USER AND CHECK IF MORE THAN ONE LOCATION SUBSCRIPTION EXISTS
+        //DO NOT DELETE RECORD FROM SUBSCRIPTION LIST TYPE BECAUSE ONE RECORD IS LINKED WITH ALL THE LOCATION
+        //SUBSCRIPTIONS
+        List<Subscription> bulkDeleteLocationSubscriptions = subscriptions.stream()
+            .filter(s -> s.getSearchType()
+            .equals(LOCATION_ID)).toList();
+
+        List<Subscription> userLocationSubscriptions = repository
+            .findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId());
+
+        if (!userLocationSubscriptions.isEmpty()
+            && bulkDeleteLocationSubscriptions.size()
+            == repository.findLocationSubscriptionsByUserId(subscriptions.get(0).getUserId()).size()) {
+            Optional<SubscriptionListType> subscriptionListTypes =
+                subscriptionListTypeRepository.findByUserId(subscriptions.get(0).getUserId());
+            subscriptionListTypes.ifPresent(subscriptionListType -> subscriptionListTypeRepository
+                .deleteByUserId(subscriptionListType.getUserId()));
         }
 
         repository.deleteByIdIn(ids);
@@ -116,6 +161,11 @@ public class SubscriptionService {
         });
     }
 
+    /**
+     * Previous version of the MI Reporting service method. No longer used and soon to be removed.
+     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
+     */
+    @Deprecated(since = "2")
     public String getAllSubscriptionsDataForMiReporting() {
         StringBuilder builder = new StringBuilder(60);
         builder.append("id,channel,search_type,user_id,court_name,created_date").append(System.lineSeparator());
@@ -124,11 +174,24 @@ public class SubscriptionService {
         return builder.toString();
     }
 
+    public List<AllSubscriptionMiData> getAllSubscriptionsDataForMiReportingV2() {
+        return repository.getAllSubsDataForMiV2();
+    }
+
+    /**
+     * Previous version of the MI Reporting service method. No longer used and soon to be removed.
+     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
+     */
+    @Deprecated(since = "2")
     public String getLocalSubscriptionsDataForMiReporting() {
         StringBuilder builder = new StringBuilder(60);
         builder.append("id,search_value,channel,user_id,court_name,created_date").append(System.lineSeparator());
         repository.getLocalSubsDataForMi()
             .forEach(line -> builder.append(line).append(System.lineSeparator()));
         return builder.toString();
+    }
+
+    public List<LocationSubscriptionMiData> getLocationSubscriptionsDataForMiReportingV2() {
+        return repository.getLocationSubsDataForMiV2();
     }
 }
