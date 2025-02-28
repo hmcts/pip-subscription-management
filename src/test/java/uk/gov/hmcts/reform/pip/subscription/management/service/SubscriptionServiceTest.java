@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,25 +44,6 @@ class SubscriptionServiceTest {
     private static final String SEARCH_VALUE = "193254";
     private static final Channel EMAIL = Channel.EMAIL;
     private static final String ACTIONING_USER_ID = "1234-1234";
-    private static final Integer LOCATION_ID = 1;
-
-    public static final List<String> EXAMPLE_CSV_ALL = List.of(
-        "a01d52c0-5c95-4f75-8994-a1c42cb45aaa,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1245,"
-            + "2023-01-19 13:45:50.873778",
-        "370963e2-9d2f-423e-b6a1-3f1f8905cdf0,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1234,"
-            + "2023-01-19 13:47:23.484632",
-        "052cda55-30fd-4a0d-939a-2c7b03ab3392,EMAIL,CASE_ID,2fe899ff-96ed-435a-bcad-1411bbe96d2a,1234,"
-            + "2023-01-19 13:53:56.434343"
-    );
-
-    public static final List<String> EXAMPLE_CSV_LOCAL = List.of(
-        "212c8b34-f6c3-424d-90e2-f874f528eebf,2,EMAIL,2fe899ff-96ed-435a-bcad-1411bbe96d2a,null,"
-            + "2023-01-19 13:45:50.873778",
-        "f4a0cb33-f211-4b46-8bdb-6320f6382a29,1234,API,2fe899ff-96ed-435a-bcad-1411bbe96d2a,null,"
-            + "2023-01-19 13:47:23.484632",
-        "34edfcde-4546-46b8-98e6-2717da3185e8,3,API,2fe899ff-96ed-435a-bcad-1411bbe96d2a,Oxford Combined Court Centre,"
-            + "2023-01-19 13:53:56.434343"
-    );
 
     private static final String COURT_NAME = "test court name";
     private static final LocalDateTime DATE_ADDED = LocalDateTime.now();
@@ -75,9 +55,6 @@ class SubscriptionServiceTest {
     private Subscription mockSubscription;
     private Subscription findableSubscription;
     private SubscriptionListType mockSubscriptionListType;
-
-    @Captor
-    private ArgumentCaptor<List<UUID>> listCaptor;
 
     @Mock
     DataManagementService dataManagementService;
@@ -255,29 +232,6 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void testMiServiceLocal() {
-        when(subscriptionRepository.getLocalSubsDataForMi()).thenReturn(EXAMPLE_CSV_LOCAL);
-        String testString = subscriptionService.getLocalSubscriptionsDataForMiReporting();
-        String[] splitLineString = testString.split("\r\n|\r|\n");
-        long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
-
-        assertThat(testString)
-            .as("Json parsing has probably failed")
-            .contains("Oxford")
-            .hasLineCount(4);
-
-        assertThat(splitLineString[0])
-            .as("Header row does not match")
-            .isEqualTo("id,search_value,channel,user_id,court_name,created_date");
-
-        assertThat(splitLineString)
-            .as("Wrong comma count compared to header row!")
-            .allSatisfy(
-                e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
-
-    }
-
-    @Test
     void testMiServiceLocationV2() {
         LocationSubscriptionMiData locationSubscriptionMiData = new LocationSubscriptionMiData();
         locationSubscriptionMiData.setId(UUID.randomUUID());
@@ -289,28 +243,6 @@ class SubscriptionServiceTest {
             .getLocationSubscriptionsDataForMiReportingV2();
 
         assertThat(locationSubscriptionsMiDataList).contains(locationSubscriptionMiData);
-    }
-
-    @Test
-    void testMiServiceAll() {
-        when(subscriptionRepository.getAllSubsDataForMi()).thenReturn(EXAMPLE_CSV_ALL);
-        String testString = subscriptionService.getAllSubscriptionsDataForMiReporting();
-        String[] splitLineString = testString.split("\r\n|\r|\n");
-        long countLine1 = splitLineString[0].chars().filter(character -> character == ',').count();
-
-        assertThat(testString)
-            .as("Json parsing has probably failed")
-            .contains("CASE_ID")
-            .hasLineCount(4);
-
-        assertThat(splitLineString[0])
-            .as("Header row does not match")
-            .isEqualTo("id,channel,search_type,user_id,court_name,created_date");
-
-        assertThat(splitLineString)
-            .as("Wrong comma count compared to header row!")
-            .allSatisfy(
-                e -> assertThat(e.chars().filter(character -> character == ',').count()).isEqualTo(countLine1));
     }
 
     @Test

@@ -50,7 +50,6 @@ class SubscriptionControllerTest {
     private static final List<String> LIST_LANGUAGE = Arrays.asList("ENGLISH");
     private static final String LOCATION_ID = "1";
     private static final String ACTIONING_USER_ID = "1234-1234";
-    private static final String REQUESTER_NAME = "ReqName";
     private static final String USER_ID = UUID.randomUUID().toString();
 
     @Mock
@@ -77,7 +76,6 @@ class SubscriptionControllerTest {
         mockSubscription = SubscriptionUtils.createMockSubscription(USER_ID, SEARCH_VALUE, EMAIL, LocalDateTime.now());
         userSubscription = new UserSubscription();
         subscriptionListType = new SubscriptionListType(USER_ID, LIST_TYPES, LIST_LANGUAGE);
-
     }
 
     @Test
@@ -201,20 +199,6 @@ class SubscriptionControllerTest {
         doNothing().when(subscriptionNotificationService).collectThirdPartyForDeletion(any());
         assertEquals(HttpStatus.ACCEPTED, subscriptionController.buildDeletedArtefactSubscribers(new Artefact())
             .getStatusCode(), STATUS_CODE_MATCH);
-    }
-
-    @Test
-    void testMiDataReturnsOk() {
-        assertEquals(
-            HttpStatus.OK,
-            subscriptionController.getSubscriptionDataForMiReportingLocal().getStatusCode(),
-            STATUS_CODE_MATCH
-        );
-        assertEquals(
-            HttpStatus.OK,
-            subscriptionController.getSubscriptionDataForMiReportingAll().getStatusCode(),
-            STATUS_CODE_MATCH
-        );
     }
 
     @Test
