@@ -3,16 +3,12 @@ package uk.gov.hmcts.reform.pip.subscription.management.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -189,27 +185,6 @@ public class SubscriptionController {
             ));
     }
 
-    /**
-     * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
-     * @deprecated This endpoint will be removed in the future in favour of the V2 equivalent.
-     */
-    @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
-        + "See example for headers ", content = {
-            @Content(examples = {@ExampleObject("id,channel,search_type,user_id,court_name,created_date")},
-                mediaType = MediaType.TEXT_PLAIN_VALUE,
-                schema = @Schema(implementation = String.class))
-            }
-        )
-    @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting. "
-        + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
-    @GetMapping("/mi-data-all")
-    @IsAdmin
-    @Deprecated(since = "2")
-    public ResponseEntity<String> getSubscriptionDataForMiReportingAll() {
-        return ResponseEntity.status(HttpStatus.OK)
-            .body(subscriptionService.getAllSubscriptionsDataForMiReporting());
-    }
-
     @ApiResponse(responseCode = OK_CODE, description = "List of All subscriptions MI data")
     @Operation(summary = "Returns a list of metadata for all existing subscriptions for MI reporting")
     @GetMapping("/v2/mi-data-all")
@@ -217,27 +192,6 @@ public class SubscriptionController {
     public ResponseEntity<List<AllSubscriptionMiData>> getSubscriptionDataForMiReportingAllV2() {
         return ResponseEntity.status(HttpStatus.OK)
             .body(subscriptionService.getAllSubscriptionsDataForMiReportingV2());
-    }
-
-    /**
-     * Previous version of the MI Reporting endpoint. No longer used and soon to be removed.
-     * @deprecated This endpoint will be removed in the future in favour of the V2 equivalent.
-     */
-    @ApiResponse(responseCode = OK_CODE, description = "A CSV like structure which contains the data. "
-        + "See example for headers ", content = {
-            @Content(examples = {@ExampleObject("id,search_value,channel,user_id,court_name,created_date")},
-                mediaType = MediaType.TEXT_PLAIN_VALUE,
-                schema = @Schema(implementation = String.class))
-            }
-        )
-    @Operation(summary = "Returns a list of subscription data for location-based subscriptions for MI reporting. "
-        + "This endpoint will be deprecated in the future, in favour of returning a JSON model")
-    @GetMapping("/mi-data-local")
-    @IsAdmin
-    @Deprecated(since = "2")
-    public ResponseEntity<String> getSubscriptionDataForMiReportingLocal() {
-        return ResponseEntity.status(HttpStatus.OK)
-            .body(subscriptionService.getLocalSubscriptionsDataForMiReporting());
     }
 
     @ApiResponse(responseCode = OK_CODE, description = "List of Location Subscription MI Data")

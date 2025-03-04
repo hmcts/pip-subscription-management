@@ -118,8 +118,6 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     private static final String CASE_NAME = "Tom Clancy";
     private static final String PARTY_NAMES = "Party A, Party B";
     private static final String SUBSCRIPTION_BASE_URL = "/subscription/";
-    private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL = "/subscription/mi-data-all";
-    private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL = "/subscription/mi-data-local";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL_V2 = "/subscription/v2/mi-data-all";
     private static final String MI_REPORTING_SUBSCRIPTION_DATA_LOCATION_URL_V2 = "/subscription/v2/mi-data-location";
     private static final String SUBSCRIPTION_USER_PATH = "/subscription/user/" + UUID_STRING;
@@ -136,9 +134,6 @@ class SubscriptionControllerTests extends IntegrationTestBase {
     private static final String OPENING_BRACKET = "[\"";
     private static final String CLOSING_BRACKET = "\"]";
     private static final String DOUBLE_QUOTE_COMMA = "\",\"";
-    private static final String EXPECTED_MI_DATA_ALL_HEADERS = "id,channel,search_type,user_id,court_name,created_date";
-    private static final String EXPECTED_MI_DATA_LOCAL_HEADERS = "id,search_value,channel,user_id,court_name,"
-        + "created_date";
 
     private static String rawArtefact;
 
@@ -1125,56 +1120,6 @@ class SubscriptionControllerTests extends IntegrationTestBase {
             )).header(USER_ID_HEADER, ACTIONING_USER_ID)).andExpect(status().isForbidden()).andReturn();
 
         assertEquals(FORBIDDEN.value(), mvcResult.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    void testGetSubscriptionDataForMiReportingAll() throws Exception {
-        mvc.perform(setupMockSubscription(CASE_ID, SearchType.CASE_ID, VALID_USER_ID))
-            .andExpect(status().isCreated());
-        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-
-        assertEquals(EXPECTED_MI_DATA_ALL_HEADERS, response.split("\n")[0],
-                     "Should successfully retrieve MI data headers"
-        );
-        assertThat(response.contains(VALID_USER_ID));
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testGetSubscriptionDataForMiReportingAllUnauthorized() throws Exception {
-        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_ALL_URL))
-            .andExpect(status().isForbidden())
-            .andReturn();
-
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
-                     FORBIDDEN_STATUS_CODE
-        );
-    }
-
-    @Test
-    void testGetSubscriptionDataForMiReportingLocal() throws Exception {
-        mvc.perform(setupMockSubscription(LOCATION_ID, SearchType.LOCATION_ID, VALID_USER_ID))
-            .andExpect(status().isCreated());
-        String response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-
-        assertEquals(EXPECTED_MI_DATA_LOCAL_HEADERS, response.split("\n")[0],
-                     "Should successfully retrieve MI data headers"
-        );
-        assertThat(response.contains(VALID_USER_ID));
-    }
-
-    @Test
-    @WithMockUser(username = UNAUTHORIZED_USERNAME, authorities = {UNAUTHORIZED_ROLE})
-    void testGetSubscriptionDataForMiReportingLocalUnauthorized() throws Exception {
-        MvcResult response = mvc.perform(get(MI_REPORTING_SUBSCRIPTION_DATA_LOCAL_URL))
-            .andExpect(status().isForbidden())
-            .andReturn();
-
-        assertEquals(FORBIDDEN.value(), response.getResponse().getStatus(),
                      FORBIDDEN_STATUS_CODE
         );
     }

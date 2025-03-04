@@ -25,7 +25,6 @@ import static uk.gov.hmcts.reform.pip.model.subscription.SearchType.LOCATION_ID;
  */
 @Slf4j
 @Service
-@SuppressWarnings("PMD.TooManyMethods")
 public class SubscriptionService {
 
     private final SubscriptionRepository repository;
@@ -161,34 +160,8 @@ public class SubscriptionService {
         });
     }
 
-    /**
-     * Previous version of the MI Reporting service method. No longer used and soon to be removed.
-     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
-     */
-    @Deprecated(since = "2")
-    public String getAllSubscriptionsDataForMiReporting() {
-        StringBuilder builder = new StringBuilder(60);
-        builder.append("id,channel,search_type,user_id,court_name,created_date").append(System.lineSeparator());
-        repository.getAllSubsDataForMi()
-            .forEach(line -> builder.append(line).append(System.lineSeparator()));
-        return builder.toString();
-    }
-
     public List<AllSubscriptionMiData> getAllSubscriptionsDataForMiReportingV2() {
         return repository.getAllSubsDataForMiV2();
-    }
-
-    /**
-     * Previous version of the MI Reporting service method. No longer used and soon to be removed.
-     * @deprecated This method will be removed in the future in favour of the V2 equivalent.
-     */
-    @Deprecated(since = "2")
-    public String getLocalSubscriptionsDataForMiReporting() {
-        StringBuilder builder = new StringBuilder(60);
-        builder.append("id,search_value,channel,user_id,court_name,created_date").append(System.lineSeparator());
-        repository.getLocalSubsDataForMi()
-            .forEach(line -> builder.append(line).append(System.lineSeparator()));
-        return builder.toString();
     }
 
     public List<LocationSubscriptionMiData> getLocationSubscriptionsDataForMiReportingV2() {
