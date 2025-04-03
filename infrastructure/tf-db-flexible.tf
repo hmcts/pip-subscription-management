@@ -28,6 +28,7 @@ module "postgresql" {
   admin_user_object_id = var.jenkins_AAD_objectId
 
   force_user_permissions_trigger = "2"
+  trigger_password_reset = "1"
 
   pgsql_server_configuration = [
     {
@@ -35,4 +36,26 @@ module "postgresql" {
       value = "plpgsql, pg_stat_statements, pg_buffercache"
     }
   ]
+}
+
+# SDP access and MV required in here. Will be done at migration
+resource "postgresql_role" "create_sdp_access-flexible" {
+  provider = postgresql.postgres-flexible
+
+  name                = data.azurerm_key_vault_secret.sdp-user.value
+  login               = true
+  password            = data.azurerm_key_vault_secret.sdp-pass.value
+  skip_reassign_owned = true
+  skip_drop_role      = true
+}
+
+resource "postgresql_grant" "readonly_mv-flexible" {
+  provider = postgresql.postgres-flexible
+
+  database    = local.db_name
+  role        = data.azurerm_key_vault_secret.sdp-user.value
+  schema      = "public"
+  object_type = "table"
+  privileges  = ["SELECT"]
+  objects     = ["sdp_mat_view_subscription"]
 }
