@@ -30,11 +30,6 @@ data "azurerm_key_vault_secret" "sdp-user" {
   key_vault_id = data.azurerm_key_vault.sdp-kv.id
 }
 
-data "azurerm_key_vault_secret" "db-password" {
-  name         = "subscription-management-POSTGRES-PASS"
-  key_vault_id = data.azurerm_key_vault.kv.id
-}
-
 data "azurerm_key_vault_secret" "sdp-pass" {
   name         = "subscription-management-SDP-PASS"
   key_vault_id = data.azurerm_key_vault.sdp-kv.id

@@ -30,7 +30,7 @@ provider "postgresql" {
   port            = 5432
   database        = local.db_name
   username        = module.postgresql.username
-  password        = data.azurerm_key_vault_secret.db-password.value
+  password        = module.postgresql.password
   superuser       = false
   sslmode         = "require"
   connect_timeout = 15
