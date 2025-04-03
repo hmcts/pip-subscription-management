@@ -28,6 +28,7 @@ module "postgresql" {
   admin_user_object_id = var.jenkins_AAD_objectId
 
   force_user_permissions_trigger = "2"
+  trigger_password_reset = "1"
 
   pgsql_server_configuration = [
     {
