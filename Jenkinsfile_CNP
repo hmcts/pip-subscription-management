@@ -2,48 +2,10 @@
 
 @Library("Infrastructure")
 
-import uk.gov.hmcts.contino.GradleBuilder
-
-def type = "java"
 def product = "pip"
 def component = "subscription-management"
-def kv = product + '-ss-kv'
 
-GradleBuilder builder = new GradleBuilder(this, product)
-
-def setupTestSecrets() {
-  def bootstap_env = env.ENV == "prod" || env.ENV == "demo" || env.ENV == "sbox" ? env.ENV : "stg"
-  azureKeyVault(
-    keyVaultURL: "https://pip-bootstrap-${bootstap_env}-kv.vault.azure.net/",
-    secrets: [
-      secret('app-pip-subscription-management-id', 'CLIENT_ID'),
-      secret('app-pip-subscription-management-pwd', 'CLIENT_SECRET'),
-      secret('app-pip-subscription-management-scope', 'APP_URI'),
-      secret('app-pip-data-management-scope', 'DATA_MANAGEMENT_AZ_API'),
-      secret('app-tenant', 'TENANT_ID'),
-      secret('app-pip-data-management-id', 'CLIENT_ID_FT'),
-      secret('app-pip-data-management-pwd', 'CLIENT_SECRET_FT'),
-    ]) {
-    env.CLIENT_ID = "${CLIENT_ID}"
-    env.CLIENT_SECRET = "${CLIENT_SECRET}"
-    env.DATA_MANAGEMENT_AZ_API = "${DATA_MANAGEMENT_AZ_API}"
-    env.APP_URI = "${APP_URI}"
-    env.TENANT_ID = "${TENANT_ID}"
-    env.CLIENT_ID_FT = "${CLIENT_ID_FT}"
-    env.CLIENT_SECRET_FT = "${CLIENT_SECRET_FT}"
-  }
-}
-
-static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
-  [$class     : 'AzureKeyVaultSecret',
-   secretType : 'Secret',
-   name       : secretName,
-   version    : '',
-   envVariable: envVar
-  ]
-}
-
-withPipeline(type, product, component) {
+withInfraPipeline(product, component) {
 
   onMaster() {
     env.ENV = 'stg'
@@ -61,15 +23,5 @@ withPipeline(type, product, component) {
     env.ENV = 'ithc'
   }
 
-  setupTestSecrets()
-
-  enableDbMigration(kv)
   enableSlackNotifications('#pip-build-notices')
-  enableAksStagingDeployment()
-  disableLegacyDeployment()
-  enableApiGatewayTest()
-
-  afterAlways('test') {
-    builder.gradle('integration')
-  }
 }
