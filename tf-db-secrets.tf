@@ -4,7 +4,7 @@ locals {
 
   //Needed to change the old details to the new Flexible Server details, as Flyway on the pipeline only picks up
   //a specific naming convention.
-  secrets = should_create == 1 ? [
+  secrets = local.should_create == 1 ? [
     {
       name_suffix = "PASS"
       value       = module.postgresql.password
@@ -59,7 +59,7 @@ resource "azurerm_key_vault_secret" "sdp-host" {
     module.postgresql
   ]
 
-  count = should_create
+  count = local.should_create
 }
 
 resource "azurerm_key_vault_secret" "sdp-port" {
@@ -76,7 +76,7 @@ resource "azurerm_key_vault_secret" "sdp-port" {
     module.postgresql
   ]
 
-  count = should_create
+  count = local.should_create
 }
 
 resource "azurerm_key_vault_secret" "sdp-database" {
@@ -93,6 +93,6 @@ resource "azurerm_key_vault_secret" "sdp-database" {
     module.postgresql
   ]
 
-  count = should_create
+  count = local.should_create
 }
 
