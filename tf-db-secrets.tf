@@ -44,7 +44,7 @@ resource "azurerm_key_vault_secret" "secret" {
 resource "azurerm_key_vault_secret" "sdp-host" {
   key_vault_id = data.azurerm_key_vault.sdp-kv.id
   name         = "${local.secret_prefix}-HOST"
-  value        = module.postgresql.fqdn
+  value        = module.postgresql[0].fqdn
   tags = merge(var.common_tags, {
     "source" : "${var.component} PostgreSQL"
   })
