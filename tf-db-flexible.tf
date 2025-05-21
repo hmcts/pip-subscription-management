@@ -36,7 +36,6 @@ module "postgresql" {
     }
   ]
 
-  count = var.env == "test" || var.env == "stg" ? 0 : 1
 }
 
 # SDP access and MV required in here. Will be done at migration

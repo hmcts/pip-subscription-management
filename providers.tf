@@ -26,11 +26,11 @@ provider "azurerm" {
 provider "postgresql" {
   alias = "postgres-flexible"
 
-  host            = module.postgresql[0].fqdn
+  host            = module.postgresql.fqdn
   port            = 5432
   database        = local.db_name
-  username        = module.postgresql[0].username
-  password        = module.postgresql[0].password
+  username        = module.postgresql.username
+  password        = module.postgresql.password
   superuser       = false
   sslmode         = "require"
   connect_timeout = 15
