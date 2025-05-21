@@ -35,6 +35,7 @@ module "postgresql" {
       value = "plpgsql, pg_stat_statements, pg_buffercache"
     }
   ]
+
 }
 
 # SDP access and MV required in here. Will be done at migration

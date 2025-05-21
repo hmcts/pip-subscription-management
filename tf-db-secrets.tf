@@ -1,9 +1,10 @@
 locals {
   secret_prefix = "${var.component}-POSTGRES"
+  should_create = var.env == "sbox" || var.env == "test" || var.env == "demo" || var.env == "ithc" || var.env == "stg" ? 0 : 1
 
   //Needed to change the old details to the new Flexible Server details, as Flyway on the pipeline only picks up
   //a specific naming convention.
-  secrets = [
+  secrets = local.should_create == 1 ? [
     {
       name_suffix = "PASS"
       value       = module.postgresql.password
@@ -24,8 +25,7 @@ locals {
       name_suffix = "DATABASE"
       value       = local.db_name
     }
-  ]
-
+  ] : []
 }
 
 ## Loop secrets
@@ -39,11 +39,6 @@ resource "azurerm_key_vault_secret" "secret" {
   })
   content_type    = ""
   expiration_date = timeadd(timestamp(), "8760h")
-
-  depends_on = [
-    module.postgresql
-  ]
-
 }
 
 resource "azurerm_key_vault_secret" "sdp-host" {
@@ -59,6 +54,8 @@ resource "azurerm_key_vault_secret" "sdp-host" {
   depends_on = [
     module.postgresql
   ]
+
+  count = local.should_create
 }
 
 resource "azurerm_key_vault_secret" "sdp-port" {
@@ -74,6 +71,8 @@ resource "azurerm_key_vault_secret" "sdp-port" {
   depends_on = [
     module.postgresql
   ]
+
+  count = local.should_create
 }
 
 resource "azurerm_key_vault_secret" "sdp-database" {
@@ -89,5 +88,7 @@ resource "azurerm_key_vault_secret" "sdp-database" {
   depends_on = [
     module.postgresql
   ]
+
+  count = local.should_create
 }
 
