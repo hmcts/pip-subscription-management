@@ -46,6 +46,8 @@ resource "postgresql_role" "create_sdp_access-flexible" {
   password            = data.azurerm_key_vault_secret.sdp-pass.value
   skip_reassign_owned = true
   skip_drop_role      = true
+
+  count = var.env == "sbox" || var.env == "test" || var.env == "demo" || var.env == "ithc" || var.env == "stg" ? 0 : 1
 }
 
 resource "postgresql_grant" "readonly_mv-flexible" {
