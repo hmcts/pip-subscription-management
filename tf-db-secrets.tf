@@ -1,6 +1,6 @@
 locals {
   secret_prefix = "${var.component}-POSTGRES"
-  should_create = var.env == "test" || var.env == "stg" ? 0 : 1
+  should_create = var.env == "sbox" || var.env == "test" || var.env == "demo" || var.env == "ithc" || var.env == "stg" ? 0 : 1
 
   //Needed to change the old details to the new Flexible Server details, as Flyway on the pipeline only picks up
   //a specific naming convention.
