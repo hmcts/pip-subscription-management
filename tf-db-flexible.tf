@@ -58,5 +58,5 @@ resource "postgresql_grant" "readonly_mv-flexible" {
   privileges  = ["SELECT"]
   objects     = ["sdp_mat_view_subscription"]
 
-  count       = var.env == "sbox" || var.env == "test" || var.env == "demo"  || var.env == "ithc" || var.env == "stg" ? 0 : 1
+  count = var.env == "sbox" || var.env == "test" || var.env == "demo" || var.env == "ithc" || var.env == "stg" ? 0 : 1
 }
