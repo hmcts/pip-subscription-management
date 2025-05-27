@@ -50,16 +50,3 @@ resource "postgresql_role" "create_sdp_access-flexible" {
 
   count = var.env == "sbox" || var.env == "test" || var.env == "demo" || var.env == "ithc" || var.env == "stg" ? 0 : 1
 }
-
-resource "postgresql_grant" "readonly_mv-flexible" {
-  provider = postgresql.postgres-flexible
-
-  database    = local.db_name
-  role        = data.azurerm_key_vault_secret.sdp-user.value
-  schema      = "public"
-  object_type = "table"
-  privileges  = ["SELECT"]
-  objects     = ["sdp_mat_view_subscription"]
-
-  count = var.env == "sbox" || var.env == "test" || var.env == "demo" || var.env == "ithc" || var.env == "stg" ? 0 : 1
-}
