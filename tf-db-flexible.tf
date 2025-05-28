@@ -37,16 +37,3 @@ module "postgresql" {
   ]
 
 }
-
-# SDP access and MV required in here. Will be done at migration
-resource "postgresql_role" "create_sdp_access-flexible" {
-  provider = postgresql.postgres-flexible
-
-  name                = data.azurerm_key_vault_secret.sdp-user.value
-  login               = true
-  password            = data.azurerm_key_vault_secret.sdp-pass.value
-  skip_reassign_owned = true
-  skip_drop_role      = true
-
-  count = var.env == "sbox" || var.env == "test" || var.env == "demo" || var.env == "ithc" || var.env == "stg" ? 0 : 1
-}
