@@ -7,15 +7,15 @@ locals {
   secrets = local.should_create == 1 ? [
     {
       name_suffix = "PASS"
-      value       = module.postgresql.password
+      value       = module.postgresql[0].password
     },
     {
       name_suffix = "HOST"
-      value       = module.postgresql.fqdn
+      value       = module.postgresql[0].fqdn
     },
     {
       name_suffix = "USER"
-      value       = module.postgresql.username
+      value       = module.postgresql[0].username
     },
     {
       name_suffix = "PORT"
@@ -44,7 +44,7 @@ resource "azurerm_key_vault_secret" "secret" {
 resource "azurerm_key_vault_secret" "sdp-host" {
   key_vault_id = data.azurerm_key_vault.sdp-kv.id
   name         = "${local.secret_prefix}-HOST"
-  value        = module.postgresql.fqdn
+  value        = module.postgresql[0].fqdn
   tags = merge(var.common_tags, {
     "source" : "${var.component} PostgreSQL"
   })
@@ -52,7 +52,7 @@ resource "azurerm_key_vault_secret" "sdp-host" {
   expiration_date = timeadd(timestamp(), "8760h")
 
   depends_on = [
-    module.postgresql
+    module.postgresql[0]
   ]
 
   count = local.should_create
@@ -69,7 +69,7 @@ resource "azurerm_key_vault_secret" "sdp-port" {
   expiration_date = timeadd(timestamp(), "8760h")
 
   depends_on = [
-    module.postgresql
+    module.postgresql[0]
   ]
 
   count = local.should_create
@@ -86,7 +86,7 @@ resource "azurerm_key_vault_secret" "sdp-database" {
   expiration_date = timeadd(timestamp(), "8760h")
 
   depends_on = [
-    module.postgresql
+    module.postgresql[0]
   ]
 
   count = local.should_create
