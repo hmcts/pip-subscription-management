@@ -36,4 +36,6 @@ module "postgresql" {
     }
   ]
 
+  count = var.env == "ithc" ? 0 : 1
+
 }
