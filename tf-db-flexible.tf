@@ -5,6 +5,7 @@ locals {
 }
 
 module "postgresql" {
+  count     = var.env == "prod" ? 1 : 0
   providers = {
     azurerm.postgres_network = azurerm.postgres_network
   }
